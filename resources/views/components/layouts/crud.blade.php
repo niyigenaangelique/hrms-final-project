@@ -27,7 +27,6 @@
               class="bg-zinc-200   scrollbar-custom dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
     <flux:sidebar.toggle class="lg:hidden " icon="x-mark"/>
 
-    <img src="{{ asset('images/logo_3_1.png') }}" class="w-auto max-lg:hidden dark:hidden" alt="">
     <img src="{{ asset('images/logo_4_1.png') }}" class="w-auto max-lg:!hidden hidden dark:flex" alt="">
     <flux:separator/>
     @auth

@@ -4,11 +4,6 @@
         {{-- Left Side: Login Form --}}
         <div class="bg-white max-w-2xl p-12 flex flex-col justify-center md:col-span-1">
             <div class="text-center mb-6">
-                <img
-                    src="{{ asset('images/logo_3_1.png') }}"
-                    alt="SG Logo"
-                    class="h-24 mx-auto mb-6 object-contain"
-                >
                 <h2 class="text-3xl font-bold text-primary-900">
                     {{--                    Welcome Back--}}
                     Welcome
