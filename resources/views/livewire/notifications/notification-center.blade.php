@@ -149,7 +149,7 @@
                                         </p>
                                         <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                                             <span>Channel: {{ ucfirst($notification->channel) }}</span>
-                                            <span>Recipient: {{ $notification->recipient->name ?? 'Unknown' }}</span>
+                                            <span>Recipient: {{ $notification->getSafeRecipient()?->name ?? 'Unknown' }}</span>
                                             <span>{{ $notification->created_at->format('M d, Y H:i') }}</span>
                                         </div>
                                     </div>

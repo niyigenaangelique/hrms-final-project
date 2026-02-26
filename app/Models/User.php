@@ -124,6 +124,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the role associated with the user.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role', 'user_role');
+    }
+
+    /**
      * Notes associated with this record as a notable entity.
      */
     public function notes(): MorphMany

@@ -152,7 +152,7 @@
                                 <span class="text-sm text-gray-600 dark:text-gray-400">{{ ucfirst($gender) }}</span>
                                 <div class="flex items-center">
                                     <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ ($count / $diversityStats['gender_distribution']->sum()) * 100 }}%"></div>
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ ($count / array_sum($diversityStats['gender_distribution'])) * 100 }}%"></div>
                                     </div>
                                     <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">{{ $count }}</span>
                                 </div>
@@ -170,7 +170,7 @@
                                 <span class="text-sm text-gray-600 dark:text-gray-400">{{ $ageGroup }}</span>
                                 <div class="flex items-center">
                                     <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                        <div class="bg-green-500 h-2 rounded-full" style="width: {{ ($count / $diversityStats['age_groups']->sum()) * 100 }}%"></div>
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: {{ ($count / array_sum($diversityStats['age_groups'])) * 100 }}%"></div>
                                     </div>
                                     <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">{{ $count }}</span>
                                 </div>
@@ -310,7 +310,7 @@
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Present Today</span>
                         <span class="font-medium text-green-600 dark:text-green-400">
-                            {{ Employee::where('is_active', true)->count() - $attendanceStats['late_arrivals'] - $attendanceStats['early_departures'] }}
+                            {{ $metrics['total_employees'] - $attendanceStats['late_arrivals'] - $attendanceStats['early_departures'] }}
                         </span>
                     </div>
                 </div>

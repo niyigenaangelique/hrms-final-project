@@ -69,7 +69,7 @@ class Role extends Model
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class, 'role', 'user_role');
     }
 
     public function creator(): BelongsTo

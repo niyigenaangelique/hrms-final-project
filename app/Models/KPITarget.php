@@ -47,6 +47,8 @@ class KPITarget extends Model
 {
     use HasApiTokens, HasUuids, Notifiable, SoftDeletes;
 
+    protected $table = 'kpi_targets';
+
     protected $fillable = [
         'code',
         'kpi_id',

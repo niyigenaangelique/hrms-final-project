@@ -89,8 +89,9 @@ class AnalyticsDashboard extends Component
     private function calculateTurnoverRate()
     {
         $totalEmployees = Employee::where('is_active', true)->count();
-        $separatedEmployees = Employee::where('status', 'separated')
-            ->whereBetween('updated_at', [$this->startDate, $this->endDate])
+        $separatedEmployees = Employee::where('is_active', false)
+            ->whereNotNull('left_date')
+            ->whereBetween('left_date', [$this->startDate, $this->endDate])
             ->count();
 
         return [
@@ -106,9 +107,9 @@ class AnalyticsDashboard extends Component
         $employees = Employee::where('is_active', true)->get();
         
         return [
-            'gender_distribution' => $employees->groupBy('gender')->map->count(),
+            'gender_distribution' => $employees->groupBy('gender')->map->count()->toArray(),
             'age_groups' => $this->getAgeGroups($employees),
-            'nationality_distribution' => $employees->groupBy('nationality')->map->count(),
+            'nationality_distribution' => $employees->groupBy('nationality')->map->count()->toArray(),
             'department_diversity' => $this->getDepartmentDiversity($employees),
         ];
     }
@@ -168,7 +169,7 @@ class AnalyticsDashboard extends Component
             'total_leave_requests' => $leaves->count(),
             'approved_leaves' => $leaves->where('status', 'approved')->count(),
             'pending_leaves' => $leaves->where('status', 'pending')->count(),
-            'leave_by_type' => $leaves->groupBy('leave_type_id')->map->count(),
+            'leave_by_type' => $leaves->groupBy('leave_type_id')->map->count()->toArray(),
             'average_leave_days' => $leaves->avg('total_days') ?? 0,
         ];
     }
@@ -176,9 +177,24 @@ class AnalyticsDashboard extends Component
     // Helper methods for calculations
     private function calculateAverageTenure(): float
     {
-        return Employee::where('is_active', true)
-            ->avg('join_date')
-            ->diffInDays(now()) / 365;
+        $employees = Employee::where('is_active', true)->get();
+        
+        if ($employees->isEmpty()) {
+            return 0;
+        }
+        
+        $totalDays = 0;
+        $count = 0;
+        
+        foreach ($employees as $employee) {
+            if ($employee->join_date) {
+                $joinDate = is_string($employee->join_date) ? \Carbon\Carbon::parse($employee->join_date) : $employee->join_date;
+                $totalDays += $joinDate->diffInDays(now());
+                $count++;
+            }
+        }
+        
+        return $count > 0 ? ($totalDays / $count) / 365 : 0;
     }
 
     private function getTrainingHours(): int
@@ -202,13 +218,13 @@ class AnalyticsDashboard extends Component
             if ($age < 45) return '35-44';
             if ($age < 55) return '45-54';
             return '55+';
-        })->map->count();
+        })->map->count()->toArray();
     }
 
     private function getDepartmentDiversity($employees): array
     {
         return $employees->groupBy('department_id')->map(function ($deptEmployees) {
-            $genders = $deptEmployees->groupBy('gender')->map->count();
+            $genders = $deptEmployees->groupBy('gender')->map->count()->toArray();
             $total = $deptEmployees->count();
             
             return [
@@ -216,7 +232,7 @@ class AnalyticsDashboard extends Component
                 'diversity_score' => $this->calculateDiversityScore($genders, $total),
                 'gender_distribution' => $genders,
             ];
-        });
+        })->toArray();
     }
 
     private function calculateDiversityScore($distribution, $total): float

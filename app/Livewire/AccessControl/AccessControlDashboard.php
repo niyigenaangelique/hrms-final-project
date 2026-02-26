@@ -125,7 +125,7 @@ class AccessControlDashboard extends Component
     public function getSecurityStats()
     {
         $totalUsers = User::count();
-        $activeUsers = User::where('is_active', true)->count();
+        $activeUsers = User::whereNull('deleted_at')->count();
         $totalRoles = Role::count();
         $totalPermissions = Permission::count();
         $failedLogins = ActivityLog::where('action', 'failed_login')

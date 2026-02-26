@@ -86,9 +86,74 @@ class NotificationLog extends Model
         return $this->belongsTo(NotificationTemplate::class);
     }
 
+    public function getRecipientTypeAttribute($value)
+    {
+        // Handle cases where recipient_type might be stored as array or has incorrect format
+        if (is_array($value)) {
+            $value = $value[0] ?? $value;
+        }
+        
+        // Handle JSON encoded values
+        if (is_string($value) && str_starts_with($value, '[')) {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                $value = $decoded[0] ?? $value;
+            }
+        }
+        
+        // Ensure proper case
+        return match(strtolower($value)) {
+            'user' => 'User',
+            'employee' => 'Employee',
+            default => $value,
+        };
+    }
+
+    public function getSafeRecipient()
+    {
+        try {
+            $recipientType = $this->recipient_type;
+            $recipientId = $this->recipient_id;
+            
+            // Handle cases where recipient_type might be stored as array or has incorrect format
+            if (is_array($recipientType)) {
+                $recipientType = $recipientType[0] ?? $recipientType;
+            }
+            
+            // Handle JSON encoded values
+            if (is_string($recipientType) && str_starts_with($recipientType, '[')) {
+                $decoded = json_decode($recipientType, true);
+                if (is_array($decoded)) {
+                    $recipientType = $decoded[0] ?? $recipientType;
+                }
+            }
+            
+            // Normalize the type
+            $recipientType = strtolower($recipientType);
+            
+            // Load the recipient manually based on type
+            switch ($recipientType) {
+                case 'user':
+                    return \App\Models\User::find($recipientId);
+                case 'employee':
+                    return \App\Models\Employee::find($recipientId);
+                default:
+                    return null;
+            }
+        } catch (\Exception $e) {
+            // Return null if there's an issue loading the recipient
+            return null;
+        }
+    }
+
     public function recipient()
     {
-        return $this->morphTo('recipient');
+        return $this->morphTo('recipient', [
+            'user' => \App\Models\User::class,
+            'employee' => \App\Models\Employee::class,
+            'User' => \App\Models\User::class,
+            'Employee' => \App\Models\Employee::class,
+        ]);
     }
 
     public function creator(): BelongsTo

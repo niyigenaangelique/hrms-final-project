@@ -45,6 +45,8 @@ class KPI extends Model
 {
     use HasApiTokens, HasUuids, Notifiable, SoftDeletes;
 
+    protected $table = 'kpis';
+
     protected $fillable = [
         'code',
         'name',

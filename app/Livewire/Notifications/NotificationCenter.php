@@ -79,7 +79,7 @@ class NotificationCenter extends Component
 
     public function getNotifications()
     {
-        $query = NotificationLog::with(['template', 'recipient'])
+        $query = NotificationLog::with(['template'])
             ->orderBy('created_at', 'desc');
 
         if ($this->searchTerm) {
