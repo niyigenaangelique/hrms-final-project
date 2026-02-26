@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Helpers;
+
+if (!function_exists('generate_formatted_id')) {
+    /**
+     * Generates a formatted ID with a prefix and zero-padded number.
+     *
+     * @param string $prefix The prefix to prepend to the ID.
+     * @param int $number The number to be zero-padded.
+     * @param int $padding_length The total length of the zero-padded number. Default is 7.
+     *
+     * @return string A string in the format "PREFIX-0000001".
+     */
+    function generate_formatted_id(string $prefix, int $number, int $padding_length = 7): string
+    {
+        if ($padding_length <= 0) {
+            throw new InvalidArgumentException("Padding length must be a positive integer.");
+        }
+
+        // Zero-pad the number to the specified length
+        $zero_padded_number = str_pad($number, $padding_length, '0', STR_PAD_LEFT);
+
+        // Combine the prefix and the zero-padded number
+        return $prefix . '-' . $zero_padded_number;
+    }
+}
+
+if (!function_exists('increment_formatted_id')) {
+    /**
+     * Increments a formatted ID and returns the next one.
+     *
+     * @param string $formatted_id The current formatted ID (e.g., "SGA-0000001").
+     * @param string $prefix The prefix used in the formatted ID.
+     * @param int $padding_length The total length of the zero-padded number. Default is 7.
+     *
+     * @return string The next formatted ID (e.g., "SGA-0000002").
+     */
+    function increment_formatted_id(string $formatted_id, string $prefix, int $padding_length = 7): string
+    {
+        // Validate the input format
+        if (!preg_match("/^$prefix-\d+$/", $formatted_id)) {
+            throw new InvalidArgumentException("Invalid formatted ID. Expected format: {$prefix}-[numbers]");
+        }
+
+        // Extract the numeric part from the formatted ID
+        list($current_prefix, $current_number) = explode('-', $formatted_id);
+
+        // Increment the numeric part
+        $next_number = intval($current_number) + 1;
+
+        // Generate the next formatted ID
+        return generate_formatted_id($prefix, $next_number, $padding_length);
+    }
+}

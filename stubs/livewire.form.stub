@@ -1,0 +1,132 @@
+<?php
+
+namespace DummyNamespace;
+
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Validate;
+use Livewire\Form;
+
+class DummyClass extends Form {
+
+    public ?User $user = null;
+    public ?string $id = null;
+    public ?string $code = null;
+    protected array $fillableData = [
+        'code',
+    ];
+
+    /** @return array<string, array<int, string>> */
+    public function rules(): array {
+        return [
+            'code' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('users', 'code')->ignore($this->id),
+            ],
+        ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array {
+        return [];
+    }
+
+    public function setData(User $user): void {
+        $this->user = $user;
+    }
+
+    protected array $backupData = [];
+
+    public function backupFormData(): void {
+        $this->backupData = $this->only($this->fillableData);
+    }
+
+    public function restoreFormData(): void {
+        foreach ($this->backupData as $key => $value) {
+            $this->$key = $value;
+        }
+    }
+
+    public function storeData(): array {
+        try {
+            $this->validate();
+            $excludeFields = [];
+            $this->fillableData = array_diff($this->fillableData, $excludeFields);
+            $this->fillableData = array_values($this->fillableData);
+
+            $this->backupFormData(); // Backup before operation
+            $user = User::create($this->only($this->fillableData));
+
+            $this->clearData();
+            return [
+                'success' => true,
+                'user' => $user,
+                'message' => 'User created successfully',
+            ];
+        } catch (ValidationException $e) {
+            Flux::modal('loadingPage')->close();
+            return $this->validate();
+        } catch (Exception $e) {
+            Log::error('User creation failed: ' . $e->getMessage(), [
+                'input' => $this->only($this->fillableData),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            session()->flash('error', 'Failed to create user: ' . $e->getMessage());
+            $this->restoreFormData(); // Restore on failure
+
+            Flux::modal('loadingPage')->close();
+            return [
+                'success' => false,
+                'errors' => [],
+                'user' => null,
+                'message' => 'Failed to create user: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+
+
+    public function updateData(): array
+    {
+        try {
+            $this->validate();
+            $this->backupFormData(); // Backup before operation
+            $excludeFields = [];
+            $this->fillableData = array_diff($this->fillableData, $excludeFields);
+            $this->fillableData = array_values($this->fillableData);
+            $this->user->update($this->only($this->fillableData));
+            $this->clearData();
+            return [
+                'success' => true,
+                'user' => $this->user,
+                'message' => 'User updated successfully',
+            ];
+        } catch (ValidationException $e) {
+            Flux::modal('loadingPage')->close();
+            return $this->validate();
+        } catch (Exception $e) {
+            Log::error('User update failed: ' . $e->getMessage(), [
+                'input' => $this->only($this->fillableData),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->restoreFormData(); // Restore on failure
+
+            Flux::modal('loadingPage')->close();
+            return [
+                'success' => false,
+                'errors' => [],
+                'user' => null,
+                'message' => 'Failed to update user: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    public function clearData(): void
+    {
+        $this->reset();
+        $this->user = null; // Ensure user is reset
+    }
+}

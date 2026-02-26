@@ -1,0 +1,409 @@
+"""
+Enum representing different user roles within the system.
+"""
+enum UserRole {
+"""
+The system-wide administrator with all permissions across all projects.
+"""
+SuperAdmin @enum(value: "SuperAdmin")
+
+"""
+The project-wide administrator with permissions for a specific project.
+"""
+CompanyAdmin @enum(value: "CompanyAdmin")
+
+"""
+The system-wide data master with all permissions across all projects.
+"""
+DataMaster @enum(value: "DataMaster")
+
+"""
+The project data master with permissions for a specific project.
+"""
+CompanyDataMaster @enum(value: "CompanyDataMaster")
+
+"""
+The project operations manager overseeing HR and finance activities at a project level.
+"""
+OperationsManager @enum(value: "OperationsManager")
+
+"""
+The HR administrator managing HR settings and users for a specific project.
+"""
+HRAdmin @enum(value: "HRAdmin")
+
+"""
+The HR manager overseeing HR activities within a specific project.
+"""
+HRManager @enum(value: "HRManager")
+
+"""
+The HR officer handling recruitment, attendance, and payroll for a specific project.
+"""
+HROfficer @enum(value: "HROfficer")
+
+"""
+The payroll officer managing salaries, taxes, and payslips for a specific project.
+"""
+PayrollOfficer @enum(value: "PayrollOfficer")
+
+"""
+The HR officer handling data entry, attendance, and payroll for a specific project.
+"""
+HRClark @enum(value: "HRClark")
+
+"""
+The employee of a specific project with access to self-service features.
+"""
+Employee @enum(value: "Employee")
+
+"""
+The finance administrator managing financial operations across a project.
+"""
+FinanceAdmin @enum(value: "FinanceAdmin")
+
+"""
+The finance manager responsible for budgeting, forecasting, and reporting.
+"""
+FinanceManager @enum(value: "FinanceManager")
+
+"""
+The finance officer handling transactions, accounts, and expense tracking.
+"""
+FinanceOfficer @enum(value: "FinanceOfficer")
+
+"""
+The supervisor monitoring attendance and performance at a specific site.
+"""
+SiteSupervisor @enum(value: "SiteSupervisor")
+
+"""
+The administrator managing site-level HR operations and resources for a specific site.
+"""
+SiteAdmin @enum(value: "SiteAdmin")
+
+"""
+The manager overseeing all HR and finance activities at a site level.
+"""
+SiteManager @enum(value: "SiteManager")
+
+"""
+The project manager overseeing projects and staffing within a specific project or site.
+"""
+ProjectManager @enum(value: "ProjectManager")
+
+"""
+The management manager overseeing HR and finance activities at a project level.
+"""
+LeadershipTeamMember @enum(value: "LeadershipTeamMember")
+
+"""
+The employee of a specific site with access to self-service features.
+"""
+SiteEmployee @enum(value: "SiteEmployee")
+}
+
+"""
+Enum representing different approval statuses for requests.
+"""
+enum ApprovalStatus {
+"""
+The request does not require approval.
+"""
+NotApplicable @enum(value: "not applicable")
+
+"""
+The request has been initiated but not yet sent to a manager for approval.
+"""
+Initiated @enum(value: "initiated")
+
+"""
+The request has been sent to a manager for approval but not yet approved or rejected.
+"""
+Pending @enum(value: "pending")
+
+"""
+The request is currently being reviewed by a manager.
+"""
+UnderReview @enum(value: "under review")
+
+"""
+The request has been approved by a manager.
+"""
+Approved @enum(value: "approved")
+
+"""
+The request has been rejected by a manager.
+"""
+Rejected @enum(value: "rejected")
+
+"""
+The request has been cancelled and is no longer being processed.
+"""
+Cancelled @enum(value: "cancelled")
+
+"""
+The request has been resolved and is no longer active.
+"""
+Closed @enum(value: "closed")
+}
+
+"""
+Enum representing different methods for recording attendance.
+"""
+enum AttendanceMethod {
+"""
+The attendance is recorded using face recognition with a camera.
+"""
+Face_Recognition @enum(value: "Face Recognition")
+
+"""
+The attendance is recorded using a fingerprint reader.
+"""
+Finger_Prints @enum(value: "Finger Prints")
+
+"""
+The attendance is entered manually.
+"""
+Manual_Input @enum(value: "Manuel Input")
+
+"""
+The attendance is uploaded in bulk from a CSV file.
+"""
+Bulk_Upload @enum(value: "Bulk Upload")
+}
+
+"""
+Enum representing different statuses for attendance logs.
+"""
+enum AttendanceStatus {
+"""
+The attendance log has been entered but not yet posted.
+"""
+Entered @enum(value: "Entered")
+
+"""
+The attendance log has been cancelled and will not be posted.
+"""
+Cancelled @enum(value: "Cancelled")
+
+"""
+The attendance log has been rejected and requires changes before posting.
+"""
+Rejected @enum(value: "Rejected")
+
+"""
+The attendance log has been approved and is ready for posting.
+"""
+Approved @enum(value: "Approved")
+
+"""
+The attendance log has been posted to the payroll system.
+"""
+Posted @enum(value: "Posted")
+}
+
+"""
+Enum representing different statuses for contracts.
+"""
+enum ContractStatus {
+"""
+The contract is in draft status.
+"""
+DRAFT @enum(value: "draft")
+
+"""
+The contract is pending approval.
+"""
+PENDING @enum(value: "pending")
+
+"""
+The contract has been approved.
+"""
+APPROVED @enum(value: "approved")
+
+"""
+The contract is currently active.
+"""
+ACTIVE @enum(value: "active")
+
+"""
+The contract is currently inactive.
+"""
+INACTIVE @enum(value: "inactive")
+
+"""
+The contract has expired.
+"""
+EXPIRED @enum(value: "expired")
+
+"""
+The contract has been rejected.
+"""
+REJECTED @enum(value: "rejected")
+
+"""
+The contract has been cancelled.
+"""
+CANCELLED @enum(value: "cancelled")
+
+"""
+The contract has been terminated.
+"""
+TERMINATED @enum(value: "terminated")
+}
+
+"""
+Enum representing different statuses for devices.
+"""
+enum DeviceStatus {
+"""
+The device is online and available for use.
+"""
+Online @enum(value: "online")
+
+"""
+The device is offline and unavailable for use.
+"""
+Offline @enum(value: "offline")
+
+"""
+The device status is unknown.
+"""
+Unknown @enum(value: "unknown")
+}
+
+"""
+Enum representing different categories of employees.
+"""
+enum EmployeeCategory {
+"""
+The employee is a regular full-time or part-time employee of the company.
+"""
+PERMANENT @enum(value: "Permanent")
+
+"""
+The employee is hired on a temporary or as-needed basis.
+"""
+CASUAL @enum(value: "Casual")
+
+"""
+The employee is exempt from minimum wage and overtime laws.
+"""
+EXEMPTED @enum(value: "Exempted")
+
+"""
+The employee is employed by a second employer while already employed by another.
+"""
+SECOND_EMPLOYER @enum(value: "Second Employer")
+}
+
+"""
+Enum representing gender identities.
+"""
+enum Gender {
+"""
+The individual identifies as male.
+"""
+MALE @enum(value: "Male")
+
+"""
+The individual identifies as female.
+"""
+FEMALE @enum(value: "Female")
+}
+
+"""
+Enum representing different statuses for payslips.
+"""
+enum PayslipStatus {
+"""
+The payslip has been entered but not yet posted.
+"""
+Entered @enum(value: "Entered")
+
+"""
+The payslip has been rejected and requires changes before posting.
+"""
+Rejected @enum(value: "Rejected")
+
+"""
+The payslip has been approved and is ready for printing.
+"""
+Approved @enum(value: "Approved")
+
+"""
+The payslip has been printed and is ready for posting.
+"""
+Printed @enum(value: "printed")
+
+"""
+The payslip has been posted to the payroll system.
+"""
+Posted @enum(value: "Posted")
+}
+
+"""
+Enum representing different statuses for projects.
+"""
+enum ProjectStatus {
+"""
+The project has not yet started.
+"""
+NotStarted @enum(value: "not started")
+
+"""
+The project is currently in the planning phase.
+"""
+InPlanning @enum(value: "in planning")
+
+"""
+The project is currently in progress.
+"""
+InProgress @enum(value: "in progress")
+
+"""
+The project is currently on hold.
+"""
+OnHold @enum(value: "on hold")
+
+"""
+The project has been completed.
+"""
+Completed @enum(value: "completed")
+
+"""
+The project has been cancelled.
+"""
+Cancelled @enum(value: "cancelled")
+
+"""
+The project has been archived.
+"""
+Archived @enum(value: "archived")
+}
+
+"""
+Enum representing different types of remuneration periods.
+"""
+enum RemunerationType {
+"""
+The remuneration is paid by the hour.
+"""
+HOURLY @enum(value: "Hourly")
+
+"""
+The remuneration is paid by the day.
+"""
+DAILY @enum(value: "Daily")
+
+"""
+The remuneration is paid by the month.
+"""
+MONTHLY @enum(value: "Monthly")
+
+"""
+The remuneration is paid by the year.
+"""
+ANNUALLY @enum(value: "Annually")
+}

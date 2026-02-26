@@ -1,0 +1,94 @@
+"""
+Represents a user in the system, with personal details, authentication fields, and role-based permissions.
+"""
+type User {
+    """
+    Unique identifier for the user.
+    """
+    id: ID!
+
+    """
+    Unique code for the user, typically auto-generated.
+    """
+    code: String!
+
+    """
+    User's first name.
+    """
+    first_name: String!
+
+    """
+    User's middle name, if applicable.
+    """
+    middle_name: String
+
+    """
+    User's last name, if applicable.
+    """
+    last_name: String
+
+    """
+    Unique username for authentication.
+    """
+    username: String!
+
+    """
+    User's email address, if provided.
+    """
+    email: String
+
+    """
+    User's phone number for contact and verification.
+    """
+    phone_number: String!
+
+    """
+    User's hashed password for authentication.
+    """
+    password: String!
+
+    """
+    User's role, determining their permissions within the system.
+    """
+    role: UserRole!
+
+    """
+    Timestamp when the user's phone number was verified.
+    """
+    phone_verified_at: DateTime
+
+    """
+    Timestamp when the user's email was verified.
+    """
+    email_verified_at: DateTime
+
+    """
+    Timestamp when the user's password was last changed.
+    """
+    password_changed_at: DateTime
+
+    """
+    List of attendances created by the user.
+    """
+    createdAttendances: [Attendance!] @hasMany
+
+    """
+    List of projects the user is associated with.
+    """
+    projects: [Project!] @belongsToMany(relation: "projects")
+
+    """
+    Timestamp when the user was created.
+    """
+    created_at: DateTime!
+
+    """
+    Timestamp when the user was last updated.
+    """
+    updated_at: DateTime!
+
+    """
+    Timestamp when the user was soft-deleted, if applicable.
+    """
+    deleted_at: DateTime
+}

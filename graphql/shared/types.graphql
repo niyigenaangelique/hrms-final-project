@@ -1,0 +1,79 @@
+"""
+A paginated response type for returning lists of data with pagination metadata.
+"""
+type PaginatedResponse {
+    """
+    The list of items for the current page.
+    """
+    data: [Object!]!
+
+    """
+    Pagination metadata for navigating the result set.
+    """
+    paginatorInfo: PaginatorInfo!
+}
+
+"""
+Metadata for paginated responses, providing information about the current page and total items.
+"""
+type PaginatorInfo {
+    """
+    Number of items in the current page.
+    """
+    count: Int!
+
+    """
+    Current page number.
+    """
+    currentPage: Int!
+
+    """
+    Index of the first item in the current page.
+    """
+    firstItem: Int
+
+    """
+    Indicates if there are more pages available.
+    """
+    hasMorePages: Boolean!
+
+    """
+    Index of the last item in the current page.
+    """
+    lastItem: Int
+
+    """
+    Total number of pages.
+    """
+    lastPage: Int!
+
+    """
+    Number of items per page.
+    """
+    perPage: Int!
+
+    """
+    Total number of items across all pages.
+    """
+    total: Int!
+}
+
+"""
+Interface for models that can have comments (polymorphic relationship).
+"""
+interface Commentable {
+    """
+    Unique identifier of the commentable entity.
+    """
+    id: ID!
+}
+
+"""
+Interface for models that can have notes (polymorphic relationship).
+"""
+interface Notable {
+    """
+    Unique identifier of the notable entity.
+    """
+    id: ID!
+}

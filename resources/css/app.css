@@ -1,0 +1,430 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+@import "flowbite/src/themes/default";
+
+
+@plugin "flowbite/plugin";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source "../../node_modules/flowbite";
+
+@theme {
+    --font-sans: 'Instrument Sans', Gotham,Inter,   ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+
+
+@theme {
+    --color-zinc-50: var(--color-slate-50);
+    --color-zinc-100: var(--color-slate-100);
+    --color-zinc-200: var(--color-slate-200);
+    --color-zinc-300: var(--color-slate-300);
+    --color-zinc-400: var(--color-slate-400);
+    --color-zinc-500: var(--color-slate-500);
+    --color-zinc-600: var(--color-slate-600);
+    --color-zinc-700: var(--color-slate-700);
+    --color-zinc-800: var(--color-slate-800);
+    --color-zinc-900: var(--color-slate-900);
+    --color-zinc-950: var(--color-slate-950);
+
+    --color-primary-50: #f6f6f6;
+    --color-primary-100: #efefef;
+    --color-primary-200: #dcdcdc;
+    --color-primary-300: #bdbdbd;
+    --color-primary-400: #989898;
+    --color-primary-500: #7c7c7c;
+    --color-primary-600: #656565;
+    --color-primary-700: #525252;
+    --color-primary-800: #464646;
+    --color-primary-900: #3d3d3d;
+    --color-primary-950: #292929;
+
+    --color-green-50: #eefff0;
+    --color-green-100: #d7ffdd;
+    --color-green-200: #b2ffbe;
+    --color-green-300: #76ff8d;
+    --color-green-400: #25f447;
+    --color-green-500: #09de2c;
+    --color-green-600: #00b91f;
+    --color-green-700: #05901d;
+    --color-green-800: #0a711c;
+    --color-green-900: #0a5d1a;
+    --color-green-950: #00340b;
+
+    --color-gold-50: #ffffe7;
+    --color-gold-100: #feffc1;
+    --color-gold-200: #fffd86;
+    --color-gold-300: #fff341;
+    --color-gold-400: #ffe40d;
+    --color-gold-500: #ffd500;
+    --color-gold-600: #d19c00;
+    --color-gold-700: #a67002;
+    --color-gold-800: #89570a;
+    --color-gold-900: #74470f;
+    --color-gold-950: #442504;
+
+
+
+}
+[data-flux-select]{
+    @apply rounded-none
+}
+
+@theme {
+    --color-accent: var(--color-slate-800);
+    --color-accent-content: var(--color-slate-800);
+    --color-accent-foreground: var(--color-white);
+
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-white);
+        --color-accent-content: var(--color-white);
+        --color-accent-foreground: var(--color-slate-800);
+    }
+}
+
+.scrollable {
+    @apply overflow-scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.w-fill-available {
+    width: 100%;
+    width: -webkit-fill-available;
+    width: -moz-available;
+}
+
+.h-fill-available {
+    height: 100%; /* Fallback for browsers that don't support fill-available */
+    height: -webkit-fill-available; /* For WebKit-based browsers */
+    height: -moz-available; /* For Firefox */
+}
+
+/* Custom scrollbar styles */
+.scrollbar-custom::-webkit-scrollbar {
+    width: 1px;  /* Vertical scrollbar width */
+    height: 2px; /* Horizontal scrollbar height */
+
+}
+
+
+.scrollbar-custom::-webkit-scrollbar-track {
+    background: #e5e7eb; /* Gray-200 for both track directions */
+    border-radius: 2px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+    background: #6b7280; /* Gray-500 for both thumb directions */
+    border-radius: 1px;
+    cursor: pointer; /* 👈 Makes the hand cursor appear */
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: #4b5563; /* Gray-600 for both thumb directions on hover */
+}
+
+/* ===== ADMIN DASHBOARD ENHANCEMENTS ===== */
+
+/* Container and Layout */
+.admin-container {
+    @apply bg-gray-50 min-h-screen p-4 md:p-6 lg:p-8;
+}
+
+.admin-header {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8;
+}
+
+.admin-title {
+    @apply text-2xl md:text-3xl font-bold text-gray-900 mb-2;
+}
+
+.admin-subtitle {
+    @apply text-gray-600 text-sm md:text-base;
+}
+
+/* Stats Cards Grid */
+.stats-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8;
+}
+
+/* Individual Stats Cards */
+.stats-card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-300 hover:shadow-lg hover:border-blue-300 hover:-translate-y-1;
+}
+
+.stats-card-icon {
+    @apply w-12 h-12 rounded-lg flex items-center justify-center mb-4;
+}
+
+.stats-card-icon-blue {
+    @apply bg-blue-100;
+}
+
+.stats-card-icon-green {
+    @apply bg-green-100;
+}
+
+.stats-card-icon-yellow {
+    @apply bg-yellow-100;
+}
+
+.stats-card-icon-purple {
+    @apply bg-purple-100;
+}
+
+.stats-card-icon svg {
+    @apply w-6 h-6;
+}
+
+.stats-card-icon-blue svg {
+    @apply text-blue-600;
+}
+
+.stats-card-icon-green svg {
+    @apply text-green-600;
+}
+
+.stats-card-icon-yellow svg {
+    @apply text-yellow-600;
+}
+
+.stats-card-icon-purple svg {
+    @apply text-purple-600;
+}
+
+.stats-card-content {
+    @apply space-y-1;
+}
+
+.stats-card-label {
+    @apply text-sm font-medium text-gray-600;
+}
+
+.stats-card-value {
+    @apply text-2xl font-bold text-gray-900;
+}
+
+/* Chart Containers */
+.chart-container {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+}
+
+.chart-title {
+    @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+.chart-placeholder {
+    @apply bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 h-64 flex items-center justify-center;
+}
+
+.chart-placeholder-content {
+    @apply text-center;
+}
+
+.chart-placeholder-icon {
+    @apply w-12 h-12 text-gray-400 mx-auto mb-3;
+}
+
+.chart-placeholder-text {
+    @apply text-sm text-gray-500;
+}
+
+/* Activity and Task Cards */
+.activity-card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+}
+
+.activity-title {
+    @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+.activity-list {
+    @apply space-y-4;
+}
+
+.activity-item {
+    @apply flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200;
+}
+
+.activity-dot {
+    @apply w-2 h-2 rounded-full mt-2 flex-shrink-0;
+}
+
+.activity-dot-blue {
+    @apply bg-blue-500;
+}
+
+.activity-dot-red {
+    @apply bg-red-500;
+}
+
+.activity-dot-yellow {
+    @apply bg-yellow-500;
+}
+
+.activity-dot-green {
+    @apply bg-green-500;
+}
+
+.activity-content {
+    @apply flex-1 min-w-0;
+}
+
+.activity-text {
+    @apply text-sm font-medium text-gray-900 break-words;
+}
+
+.activity-time {
+    @apply text-xs text-gray-500 mt-1;
+}
+
+/* Quick Actions */
+.quick-actions-container {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+}
+
+.quick-actions-title {
+    @apply text-lg font-semibold text-gray-900 mb-6;
+}
+
+.quick-actions-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+}
+
+.quick-action-btn {
+    @apply flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 hover:shadow-sm;
+}
+
+.quick-action-icon {
+    @apply w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 transition-colors duration-200;
+}
+
+.quick-action-icon svg {
+    @apply w-6 h-6 text-gray-600 transition-colors duration-200;
+}
+
+.quick-action-label {
+    @apply text-xs font-medium text-gray-700 text-center transition-colors duration-200;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-container {
+        @apply p-4;
+    }
+    
+    .stats-grid {
+        @apply grid-cols-1 gap-4;
+    }
+    
+    .quick-actions-grid {
+        @apply grid-cols-2 gap-3;
+    }
+    
+    .quick-action-btn {
+        @apply p-3;
+    }
+    
+    .quick-action-icon {
+        @apply w-10 h-10;
+    }
+    
+    .quick-action-icon svg {
+        @apply w-5 h-5;
+    }
+}
+
+/* Loading States */
+.loading-skeleton {
+    @apply bg-gray-200 rounded animate-pulse;
+}
+
+.loading-text {
+    @apply bg-gray-200 h-4 rounded animate-pulse;
+}
+
+.loading-text-sm {
+    @apply bg-gray-200 h-3 rounded animate-pulse w-3/4;
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Focus and Accessibility */
+.focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .admin-container {
+        @apply bg-gray-900;
+    }
+    
+    .admin-header,
+    .stats-card,
+    .chart-container,
+    .activity-card,
+    .quick-actions-container {
+        @apply bg-gray-800 border-gray-700;
+    }
+    
+    .admin-title,
+    .chart-title,
+    .activity-title,
+    .quick-actions-title {
+        @apply text-white;
+    }
+    
+    .admin-subtitle,
+    .stats-card-label,
+    .activity-text,
+    .quick-action-label {
+        @apply text-gray-300;
+    }
+    
+    .stats-card-value {
+        @apply text-white;
+    }
+    
+    .quick-action-btn {
+        @apply border-gray-600 hover:border-blue-500 hover:bg-blue-900;
+    }
+}
+
+
+
+
+

@@ -1,0 +1,72 @@
+<?php
+
+
+
+use App\Enum\ApprovalStatus;
+use App\Enum\ProjectStatus;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('bank_infos', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('code')->unique();
+            $table->foreignUuid('employee_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('bank_id')->constrained()->cascadeOnDelete();
+            $table->string('account_number');
+            $table->string('account_name');
+            $table->boolean('is_active')->default(true);
+            $table->date('activation_date')->nullable();
+            $table->date('deactivation_date')->nullable();
+            $table->enum('approval_status', ApprovalStatus::values())
+                ->default(ApprovalStatus::NotApplicable)
+                ->comment('Approval status of the record');
+
+            $table->boolean('is_locked')
+                ->default(false)
+                ->comment('Indicates if record is locked from edits');
+
+            $table->foreignUuid('locked_by')
+                ->nullable()
+                ->comment('User who locked the record')
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->foreignUuid('created_by')
+                ->nullable()
+                ->comment('User who created the record')
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->foreignUuid('updated_by')
+                ->nullable()
+                ->comment('User who last updated the record')
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->foreignUuid('deleted_by')
+                ->nullable()
+                ->comment('User who last updated the record')
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->softDeletes();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('bank_infos');
+    }
+};

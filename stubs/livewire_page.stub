@@ -1,0 +1,22 @@
+<?php
+
+namespace [namespace];
+
+use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+#[Title('SGA | C-HRMS | [pluralModel]')]
+
+class [class] extends Component
+{
+    #[On('[snakeModel]Notification')]
+    public function handleNotification(): void
+    {
+
+    }
+    public function render():object
+    {
+        return view('[view]');
+    }
+}

@@ -1,0 +1,59 @@
+"""
+Input type for creating or updating a user.
+"""
+input UserInput {
+    """
+    User's first name.
+    """
+    first_name: String!
+
+    """
+    User's middle name, if applicable.
+    """
+    middle_name: String
+
+    """
+    User's last name, if applicable.
+    """
+    last_name: String
+
+    """
+    Unique username for authentication.
+    """
+    username: String!
+
+    """
+    User's email address, if provided.
+    """
+    email: String
+
+    """
+    User's phone number for contact and verification.
+    """
+    phone_number: String!
+
+    """
+    User's password for authentication (hashed on the server).
+    """
+    password: String!
+
+    """
+    User's role, determining their permissions within the system.
+    """
+    role: UserRole!
+
+    """
+    Timestamp when the user's phone number was verified.
+    """
+    phone_verified_at: DateTime
+
+    """
+    Timestamp when the user's email was verified.
+    """
+    email_verified_at: DateTime
+
+    """
+    Timestamp when the user's password was last changed.
+    """
+    password_changed_at: DateTime
+}

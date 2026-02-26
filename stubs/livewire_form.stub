@@ -1,0 +1,206 @@
+<?php
+
+namespace [namespace];
+
+use App\Helpers\FormattedIdHelper;
+use App\Models\[model];
+use App\Livewire\Forms\[model]Form;
+use Exception;
+use Flux\Flux;
+use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+
+class [class] extends Component
+{
+    use WithFileUploads;
+    public [model]Form $form;
+    public ?string $selectedId = null;
+    public bool $idNullWarningModal = false;
+
+    #[On('[camelModel]-selected')]
+    public function handleSelected(array $data = []): void
+    {
+        $this->selectedId = $data['id'] ?? null;
+        if ($[camelModel] = [model]::find($this->selectedId)) {
+            $this->form->setData($[camelModel]);
+            Log::info("[model] selected with ID: {$this->selectedId}");
+        } else {
+            Log::warning("[model] not found for ID: {$this->selectedId}");
+            $this->dispatch('[snakeModel]Notification', ['message' => 'Selected [model] not found.', 'type' => 'error']);
+        }
+    }
+    public function render():object
+    {
+        return view('[view]',
+        []
+        );
+    }
+    public function mount(?string $id = null): void
+    {
+        $this->generateCode();
+        if ($id && $[camelModel] = [model]::find($id)) {
+            $this->selectedId = $id;
+            $this->form->setData($[camelModel]);
+        }
+    }
+
+    protected function generateCode(): void
+    {
+        $this->form->code = FormattedIdHelper::getNextFormattedCode([model]::class, 'SGA', 5);
+    }
+
+
+    #[On('[model]ClosePage')]
+    public function handleClosePage(): void
+    {
+        $this->redirect('/', navigate: true);
+    }
+
+    #[On('[model]New')]
+    public function handleNew(): void
+    {
+        if ($this->selectedId) {
+            $this->selectedId = null;
+            $this->form->clearData();
+            $this->generateCode();
+            $this->dispatch('[snakeModel]Notification', ['message' => 'Form reset for new user.', 'type' => 'info']);
+            $this->redirect('/[pluralCamelModel]', navigate: true);
+        } else {
+            $this->generateCode();
+        }
+
+        sleep(1);
+        Flux::modal('loadingPage')->close();
+    }
+
+    public function reloadPage(): void
+    {
+        $this->dispatch('reload-page');
+        $this->redirect('/[pluralCamelModel]', navigate: true);
+    }
+
+    #[On('[model]Create')]
+    public function handleCreate(): void
+    {
+        if ($this->selectedId) {
+            Flux::toast('Creation of a new [model] is not allowed while an existing [model] is selected. Please click on New Item button before proceeding.', 'Error', 10000,variant: 'danger',position:"top right");
+            Log::info("Unable to create a new [model] because an existing [model] is currently selected. Selected [model] ID: {$this->selectedId}.");
+            $this->dispatch('[snakeModel]Notification', [
+                'message' => 'Creation of a new [model] is not allowed while an existing [model] is selected. Please deselect the current [model] before proceeding.',
+                'type' => 'error'
+            ]);
+            return;
+
+        }
+        $result = $this->form->storeData();
+        if ($result['success']) {
+
+            $this->dispatch('[snakeModel]Notification', ['message' => $result['message'], 'type' => 'success']);
+            sleep(1);
+            Flux::modal('loadingPage')->close();
+
+        } else {
+
+            sleep(1);
+            Flux::modal('loadingPage')->close();
+            $this->dispatch('[snakeModel]Notification', ['message' => $result['message'], 'type' => 'error']);
+            return;
+        }
+    }
+
+    #[On('[model]Save')]
+    public function handleSave(): void
+    {
+        if (!$this->selectedId) {
+            Log::info('Cannot save [model] because no [model] is currently selected.');
+
+            Flux::toast(
+                'Cannot update [model] because no [model] is selected. Please select a [model] from the list before attempting to update.',
+                'Error',
+                10000,
+                variant: 'danger',
+                position: 'top right'
+            );
+
+            $this->dispatch('[snakeModel]Notification', [
+                'message' => 'No [model] selected to save. Please select one before proceeding.',
+                'type' => 'error'
+            ]);
+
+
+            sleep(1);
+            Flux::modal('loadingPage')->close();
+            return;
+        }
+
+        $result = $this->form->updateData();
+        if ($result['success']) {
+            $this->form->clearData(); // Clear form data on success
+            $this->dispatch('[snakeModel]Notification', ['message' => $result['message'], 'type' => 'success']);
+            $this->redirect('/[pluralCamelModel]', navigate: true);
+        } else {
+            $this->dispatch('[snakeModel]Notification', ['message' => $result['message'], 'type' => 'error']);
+        }
+    }
+
+    #[On('[model]Delete')]
+    public function handleDelete(): void
+    {
+
+        if (!$this->selectedId) {
+            Log::info('Cannot delete [model] because no [model] is currently selected.');
+
+            Flux::toast(
+                'Cannot delete [model] because no [model] is selected. Please select a [model] from the list before attempting to delete.',
+                'Error',
+                10000,
+                variant: 'danger',
+                position: 'top right'
+            );
+
+            $this->dispatch('[snakeModel]Notification', ['message' => 'No user selected to delete.', 'type' => 'error']);
+
+            sleep(2);
+            Flux::modal('loadingPage')->close();
+            return;
+        }
+        sleep(2);
+        Flux::modal('loadingPage')->close();
+        Flux::modal('DeleteConfirm')->show();
+
+    }
+
+    public function delete[model](): void
+    {
+        try{
+            Flux::modal('loadingPage')->show();
+            $user = [model]::find($this->selectedId);
+            $user->delete();
+            $this->dispatch('[snakeModel]Notification', ['message' => '[model] deleted successfully', 'type' => 'success']);
+            $this->reloadPage();
+        }
+        catch (Exception $e) {
+            $this->dispatch('[snakeModel]Notification', ['message' => 'Error deleting [model]: ' . $e->getMessage(), 'type' => 'error']);
+        }
+        finally {
+            Flux::modal('loadingPage')->close();
+        }
+
+    }
+
+
+
+    #[On('[model]Cancel')]
+    public function handleCancel(): void
+    {
+        $this->selectedId = null;
+        $this->form->clearData();
+        $this->generateCode();
+        $this->reloadPage();
+        sleep(2);
+        Flux::modal('loadingPage')->close();
+    }
+}
+

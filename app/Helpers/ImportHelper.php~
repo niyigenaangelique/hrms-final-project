@@ -1,0 +1,310 @@
+<?php
+
+namespace App\Helpers;
+
+use Spatie\SimpleExcel\SimpleExcelReader;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Spatie\SimpleExcel\SimpleExcelWriter;
+
+class ImportHelper
+{
+    protected array $allowedFields = [];
+    protected array $validationRules = [];
+    protected bool $hasHeaders = true;
+    protected bool $trimHeaders = false;
+    protected bool $convertToSnakeCase = false;
+    protected int $headerOnRow = 0;
+    protected bool $preserveEmptyRows = false;
+    protected bool $preserveDateTimeFormatting = false;
+    protected array $defaultValues = [];
+    protected int $batchSize = 100;
+    protected int $chunkSize = 100;
+    protected string $errorLogFile = '';
+    protected bool $useTransactions = true; // Use database transactions for batch inserts
+
+    /**
+     * Constructor to initialize configuration.
+     *
+     * @param array $allowedFields Array of allowed fields
+     * @param array $validationRules Validation rules for import
+     * @param string $errorLogFile Path to error log file
+     */
+    public function __construct(array $allowedFields = [], array $validationRules = [], string $errorLogFile = 'excel_errors.log')
+    {
+        $this->validateAllowedFields($allowedFields);
+        $this->allowedFields = $allowedFields;
+        $this->validationRules = $validationRules;
+        $this->errorLogFile = storage_path('logs/' . $errorLogFile);
+    }
+
+    // Configuration methods
+    public function setHasHeaders(bool $hasHeaders): self
+    {
+        $this->hasHeaders = $hasHeaders;
+        return $this;
+    }
+
+    public function setTrimHeaders(bool $trimHeaders): self
+    {
+        $this->trimHeaders = $trimHeaders;
+        return $this;
+    }
+
+    public function setConvertToSnakeCase(bool $convertToSnakeCase): self
+    {
+        $this->convertToSnakeCase = $convertToSnakeCase;
+        return $this;
+    }
+
+    public function setHeaderOnRow(int $headerOnRow): self
+    {
+        $this->headerOnRow = $headerOnRow;
+        return $this;
+    }
+
+    public function setPreserveEmptyRows(bool $preserveEmptyRows): self
+    {
+        $this->preserveEmptyRows = $preserveEmptyRows;
+        return $this;
+    }
+
+    public function setPreserveDateTimeFormatting(bool $preserveDateTimeFormatting): self
+    {
+        $this->preserveDateTimeFormatting = $preserveDateTimeFormatting;
+        return $this;
+    }
+
+    public function setDefaultValues(array $defaultValues): self
+    {
+        $this->defaultValues = $defaultValues;
+        return $this;
+    }
+
+    public function setBatchSize(int $batchSize): self
+    {
+        $this->batchSize = $batchSize;
+        return $this;
+    }
+
+    public function setChunkSize(int $chunkSize): self
+    {
+        $this->chunkSize = $chunkSize;
+        return $this;
+    }
+
+    public function setUseTransactions(bool $useTransactions): self
+    {
+        $this->useTransactions = $useTransactions;
+        return $this;
+    }
+
+    /**
+     * Import data from an Excel/CSV file into the database.
+     *
+     * @param string $filePath Path to the uploaded file
+     * @param string $modelClass Fully qualified model class name
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function importData(string $filePath, string $modelClass): array
+    {
+        try {
+            // Initialize the reader
+            $reader = SimpleExcelReader::create($filePath);
+
+            // Configure the reader based on settings
+            if (!$this->hasHeaders) {
+                $reader = $reader->noHeaderRow();
+            }
+            if ($this->trimHeaders) {
+                $reader = $reader->trimHeaderRow();
+            }
+            if ($this->convertToSnakeCase) {
+                $reader = $reader->headersToSnakeCase();
+            }
+            if ($this->headerOnRow > 0) {
+                $reader = $reader->headerOnRow($this->headerOnRow);
+            }
+            if ($this->preserveEmptyRows) {
+                $reader = $reader->preserveEmptyRows();
+            }
+            if ($this->preserveDateTimeFormatting) {
+                $reader = $reader->preserveDateTimeFormatting();
+            }
+
+            // Get the header row (column names)
+            $headerRow = $this->hasHeaders ? $reader->getHeaders() : [];
+
+            // Check if all required fields are present in the header row
+            foreach ($this->allowedFields as $field) {
+                if ($this->hasHeaders && !in_array($field, $headerRow)) {
+                    return [
+                        'success' => false,
+                        'message' => "Missing required column: $field",
+                    ];
+                }
+            }
+
+            $totalRows = 0;
+            $errorCount = 0;
+            $insertedRows = 0;
+            $batchData = [];
+            $errors = [];
+
+            // Process rows in chunks
+            $reader->getRows()->each(function ($row, $index) use (
+                &$totalRows,
+                &$errorCount,
+                &$insertedRows,
+                &$batchData,
+                &$errors,
+                $modelClass
+            ) {
+                $totalRows++;
+
+                // Create an array of data to insert into the database
+                $data = [];
+                foreach ($this->allowedFields as $field) {
+                    $data[$field] = $row[$field] ?? null; // Handle missing values
+                }
+
+                // Apply default values if not already set in the row
+                foreach ($this->defaultValues as $key => $value) {
+                    if (!isset($data[$key]) || is_null($data[$key])) {
+                        $data[$key] = $value;
+                    }
+                }
+
+                // Validate the data before saving
+                $validator = Validator::make($data, $this->validationRules);
+                if ($validator->fails()) {
+                    // Collect detailed validation errors for the current row
+                    $errorDetails = [];
+                    foreach ($validator->errors()->messages() as $field => $messages) {
+                        foreach ($messages as $message) {
+                            $errorDetails[] = "$field: $message";
+                        }
+                    }
+
+                    // Add the row data and error details to the errors array
+                    $errors[] = [
+                        'rowNumber' => $index + 1, // Adjust index to start from 1
+                        'rowData' => $data,
+                        'errorMessage' => implode('; ', $errorDetails),
+                    ];
+                    $errorCount++;
+                    return;
+                }
+
+                // Add the row to the batch
+                $batchData[] = $data;
+
+                // Insert data in batches with optional transactions
+                if (count($batchData) >= $this->batchSize) {
+                    $this->insertBatch($batchData, $modelClass);
+                    $insertedRows += count($batchData);
+                    $batchData = []; // Clear the batch
+                }
+
+                // Log errors in chunks
+                if (count($errors) >= $this->chunkSize) {
+                    $this->logErrors($errors);
+                    $errors = []; // Clear the error buffer
+                }
+            });
+
+            // Insert any remaining rows in the last batch
+            if (!empty($batchData)) {
+                $this->insertBatch($batchData, $modelClass);
+                $insertedRows += count($batchData);
+            }
+
+            // Log any remaining errors
+            if (!empty($errors)) {
+                $this->logErrors($errors);
+            }
+
+            if ($errorCount > 0) {
+                return [
+                    'success' => false,
+                    'message' => "$insertedRows rows imported successfully, but $errorCount rows failed validation. Please check the logs for details.",
+                ];
+            } else {
+                return [
+                    'success' => true,
+                    'message' => "$insertedRows rows imported successfully!",
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Excel import failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error importing data: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Insert a batch of rows into the database.
+     *
+     * @param array $batchData Array of rows to insert
+     * @param string $modelClass Fully qualified model class name
+     */
+    protected function insertBatch(array $batchData, string $modelClass): void
+    {
+        if ($this->useTransactions) {
+            DB::transaction(function () use ($batchData, $modelClass) {
+                DB::table((new $modelClass)->getTable())->insert($batchData);
+            });
+        } else {
+            DB::table((new $modelClass)->getTable())->insert($batchData);
+        }
+    }
+
+    /**
+     * Log errors to a file or stream them directly to the browser.
+     *
+     * @param array $errors List of error messages
+     * @param string|null $filePath Path to save the error log file (null for streaming)
+     */
+    protected function logErrors(array $errors, ?string $filePath = null): void
+    {
+        if ($filePath) {
+            $writer = SimpleExcelWriter::create($filePath);
+        } else {
+            $writer = SimpleExcelWriter::streamDownload('error_log.xlsx');
+        }
+
+        // Define headers (same as allowed fields + error message column)
+        $headers = $this->allowedFields;
+        $headers[] = 'Error Message';
+        $writer->addRow($headers);
+
+        // Add each error row to the writer
+        foreach ($errors as $error) {
+            $formattedRow = array_values($error['rowData']); // Extract row data
+            $formattedRow[] = $error['errorMessage']; // Append error message
+            $writer->addRow($formattedRow);
+        }
+
+        if ($filePath) {
+            $writer->close();
+        } else {
+            $writer->toBrowser();
+        }
+    }
+
+    /**
+     * Validate allowed fields.
+     *
+     * @param array $allowedFields Fields to validate
+     * @throws InvalidArgumentException If validation fails
+     */
+    protected function validateAllowedFields(array $allowedFields): void
+    {
+        if (empty($allowedFields)) {
+            throw new \InvalidArgumentException('Allowed fields cannot be empty.');
+        }
+    }
+}
