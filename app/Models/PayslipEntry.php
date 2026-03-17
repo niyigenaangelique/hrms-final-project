@@ -28,18 +28,20 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $code
  * @property string $payroll_entry_id
  * @property string $gross_pay
+ * @property string $taxable_income // Added for transparency
  * @property string $paye
  * @property string $pension
  * @property string $maternity
  * @property string $cbhi
  * @property string $employer_contribution
  * @property string $net_pay
- *
  * @property string $created_by
  * @property string $updated_by
  * @property string $locked_by
  * @property string $deleted_by
  * @property ApprovalStatus $approval_status
+ * @property string $tax_bracket_used // Added calculation metadata
+ * @property float $effective_tax_rate // Added calculation metadata
  *
  * @property-read Collection|Comment[] $comments
  * @property-read Collection|Note[] $notes
@@ -72,6 +74,7 @@ class PayslipEntry extends Model
         'payroll_entry_id',
 
         'gross_pay',
+        'taxable_income', // Added for transparency
         'paye',
         'pension',
         'maternity',
@@ -87,18 +90,24 @@ class PayslipEntry extends Model
         'created_by',
         'updated_by',
         'deleted_by',
+
+        // Added calculation metadata
+        'tax_bracket_used',
+        'effective_tax_rate',
     ];
 
     protected function casts(): array
     {
         return [
             'gross_pay' => 'decimal:2',
+            'taxable_income' => 'decimal:2', // Added for transparency
             'paye' => 'decimal:2',
             'pension' => 'decimal:2',
             'maternity' => 'decimal:2',
             'cbhi' => 'decimal:2',
             'employer_contribution' => 'decimal:2',
             'net_pay' => 'decimal:2',
+            'effective_tax_rate' => 'decimal:2', // Added calculation metadata
 
             'is_locked' => 'boolean',
             'status' => PayslipStatus::class,

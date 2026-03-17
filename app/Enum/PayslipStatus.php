@@ -5,7 +5,7 @@ namespace App\Enum;
 enum PayslipStatus: string
 {
     case Entered = 'Entered';
-    case Rejected = 'Rejected';
+    case Generated = 'Generated';
     case Approved = 'Approved';
     case Printed = 'printed';
     case Posted = 'Posted';
@@ -18,13 +18,10 @@ enum PayslipStatus: string
     {
         return match ($this) {
             self::Entered => 'Entered - Attendance log has been entered but not posted yet.',
-            self::Rejected => 'Rejected - Attendance log has been rejected and requires changes before it can be posted again.',
+            self::Generated => 'Generated - Payslip has been generated and is ready for review.',
             self::Approved => 'Approved - Attendance log has been approved and is ready for printing.',
             self::Printed => 'Printed - Attendance log has been printed and is ready for posting.',
             self::Posted => 'Posted - Attendance log has been posted to the payroll system.',
-
-
-
         };
     }
 

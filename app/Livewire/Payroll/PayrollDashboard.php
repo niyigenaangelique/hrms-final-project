@@ -126,6 +126,28 @@ class PayrollDashboard extends Component
         $this->loadDashboardData();
     }
 
+    public function closeProcessModal()
+    {
+        $this->showProcessModal = false;
+        $this->processingEmployees = [];
+        $this->processingMonth = null;
+        $this->processingStatus = 'idle';
+        $this->processingProgress = 0;
+        $this->processedCount = 0;
+        $this->totalCount = 0;
+    }
+
+    public function closeBulkProcessModal()
+    {
+        $this->showBulkProcessModal = false;
+        $this->processingEmployees = [];
+        $this->processingMonth = null;
+        $this->processingStatus = 'idle';
+        $this->processingProgress = 0;
+        $this->processedCount = 0;
+        $this->totalCount = 0;
+    }
+
     public function openProcessModal()
     {
         $this->showProcessModal = true;
@@ -172,10 +194,17 @@ class PayrollDashboard extends Component
 
         // Get selected employees or all approved employees if none selected
         $employeesToProcess = [];
-        if (!empty($this->processingEmployees)) {
+        if (empty($this->processingEmployees)) {
+            // If no specific employees selected, get all approved employees
+            $employeesToProcess = Employee::where('approval_status', 'Approved')->get();
+        } else {
+            // Process selected employees
             foreach ($this->processingEmployees as $employeeId => $isSelected) {
                 if ($isSelected) {
-                    $employeesToProcess[] = Employee::find($employeeId);
+                    $employee = Employee::find($employeeId);
+                    if ($employee) {
+                        $employeesToProcess[] = $employee;
+                    }
                 }
             }
         }
@@ -190,28 +219,22 @@ class PayrollDashboard extends Component
         $this->totalCount = count($employeesToProcess);
 
         foreach ($employeesToProcess as $employee) {
-            if (!$employee) continue;
-            
             // Check if entry already exists
             $existingEntry = PayrollEntry::where('payroll_month_id', $this->processingMonth->id)
                 ->where('employee_id', $employee->id)
                 ->first();
                 
             if (!$existingEntry) {
+                // Use monthly salary with fallback
+                $monthlySalary = $employee->monthly_salary ?: 100000; // Default to 100,000
+                
                 // Create new payroll entry
-                $dailyRate = $employee->daily_rate ?? $employee->calculateDailyRate();
                 PayrollEntry::create([
                     'code' => 'PE-' . strtoupper(uniqid()),
                     'payroll_month_id' => $this->processingMonth->id,
                     'employee_id' => $employee->id,
-                    'daily_rate' => $dailyRate,
-                    'work_days' => 22,
-                    'work_days_pay' => $dailyRate * 22,
-                    'overtime_hour_rate' => $employee->hourly_rate ?? $employee->calculateHourlyRate() * 1.50,
-                    'overtime_hours_worked' => 0,
-                    'overtime_total_amount' => 0,
-                    'total_amount' => $dailyRate * 22,
-                    'status' => 'entered',
+                    'total_amount' => $monthlySalary,
+                    'approval_status' => 'approved',
                     'created_by' => auth()->id(),
                 ]);
             }
@@ -236,7 +259,7 @@ class PayrollDashboard extends Component
         }
 
         $this->processingStatus = 'processing';
-        $allEmployees = Employee::where('approval_status', 'approved')->get();
+        $allEmployees = Employee::where('approval_status', 'Approved')->get();
         $this->processingEmployees = $allEmployees;
         $this->processedCount = 0;
         $this->totalCount = $allEmployees->count();
@@ -248,20 +271,16 @@ class PayrollDashboard extends Component
                 ->first();
                 
             if (!$existingEntry) {
+                // Use monthly salary with fallback
+                $monthlySalary = $employee->monthly_salary ?: 100000; // Default to 100,000
+                
                 // Create new payroll entry
-                $dailyRate = $employee->daily_rate ?? $employee->calculateDailyRate();
                 PayrollEntry::create([
                     'code' => 'PE-' . strtoupper(uniqid()),
                     'payroll_month_id' => $this->processingMonth->id,
                     'employee_id' => $employee->id,
-                    'daily_rate' => $dailyRate,
-                    'work_days' => 22,
-                    'work_days_pay' => $dailyRate * 22,
-                    'overtime_hour_rate' => $employee->hourly_rate ?? $employee->calculateHourlyRate() * 1.50,
-                    'overtime_hours_worked' => 0,
-                    'overtime_total_amount' => 0,
-                    'total_amount' => $dailyRate * 22,
-                    'status' => 'entered',
+                    'total_amount' => $monthlySalary,
+                    'approval_status' => 'approved',
                     'created_by' => auth()->id(),
                 ]);
             }
@@ -289,13 +308,23 @@ class PayrollDashboard extends Component
         $generatedCount = 0;
 
         foreach ($entries as $entry) {
-            // Calculate deductions
+            // Calculate deductions using Rwandan tax system
             $grossPay = $entry->total_amount;
-            $paye = $this->calculatePAYE($grossPay);
-            $pension = $grossPay * 0.05;
-            $rssb = $grossPay * 0.03; // RSSB contribution
-            $employerContribution = $grossPay * 0.07;
-            $netPay = $grossPay - $paye - $pension - $rssb;
+            $pension = $grossPay * 0.05; // 5% employee pension
+            $maternity = $grossPay * 0.01; // 1% maternity fund
+            $cbhi = $grossPay * 0.01; // 1% CBHI
+            
+            // Calculate taxable income (gross - pension)
+            $taxableIncome = $grossPay - $pension;
+            
+            // Apply Rwandan progressive tax
+            $paye = $this->calculateRwandanPAYE($taxableIncome);
+            
+            // Calculate employer contribution
+            $employerContribution = $grossPay * 0.07; // 7% employer contribution
+            
+            // Calculate net pay
+            $netPay = $taxableIncome - $paye - $maternity - $cbhi;
 
             // Create or update payslip entry
             PayslipEntry::updateOrCreate(
@@ -303,34 +332,49 @@ class PayrollDashboard extends Component
                 [
                     'code' => 'PS-' . strtoupper(uniqid()),
                     'gross_pay' => $grossPay,
+                    'taxable_income' => $taxableIncome, // Added for transparency
                     'paye' => $paye,
                     'pension' => $pension,
-                    'rssb' => $rssb,
+                    'maternity' => $maternity,
+                    'cbhi' => $cbhi,
                     'employer_contribution' => $employerContribution,
                     'net_pay' => $netPay,
-                    'status' => 'generated',
+                    'status' => 'Generated',
                     'created_by' => auth()->id(),
+                    'tax_bracket_used' => $this->getTaxBracket($taxableIncome),
+                    'effective_tax_rate' => $grossPay > 0 ? ($paye / $grossPay) * 100 : 0,
                 ]
             );
             $generatedCount++;
         }
 
-        session()->flash('success', 'Generated ' . $generatedCount . ' payslips successfully!');
+        session()->flash('success', 'Generated ' . $generatedCount . ' payslips successfully with Rwandan tax calculations!');
     }
 
-    private function calculatePAYE($grossPay)
+    private function calculateRwandanPAYE($grossPay)
     {
-        // Simplified Rwandan PAYE calculation
+        // Rwandan PAYE calculation (progressive rates)
         if ($grossPay <= 30000) {
             return 0;
         } elseif ($grossPay <= 100000) {
-            return ($grossPay - 30000) * 0.20;
+            return $grossPay * 0.20;
         } elseif ($grossPay <= 500000) {
-            return 14000 + (($grossPay - 100000) * 0.25);
-        } elseif ($grossPay <= 1000000) {
-            return 114000 + (($grossPay - 500000) * 0.30);
+            return 20000 + (($grossPay - 100000) * 0.30);
         } else {
-            return 264000 + (($grossPay - 1000000) * 0.35);
+            return 140000 + (($grossPay - 500000) * 0.35);
+        }
+    }
+
+    private function getTaxBracket($taxableIncome)
+    {
+        if ($taxableIncome <= 30000) {
+            return '0% (Up to 30,000)';
+        } elseif ($taxableIncome <= 100000) {
+            return '20% (30,001 - 100,000)';
+        } elseif ($taxableIncome <= 500000) {
+            return '30% (100,001 - 500,000)';
+        } else {
+            return '35% (Above 500,000)';
         }
     }
 

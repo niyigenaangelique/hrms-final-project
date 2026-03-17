@@ -132,7 +132,7 @@
 /* ── Message history ───────────────────────────────────── */
 .hcom-history-head { padding: 20px 24px 16px; border-bottom: 1px solid rgba(0,0,0,0.055); }
 .hcom-history-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0; }
-.hcom-history-body { padding: 16px 24px 24px; max-height: 400px; overflow-y: auto; }
+.hcom-history-body { padding: 16px 24px 24px; }
 
 .hcom-message {
     background: rgba(255,255,255,0.5);

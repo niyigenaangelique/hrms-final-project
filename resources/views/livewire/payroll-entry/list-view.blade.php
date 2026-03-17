@@ -118,12 +118,12 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                    @if($entry->status === 'entered') bg-blue-100 text-blue-800
-                                    @elseif($entry->status === 'processed') bg-yellow-100 text-yellow-800
-                                    @elseif($entry->status === 'paid') bg-green-100 text-green-800
+                                    @if($entry->status->value === 'entered') bg-blue-100 text-blue-800
+                                    @elseif($entry->status->value === 'processed') bg-yellow-100 text-yellow-800
+                                    @elseif($entry->status->value === 'paid') bg-green-100 text-green-800
                                     @else bg-gray-100 text-gray-800
                                     @endif">
-                                    {{ ucfirst($entry->status) }}
+                                    {{ ucfirst($entry->status->value) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

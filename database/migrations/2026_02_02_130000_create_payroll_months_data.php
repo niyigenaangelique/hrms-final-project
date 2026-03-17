@@ -38,7 +38,7 @@ return new class extends Migration
             $endDate = date('Y-m-t', strtotime($startDate));
             $monthName = date('F', strtotime($startDate));
             
-            DB::table('payroll_months')->insert([
+            DB::table('payroll_months')->insertOrIgnore([
                 'id' => \Illuminate\Support\Str::uuid(),
                 'code' => 'PM-' . $currentYear . '-' . str_pad($month, 2, '0', STR_PAD_LEFT),
                 'name' => $monthName . ' ' . $currentYear . ' Payroll',

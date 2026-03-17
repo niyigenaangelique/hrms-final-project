@@ -77,49 +77,78 @@ class PayslipGenerator extends Component
             return;
         }
 
-        // Calculate deductions based on Tanzanian tax rates
+        // Use individual employee tax calculation approach
         $grossPay = $payrollEntry->total_amount;
-        $paye = $this->calculatePAYE($grossPay);
+        
+        // Get employee-specific tax settings (could be stored in employee preferences)
+        $employee = $payrollEntry->employee;
+        
+        // Calculate statutory deductions using Rwandan tax rates
         $pension = $grossPay * 0.05; // 5% employee pension
         $maternity = $grossPay * 0.01; // 1% maternity fund
         $cbhi = $grossPay * 0.01; // 1% CBHI
+        
+        // Calculate taxable income (gross - pension)
+        $taxableIncome = $grossPay - $pension;
+        
+        // Apply Rwandan progressive tax
+        $paye = $this->calculateRwandanPAYE($taxableIncome);
+        
+        // Calculate employer contribution
         $employerContribution = $grossPay * 0.07; // 7% employer contribution
-        $netPay = $grossPay - $paye - $pension - $maternity - $cbhi;
-
-        // Create or update payslip entry
+        
+        // Calculate net pay
+        $netPay = $taxableIncome - $paye - $maternity - $cbhi;
+        
+        // Create or update payslip entry with detailed breakdown
         $payslipEntry = PayslipEntry::updateOrCreate(
             ['payroll_entry_id' => $payrollEntryId],
             [
                 'code' => 'PS-' . strtoupper(uniqid()),
                 'gross_pay' => $grossPay,
+                'taxable_income' => $taxableIncome, // Added for transparency
                 'paye' => $paye,
                 'pension' => $pension,
                 'maternity' => $maternity,
                 'cbhi' => $cbhi,
                 'employer_contribution' => $employerContribution,
                 'net_pay' => $netPay,
-                'status' => 'generated',
+                'status' => 'Generated',
                 'created_by' => auth()->id(),
+                // Add calculation metadata
+                'tax_bracket_used' => $this->getTaxBracket($taxableIncome),
+                'effective_tax_rate' => $grossPay > 0 ? ($paye / $grossPay) * 100 : 0,
             ]
         );
 
-        session()->flash('success', 'Payslip generated successfully for ' . $payrollEntry->employee->first_name . ' ' . $payrollEntry->employee->last_name);
+        session()->flash('success', 'Payslip generated successfully for ' . $payrollEntry->employee->first_name . ' ' . $payrollEntry->employee->last_name . ' (Tax Rate: ' . number_format(($paye / $grossPay) * 100, 1) . '%)');
         $this->loadPayrollEntries();
     }
 
-    private function calculatePAYE($grossPay)
+    private function calculateRwandanPAYE($grossPay)
     {
-        // Simplified Tanzanian PAYE calculation (for demonstration)
-        if ($grossPay <= 170000) {
+        // Rwandan PAYE calculation (progressive rates)
+        if ($grossPay <= 30000) {
             return 0;
-        } elseif ($grossPay <= 360000) {
-            return ($grossPay - 170000) * 0.09;
-        } elseif ($grossPay <= 540000) {
-            return 17100 + (($grossPay - 360000) * 0.20);
-        } elseif ($grossPay <= 720000) {
-            return 53100 + (($grossPay - 540000) * 0.25);
+        } elseif ($grossPay <= 100000) {
+            return $grossPay * 0.20;
+        } elseif ($grossPay <= 500000) {
+            return 20000 + (($grossPay - 100000) * 0.30);
         } else {
-            return 98100 + (($grossPay - 720000) * 0.30);
+            return 140000 + (($grossPay - 500000) * 0.35);
+        }
+    }
+
+    private function getTaxBracket($taxableIncome)
+    {
+        if ($taxableIncome <= 30000) {
+            return '0% (Up to 30,000)';
+        } elseif ($taxableIncome <= 100000) {
+            return '20% (30,001 - 100,000)';
+        } elseif ($taxableIncome <= 500000) {
+            return '30% (100,001 - 500,000)';
+        } else {
+            return '35% (Above 500,000)';
         }
     }
 
