@@ -19,6 +19,7 @@ class EmployeeDashboard extends Component
     public $attendances;
     public $upcomingHolidays;
     public $recentActivities;
+    public $notifications;
 
     // Chart data
     public $leaveChartData = [];
@@ -68,6 +69,13 @@ class EmployeeDashboard extends Component
             ->orderBy('date', 'desc')
             ->take(30)
             ->get();
+
+        // Load notifications (using a collection for now)
+        $this->notifications = collect([
+            ['title' => 'Contract Renewal', 'message' => 'Your contract is expiring soon', 'read' => false],
+            ['title' => 'Leave Approved', 'message' => 'Your leave request has been approved', 'read' => false],
+            ['title' => 'New Policy', 'message' => 'Company policy updated', 'read' => true],
+        ]);
 
         // Prepare chart data
         $this->prepareChartData();

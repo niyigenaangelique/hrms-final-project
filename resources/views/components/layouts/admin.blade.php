@@ -23,83 +23,114 @@
 <body class="min-h-screen bg-gray-100 dark:bg-gray-900">
 <div class="flex h-screen">
     <!-- Admin Sidebar -->
-    <div class="w-64 bg-white shadow-lg">
+    <div class="w-64 bg-blue-900 shadow-lg">
         <div class="p-4">
             <div class="flex items-center space-x-3 mb-8">
-                <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
+                <div class="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center">
                     <i class="fas fa-shield-alt text-white"></i>
                 </div>
                 <div>
-                    <p class="font-semibold text-gray-900">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</p>
-                    <p class="text-sm text-gray-500">Administrator</p>
+                    <p class="font-semibold text-white">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</p>
+                    <p class="text-sm text-blue-200">Administrator</p>
                 </div>
             </div>
             
             <!-- Navigation Menu -->
-            <nav class="space-y-2">
+            <nav>
+                <!-- System Admin Section -->
+                <div class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">System Admin</div>
+                <a href="{{ route('admin.enhanced-dashboard') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
+                    <i class="fas fa-shield-check w-5"></i>
+                    <span>Admin Dashboard</span>
+                </a>
+                <a href="{{ route('admin.users') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
+                    <i class="fas fa-users w-5"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="{{ route('admin.permissions') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
+                    <i class="fas fa-key w-5"></i>
+                    <span>Permissions</span>
+                </a>
+                <a href="{{ route('admin.activity-logs') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
+                    <i class="fas fa-clipboard-list w-5"></i>
+                    <span>Activity Logs</span>
+                </a>
+                <a href="{{ route('admin.system-configuration') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>System Configuration</span>
+                </a>
+                <a href="{{ route('admin.database-management') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
+                    <i class="fas fa-database w-5"></i>
+                    <span>Database Management</span>
+                </a>
+                <a href="{{ route('admin.system-analytics') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span>System Analytics</span>
+                </a>
+                
                 <!-- Dashboard Section -->
-                <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dashboard</div>
-                <a href="{{ route('admin.enhanced-dashboard') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <div class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Dashboard</div>
+                <a href="{{ route('admin.enhanced-dashboard') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-tachometer-alt w-5"></i>
                     <span>Overview</span>
                 </a>
                 
                 <!-- User Management Section -->
-                <div class="px-4 py-2 mt-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">User Management</div>
-                <a href="{{ route('admin.users') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <div class="px-4 py-2 mt-6 text-xs font-semibold text-blue-300 uppercase tracking-wider">User Management</div>
+                <a href="{{ route('admin.users') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-users w-5"></i>
                     <span>Users Management</span>
                 </a>
-                <a href="{{ route('admin.employees') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('admin.employees') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-user-tie w-5"></i>
                     <span>Employees</span>
                 </a>
-                <a href="{{ route('admin.permissions') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('admin.permissions') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-user-shield w-5"></i>
                     <span>Permissions</span>
                 </a>
                 
                 <!-- System Management Section -->
-                <div class="px-4 py-2 mt-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">System Management</div>
-                <a href="{{ route('admin.activity-logs') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <div class="px-4 py-2 mt-6 text-xs font-semibold text-blue-300 uppercase tracking-wider">System Management</div>
+                <a href="{{ route('admin.activity-logs') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-history w-5"></i>
                     <span>Activity Logs</span>
                 </a>
-                <a href="{{ route('admin.security-settings') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('admin.security-settings') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-lock w-5"></i>
                     <span>Security Settings</span>
                 </a>
-                <a href="{{ route('admin.active-sessions') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('admin.active-sessions') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-desktop w-5"></i>
                     <span>Active Sessions</span>
                 </a>
-                <a href="{{ route('admin.password-resets') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('admin.password-resets') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-key w-5"></i>
                     <span>Password Resets</span>
                 </a>
                 
                 <!-- System Tools Section -->
-                <div class="px-4 py-2 mt-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">System Tools</div>
-                <a href="{{ route('admin.system-configuration') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <div class="px-4 py-2 mt-6 text-xs font-semibold text-blue-300 uppercase tracking-wider">System Tools</div>
+                <a href="{{ route('admin.system-configuration') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-cog w-5"></i>
                     <span>System Configuration</span>
                 </a>
-                <a href="{{ route('admin.database-management') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('admin.database-management') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-database w-5"></i>
                     <span>Database Management</span>
                 </a>
-                <a href="{{ route('admin.system-analytics') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('admin.system-analytics') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-chart-line w-5"></i>
                     <span>System Analytics</span>
                 </a>
                 
                 <!-- User Section -->
-                <div class="px-4 py-2 mt-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Account</div>
-                <a href="#" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <div class="px-4 py-2 mt-6 text-xs font-semibold text-blue-300 uppercase tracking-wider">Account</div>
+                <a href="#" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-user-cog w-5"></i>
                     <span>Profile Settings</span>
                 </a>
-                <a href="{{ route('logout') }}" class="flex items-center space-x-3 px-4 py-2 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('logout') }}" class="flex items-center space-x-3 px-4 py-2 text-blue-100 rounded-lg hover:bg-blue-800 hover:text-white transition-colors">
                     <i class="fas fa-sign-out-alt w-5"></i>
                     <span>Logout</span>
                 </a>

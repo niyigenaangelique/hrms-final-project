@@ -76,6 +76,56 @@
         </div>
     </div>
 
+    <!-- Department Statistics -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Department Overview</h3>
+        
+        @if(empty($departmentStats['department_distribution']))
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No Department Data</h3>
+                <p class="mt-1 text-sm text-gray-500">Department charts will appear here once employees are assigned to departments.</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Department Distribution Chart -->
+                <div class="analytics-card">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">Department Distribution</h4>
+                    <div class="space-y-3">
+                        @foreach($departmentStats['department_distribution'] as $dept)
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ $dept['name'] }}</span>
+                                <div class="flex items-center">
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill progress-purple" style="width: {{ $dept['percentage'] }}%"></div>
+                                    </div>
+                                    <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">{{ $dept['employee_count'] }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Department Summary -->
+                <div class="analytics-card">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">Summary</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">{{ $departmentStats['total_departments'] }}</div>
+                            <div class="text-sm text-blue-600">Total Departments</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">{{ $departmentStats['active_departments'] }}</div>
+                            <div class="text-sm text-green-600">Active Departments</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

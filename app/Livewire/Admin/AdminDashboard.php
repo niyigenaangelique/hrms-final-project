@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Employee;
 use App\Models\Role;
 use App\Models\RolePermission;
+use App\Models\Department;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
@@ -20,6 +21,8 @@ class AdminDashboard extends Component
     use WithPagination;
 
     public $users;
+    public $departments;
+    public $departmentStats;
     public $search = '';
     public $roleFilter = '';
     public $showCreateModal = false;
@@ -52,6 +55,7 @@ class AdminDashboard extends Component
     public function mount()
     {
         $this->loadUsers();
+        $this->loadDepartmentData();
     }
 
     public function loadUsers()
@@ -88,21 +92,20 @@ class AdminDashboard extends Component
 
     public function createUser()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        $user = User::create([
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'email' => $this->email,
-            'phone_number' => $this->phone_number,
-            'role' => $this->role,
-            'password' => Hash::make($this->password),
-            'email_verified_at' => now(),
-        ]);
+            $user = User::create([
+                'first_name' => $this->first_name,
+                'last_name' => $this->last_name,
+                'email' => $this->email,
+                'phone_number' => $this->phone_number,
+                'role' => $this->role,
+                'password' => Hash::make($this->password),
+                'email_verified_at' => now(),
+            ]);
 
-        // Create corresponding employee record if not Employee role
-        if ($this->role !== 'Employee') {
-            // Get the highest existing employee code number
+            // Create corresponding employee record for all users
             $lastEmployee = Employee::orderBy('id', 'desc')->first();
             $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -4)) : 0;
             $newCode = 'EMP-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
@@ -116,13 +119,15 @@ class AdminDashboard extends Component
                 'approval_status' => \App\Enum\ApprovalStatus::Approved,
                 'created_by' => Auth::id(),
             ]);
+
+            $this->resetForm();
+            $this->showCreateModal = false;
+            $this->loadUsers();
+
+            session()->flash('success', "User {$this->first_name} {$this->last_name} created successfully with credentials: Email: {$this->email}, Password: {$this->password}");
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error creating user: ' . $e->getMessage());
         }
-
-        $this->resetForm();
-        $this->showCreateModal = false;
-        $this->loadUsers();
-
-        session()->flash('success', "User {$user->full_name} created successfully with credentials: Email: {$user->email}, Password: {$this->password}");
     }
 
     public function editUser($userId)
@@ -216,6 +221,31 @@ class AdminDashboard extends Component
             'Employee' => 'bg-gray-100 text-gray-800',
             default => 'bg-gray-100 text-gray-800',
         };
+    }
+
+    public function loadDepartmentData()
+    {
+        // Get department distribution from employees table
+        $departmentStats = Employee::selectRaw('department, COUNT(*) as employee_count')
+            ->whereNotNull('department')
+            ->groupBy('department')
+            ->orderBy('employee_count', 'desc')
+            ->get();
+
+        $totalEmployees = $departmentStats->sum('employee_count');
+
+        $this->departmentStats = [
+            'total_departments' => $departmentStats->count(),
+            'active_departments' => $departmentStats->count(), // All departments with employees are considered active
+            'department_distribution' => $departmentStats->map(function ($dept) {
+                return [
+                    'name' => $dept->department ?: 'Unassigned',
+                    'employee_count' => $dept->employee_count,
+                    'percentage' => $totalEmployees > 0 ? 
+                        round(($dept->employee_count / $totalEmployees) * 100, 1) : 0
+                ];
+            })->toArray()
+        ];
     }
 
     public function render()

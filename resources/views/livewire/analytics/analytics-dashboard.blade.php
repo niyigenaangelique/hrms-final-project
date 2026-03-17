@@ -151,8 +151,8 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">{{ ucfirst($gender) }}</span>
                                 <div class="flex items-center">
-                                    <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ ($count / array_sum($diversityStats['gender_distribution'])) * 100 }}%"></div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill progress-blue" style="width: {{ ($count / array_sum($diversityStats['gender_distribution'])) * 100 }}%"></div>
                                     </div>
                                     <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">{{ $count }}</span>
                                 </div>
@@ -169,8 +169,8 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">{{ $ageGroup }}</span>
                                 <div class="flex items-center">
-                                    <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                        <div class="bg-green-500 h-2 rounded-full" style="width: {{ ($count / array_sum($diversityStats['age_groups'])) * 100 }}%"></div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill progress-green" style="width: {{ ($count / array_sum($diversityStats['age_groups'])) * 100 }}%"></div>
                                     </div>
                                     <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">{{ $count }}</span>
                                 </div>
@@ -256,8 +256,8 @@
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-600 dark:text-gray-400 capitalize">{{ $rating }}</span>
                                 <div class="flex items-center">
-                                    <div class="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ ($count / array_sum($performanceStats['performance_distribution'])) * 100 }}%"></div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill progress-blue" style="width: {{ ($count / array_sum($performanceStats['performance_distribution'])) * 100 }}%"></div>
                                     </div>
                                     <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">{{ $count }}</span>
                                 </div>

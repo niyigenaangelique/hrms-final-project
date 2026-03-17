@@ -40,20 +40,37 @@ class CheckUserRole
         }
 
         try {
-            $requiredRoles = array_map(fn($role) => UserRole::from($role), $roles);
+            // Check if roles are already enum instances, if not convert them
+            $requiredRoles = [];
+            foreach ($roles as $role) {
+                if ($role instanceof UserRole) {
+                    $requiredRoles[] = $role;
+                } else {
+                    $requiredRoles[] = UserRole::from($role);
+                }
+            }
         } catch (Exception $e) {
             return response()->json(['error' => "Invalid role specified: {$e->getMessage()}."], 403);
         }
 
         try {
-            $userRole = UserRole::from($user->role); // Get the user's role
+            // Check if user's role is already a UserRole enum instance
+            if ($user->role instanceof UserRole) {
+                $userRole = $user->role;
+            } else {
+                $userRole = UserRole::from($user->role);
+            }
         } catch (Exception $e) {
             return response()->json(['error' => 'User role is invalid or undefined.'], 500);
         }
 
-        if (!in_array($userRole, $requiredRoles, true)) {
+        // Convert both to values for comparison
+        $userRoleValue = $userRole->value;
+        $requiredRoleValues = array_map(fn($role) => $role->value, $requiredRoles);
+
+        if (!in_array($userRoleValue, $requiredRoleValues, true)) {
             return response()->json([
-                'error' => "You don't have any of the required roles (" . implode(', ', array_map(fn($role) => $role->value, $requiredRoles)) . ") to access this resource."
+                'error' => "You don't have any of the required roles (" . implode(', ', $requiredRoleValues) . ") to access this resource."
             ], 403);
         }
         
