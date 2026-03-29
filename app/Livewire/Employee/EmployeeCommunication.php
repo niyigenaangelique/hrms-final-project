@@ -19,16 +19,14 @@ class EmployeeCommunication extends Component
     public $subject = '';
     public $messageContent = '';
     public $unreadCount = 0;
+    public $selectedConversation = null;
+    public $conversationMessages = null;
 
     protected $rules = [
-        'selectedHrUser' => 'required|exists:users,id',
-        'subject' => 'required|string|max:255',
         'messageContent' => 'required|string|max:1000',
     ];
 
     protected $validationAttributes = [
-        'selectedHrUser' => 'HR personnel',
-        'subject' => 'subject',
         'messageContent' => 'message',
     ];
 
@@ -56,6 +54,14 @@ class EmployeeCommunication extends Component
 
         $this->loadHrUsers();
         $this->loadMessages();
+        
+        // Auto-select first conversation if available
+        if ($this->messageList->count() > 0) {
+            $firstPerson = $this->messageList->first()->sender_id === Auth::id() 
+                ? $this->messageList->first()->receiver_id 
+                : $this->messageList->first()->sender_id;
+            $this->selectConversation($firstPerson);
+        }
     }
 
     public function loadHrUsers()
@@ -83,19 +89,26 @@ class EmployeeCommunication extends Component
     {
         $this->validate();
 
+        // Check if a conversation is selected
+        if (!$this->selectedConversation) {
+            session()->flash('error', 'Please select a person to message first.');
+            return;
+        }
+
         try {
             Message::create([
                 'sender_id' => Auth::id(),
-                'receiver_id' => $this->selectedHrUser,
-                'subject' => $this->subject,
+                'receiver_id' => $this->selectedConversation,
+                'subject' => 'Message', // Default subject
                 'message' => $this->messageContent,
                 'status' => 'sent',
                 'is_read' => false,
                 'created_by' => Auth::id(),
             ]);
 
-            $this->reset(['subject', 'messageContent', 'selectedHrUser']);
+            $this->reset(['messageContent']);
             $this->loadMessages();
+            $this->loadConversationMessages($this->selectedConversation);
             
             session()->flash('success', 'Message sent successfully!');
             
@@ -117,6 +130,39 @@ class EmployeeCommunication extends Component
             ]);
             $this->loadMessages();
         }
+    }
+
+    public function selectConversation($personId)
+    {
+        $this->selectedConversation = $personId;
+        $this->loadConversationMessages($personId);
+    }
+
+    public function loadConversationMessages($personId)
+    {
+        $this->conversationMessages = Message::with(['sender', 'receiver'])
+            ->where(function($query) use ($personId) {
+                $query->where(function($q) use ($personId) {
+                    $q->where('sender_id', Auth::id())
+                      ->where('receiver_id', $personId);
+                })->orWhere(function($q) use ($personId) {
+                    $q->where('sender_id', $personId)
+                      ->where('receiver_id', Auth::id());
+                });
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // Mark all messages in this conversation as read
+        Message::where('receiver_id', Auth::id())
+            ->where('sender_id', $personId)
+            ->where('is_read', false)
+            ->update([
+                'is_read' => true,
+                'updated_by' => Auth::id(),
+            ]);
+
+        $this->loadMessages();
     }
 
     public function render()

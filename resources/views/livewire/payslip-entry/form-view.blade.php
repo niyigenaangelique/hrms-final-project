@@ -40,6 +40,103 @@
     border-radius: var(--radius) var(--radius) 0 0;
 }
 
+/* Floating Navigation */
+.floating-nav {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    border: 1px solid rgba(255,255,255,0.88);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.08);
+    font-family: 'DM Sans', -apple-system, sans-serif;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    text-decoration: none;
+    color: rgba(15,15,25,0.68);
+    transition: all 0.2s ease;
+    position: relative;
+    min-width: 64px;
+}
+
+.nav-item:hover {
+    background: rgba(37,99,235,0.08);
+    color: #2563eb;
+    transform: translateY(-2px);
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(99,102,241,0.08));
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 3px;
+    background: linear-gradient(90deg, #2563eb, #6366f1);
+    border-radius: 2px;
+}
+
+.nav-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.nav-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+}
+
+@media (max-width: 768px) {
+    .floating-nav {
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        transform: none;
+        padding: 10px;
+        gap: 8px;
+        border-radius: 20px;
+    }
+    
+    .nav-item {
+        padding: 8px 12px;
+        min-width: 56px;
+    }
+    
+    .nav-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .nav-label {
+        font-size: 10px;
+    }
+}
+
 /* Fieldset legend override */
 .g-card legend,
 .g-card [data-flux-legend] {
@@ -178,5 +275,36 @@
         </div>
     </div>
 </flux:modal>
+
+<div class="floating-nav">
+    <a href="{{ route('payroll.dashboard') }}" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="nav-label">Dashboard</span>
+    </a>
+    
+    <a href="{{ route('payroll.payslip-generator') }}" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="nav-label">Payslips</span>
+    </a>
+    
+    <a href="{{ route('payroll.tax-calculator') }}" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+        <span class="nav-label">Tax Calc</span>
+    </a>
+</div>
 
 </div>

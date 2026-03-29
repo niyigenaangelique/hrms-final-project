@@ -304,7 +304,7 @@ class PermissionManagement extends Component
 
             $selectedRole = $this->selectedEmployeeRoles[0];
             
-            session()->flash('info', 'Processing: Employee ID: ' . $this->selectedEmployeeId . ' | Role: ' . $selectedRole);
+            session()->flash('info', 'Processing: Employee ID: ' . $this->selectedEmployeeId . ' | Role: ' . $selectedRole->value);
 
             $employee = \App\Models\Employee::findOrFail($this->selectedEmployeeId);
             $user = $employee->user;
@@ -319,7 +319,7 @@ class PermissionManagement extends Component
                     'email' => $employee->email,
                     'phone_number' => $employee->phone_number,
                     'password' => Hash::make('password123'),
-                    'role' => $selectedRole,
+                    'role' => $selectedRole->value,
                     'email_verified_at' => now(),
                     'phone_verified_at' => now(),
                     'password_changed_at' => now(),
@@ -329,7 +329,7 @@ class PermissionManagement extends Component
                 session()->flash('success', 'User account created and role assigned successfully!');
             } else {
                 // Update existing user role
-                $user->update(['role' => $selectedRole]);
+                $user->update(['role' => $selectedRole->value]);
                 session()->flash('success', 'Role updated successfully!');
             }
 

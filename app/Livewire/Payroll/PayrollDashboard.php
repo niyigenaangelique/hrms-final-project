@@ -2,11 +2,12 @@
 
 namespace App\Livewire\Payroll;
 
+use App\Models\Employee;
 use App\Models\PayrollEntry;
 use App\Models\PayrollMonth;
 use App\Models\PayslipEntry;
 use App\Models\PaymentHistory;
-use App\Models\Employee;
+use App\Services\TaxService;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\Attributes\Title;
@@ -28,44 +29,51 @@ class PayrollDashboard extends Component
     public $upcomingPayrolls;
     public $selectedMonth;
     public $selectedYear;
-    public $showProcessModal = false;
+
+    public $showProcessModal     = false;
     public $showBulkProcessModal = false;
-    public $processingEmployees = [];
-    public $processingMonth;
-    public $processingStatus = 'idle';
-    public $processingProgress = 0;
-    public $processedCount = 0;
-    public $totalCount = 0;
+    public $processingEmployees  = [];
+    public $processingMonth      = null;
+    public $processingMonthId     = null;  // bound to select in blade
+    public $processingStatus     = 'idle';
+    public $processingProgress   = 0;
+    public $processedCount       = 0;
+    public $totalCount           = 0;
+
+    // Tax settings — matches TaxCalculator defaults
+    public $useRwandanTax = true;
+    public $pensionRate   = 5;
+    public $maternityRate = 1;
+    public $cbhiRate      = 1;
+    public $payeRate      = 30;
 
     public function mount()
     {
         $this->selectedMonth = now()->month;
-        $this->selectedYear = now()->year;
+        $this->selectedYear  = now()->year;
         $this->loadDashboardData();
     }
 
     public function loadDashboardData()
     {
         $this->totalPayrollEntries = PayrollEntry::count();
-        $this->totalPayrollAmount = PayrollEntry::sum('total_amount');
-        $this->totalEmployees = Employee::where('approval_status', 'approved')->count();
-        
-        $this->pendingPayments = PaymentHistory::where('status', 'pending')->count();
+        $this->totalPayrollAmount  = PayrollEntry::sum('total_amount');
+        $this->totalEmployees      = Employee::where('approval_status', 'approved')->count();
+
+        $this->pendingPayments   = PaymentHistory::where('status', 'pending')->count();
         $this->completedPayments = PaymentHistory::where('status', 'completed')->count();
-        
-        $this->currentMonthPayroll = PayrollEntry::whereHas('payrollMonth', function($query) {
-            $query->whereMonth('start_date', now()->month)
-                  ->whereYear('start_date', now()->year);
+
+        $this->currentMonthPayroll = PayrollEntry::whereHas('payrollMonth', function ($q) {
+            $q->whereMonth('start_date', now()->month)
+              ->whereYear('start_date', now()->year);
         })->sum('total_amount');
-        
+
         $this->recentPayments = PaymentHistory::with(['employee', 'payslipEntry'])
-            ->latest('payment_date')
-            ->take(10)
-            ->get();
-            
-        $this->payrollTrends = $this->getPayrollTrends();
+            ->latest('payment_date')->take(10)->get();
+
+        $this->payrollTrends    = $this->getPayrollTrends();
         $this->monthlyComparison = $this->getMonthlyComparison();
-        $this->departmentStats = $this->getDepartmentStats();
+        $this->departmentStats  = $this->getDepartmentStats();
         $this->upcomingPayrolls = $this->getUpcomingPayrolls();
     }
 
@@ -80,23 +88,23 @@ class PayrollDashboard extends Component
 
     private function getMonthlyComparison()
     {
-        $currentMonth = $this->selectedMonth;
-        $currentYear = $this->selectedYear;
+        $currentMonth  = $this->selectedMonth;
+        $currentYear   = $this->selectedYear;
         $previousMonth = $currentMonth == 1 ? 12 : $currentMonth - 1;
-        $previousYear = $currentMonth == 1 ? $currentYear - 1 : $currentYear;
+        $previousYear  = $currentMonth == 1 ? $currentYear - 1 : $currentYear;
 
-        $currentMonthTotal = PayrollEntry::whereHas('payrollMonth', function($query) use ($currentMonth, $currentYear) {
-            $query->whereMonth('start_date', $currentMonth)->whereYear('start_date', $currentYear);
-        })->sum('total_amount');
+        $current = PayrollEntry::whereHas('payrollMonth', fn($q) =>
+            $q->whereMonth('start_date', $currentMonth)->whereYear('start_date', $currentYear)
+        )->sum('total_amount');
 
-        $previousMonthTotal = PayrollEntry::whereHas('payrollMonth', function($query) use ($previousMonth, $previousYear) {
-            $query->whereMonth('start_date', $previousMonth)->whereYear('start_date', $previousYear);
-        })->sum('total_amount');
+        $previous = PayrollEntry::whereHas('payrollMonth', fn($q) =>
+            $q->whereMonth('start_date', $previousMonth)->whereYear('start_date', $previousYear)
+        )->sum('total_amount');
 
         return [
-            'current' => $currentMonthTotal,
-            'previous' => $previousMonthTotal,
-            'change' => $previousMonthTotal > 0 ? (($currentMonthTotal - $previousMonthTotal) / $previousMonthTotal) * 100 : 0
+            'current'  => $current,
+            'previous' => $previous,
+            'change'   => $previous > 0 ? round((($current - $previous) / $previous) * 100, 1) : 0,
         ];
     }
 
@@ -116,266 +124,216 @@ class PayrollDashboard extends Component
             ->get();
     }
 
-    public function updatedSelectedMonth()
-    {
-        $this->loadDashboardData();
-    }
+    public function updatedSelectedMonth() { $this->loadDashboardData(); }
+    public function updatedSelectedYear()  { $this->loadDashboardData(); }
 
-    public function updatedSelectedYear()
+    // ── Modal open/close ──────────────────────────────────────
+
+    public function openProcessModal()
     {
-        $this->loadDashboardData();
+        $this->showProcessModal    = true;
+        $this->processingEmployees = [];
+        $this->processingMonth     = null;
+        $this->processingMonthId   = null;
+        $this->processingStatus    = 'idle';
+        $this->processingProgress  = 0;
+        $this->processedCount      = 0;
+        $this->totalCount          = 0;
     }
 
     public function closeProcessModal()
     {
-        $this->showProcessModal = false;
+        $this->showProcessModal    = false;
         $this->processingEmployees = [];
-        $this->processingMonth = null;
-        $this->processingStatus = 'idle';
-        $this->processingProgress = 0;
-        $this->processedCount = 0;
-        $this->totalCount = 0;
-    }
-
-    public function closeBulkProcessModal()
-    {
-        $this->showBulkProcessModal = false;
-        $this->processingEmployees = [];
-        $this->processingMonth = null;
-        $this->processingStatus = 'idle';
-        $this->processingProgress = 0;
-        $this->processedCount = 0;
-        $this->totalCount = 0;
-    }
-
-    public function openProcessModal()
-    {
-        $this->showProcessModal = true;
-        $this->processingEmployees = [];
-        $this->processingMonth = null;
-        $this->processingStatus = 'idle';
-        $this->processingProgress = 0;
-        $this->processedCount = 0;
-        $this->totalCount = 0;
+        $this->processingMonth     = null;
+        $this->processingStatus    = 'idle';
+        $this->processingProgress  = 0;
+        $this->processedCount      = 0;
+        $this->totalCount          = 0;
     }
 
     public function openBulkProcessModal()
     {
         $this->showBulkProcessModal = true;
-        $this->processingEmployees = [];
-        $this->processingMonth = null;
-        $this->processingStatus = 'idle';
-        $this->processingProgress = 0;
-        $this->processedCount = 0;
-        $this->totalCount = 0;
+        $this->processingEmployees  = [];
+        $this->processingMonth      = null;
+        $this->processingStatus     = 'idle';
+        $this->processingProgress   = 0;
+        $this->processedCount       = 0;
+        $this->totalCount           = 0;
     }
 
-    public function selectProcessingMonth($monthId)
+    public function closeBulkProcessModal()
     {
-        $this->processingMonth = PayrollMonth::find($monthId);
-        $this->processingEmployees = [];
-        $this->processedCount = 0;
-        $this->totalCount = 0;
+        $this->showBulkProcessModal = false;
+        $this->processingEmployees  = [];
+        $this->processingMonth      = null;
+        $this->processingStatus     = 'idle';
+        $this->processingProgress   = 0;
+        $this->processedCount       = 0;
+        $this->totalCount           = 0;
     }
 
-    public function selectEmployees($employeeIds)
-    {
-        $this->processingEmployees = Employee::whereIn('id', $employeeIds)->get();
-        $this->processedCount = 0;
-        $this->totalCount = count($this->processingEmployees);
-    }
-    
+    // ── Process selected employees ────────────────────────────
+
     public function processPayroll()
     {
-        if (!$this->processingMonth) {
+        if (!$this->processingMonthId) {
             session()->flash('error', 'Please select a payroll month.');
             return;
         }
 
-        // Get selected employees or all approved employees if none selected
-        $employeesToProcess = [];
-        if (empty($this->processingEmployees)) {
-            // If no specific employees selected, get all approved employees
-            $employeesToProcess = Employee::where('approval_status', 'Approved')->get();
-        } else {
-            // Process selected employees
-            foreach ($this->processingEmployees as $employeeId => $isSelected) {
-                if ($isSelected) {
-                    $employee = Employee::find($employeeId);
-                    if ($employee) {
-                        $employeesToProcess[] = $employee;
-                    }
-                }
-            }
+        $payrollMonth = PayrollMonth::find($this->processingMonthId);
+
+        if (!$payrollMonth) {
+            session()->flash('error', 'Payroll month not found.');
+            return;
         }
-        
-        if (empty($employeesToProcess)) {
-            session()->flash('error', 'Please select at least one employee to process.');
+
+        // Collect selected employee IDs from checkbox array
+        $selectedIds = collect($this->processingEmployees)
+            ->filter(fn($checked) => $checked)
+            ->keys()
+            ->toArray();
+
+        // Fall back to all approved employees if none ticked
+        $employees = empty($selectedIds)
+            ? Employee::where('approval_status', 'Approved')->whereNotNull('monthly_salary')->get()
+            : Employee::whereIn('id', $selectedIds)->get();
+
+        if ($employees->isEmpty()) {
+            session()->flash('error', 'No employees to process.');
             return;
         }
 
         $this->processingStatus = 'processing';
-        $this->processedCount = 0;
-        $this->totalCount = count($employeesToProcess);
+        $this->totalCount       = $employees->count();
+        $this->processedCount   = 0;
 
-        foreach ($employeesToProcess as $employee) {
-            // Check if entry already exists
-            $existingEntry = PayrollEntry::where('payroll_month_id', $this->processingMonth->id)
-                ->where('employee_id', $employee->id)
-                ->first();
-                
-            if (!$existingEntry) {
-                // Use monthly salary with fallback
-                $monthlySalary = $employee->monthly_salary ?: 100000; // Default to 100,000
-                
-                // Create new payroll entry
-                PayrollEntry::create([
-                    'code' => 'PE-' . strtoupper(uniqid()),
-                    'payroll_month_id' => $this->processingMonth->id,
-                    'employee_id' => $employee->id,
-                    'total_amount' => $monthlySalary,
-                    'approval_status' => 'approved',
-                    'created_by' => auth()->id(),
-                ]);
-            }
-            
+        $tax = app(TaxService::class);
+
+        foreach ($employees as $employee) {
+            $this->processOneEmployee($tax, $payrollMonth, $employee);
             $this->processedCount++;
-            $this->processingProgress = ($this->processedCount / $this->totalCount) * 100;
-            
-            // Small delay to show progress
-            usleep(100000); // 0.1 second delay
+            $this->processingProgress = (int)(($this->processedCount / $this->totalCount) * 100);
         }
 
         $this->processingStatus = 'completed';
-        session()->flash('success', 'Payroll processed successfully for ' . $this->processedCount . ' employees!');
+        session()->flash('success', "Payroll processed for {$this->processedCount} employee(s) with tax calculations.");
         $this->loadDashboardData();
     }
+
+    // ── Bulk process ALL approved employees ───────────────────
 
     public function bulkProcessAllEmployees()
     {
-        if (!$this->processingMonth) {
-            session()->flash('error', 'Please select a payroll month to process.');
+        if (!$this->processingMonthId) {
+            session()->flash('error', 'Please select a payroll month.');
+            return;
+        }
+
+        $payrollMonth = PayrollMonth::find($this->processingMonthId);
+
+        if (!$payrollMonth) {
+            session()->flash('error', 'Payroll month not found.');
+            return;
+        }
+
+        $employees = Employee::where('approval_status', 'Approved')
+            ->whereNotNull('monthly_salary')
+            ->get();
+
+        if ($employees->isEmpty()) {
+            session()->flash('error', 'No approved employees with salary found.');
             return;
         }
 
         $this->processingStatus = 'processing';
-        $allEmployees = Employee::where('approval_status', 'Approved')->get();
-        $this->processingEmployees = $allEmployees;
-        $this->processedCount = 0;
-        $this->totalCount = $allEmployees->count();
+        $this->totalCount       = $employees->count();
+        $this->processedCount   = 0;
 
-        foreach ($allEmployees as $employee) {
-            // Check if entry already exists
-            $existingEntry = PayrollEntry::where('payroll_month_id', $this->processingMonth->id)
-                ->where('employee_id', $employee->id)
-                ->first();
-                
-            if (!$existingEntry) {
-                // Use monthly salary with fallback
-                $monthlySalary = $employee->monthly_salary ?: 100000; // Default to 100,000
-                
-                // Create new payroll entry
-                PayrollEntry::create([
-                    'code' => 'PE-' . strtoupper(uniqid()),
-                    'payroll_month_id' => $this->processingMonth->id,
-                    'employee_id' => $employee->id,
-                    'total_amount' => $monthlySalary,
-                    'approval_status' => 'approved',
-                    'created_by' => auth()->id(),
-                ]);
-            }
-            
+        $tax = app(TaxService::class);
+
+        foreach ($employees as $employee) {
+            $this->processOneEmployee($tax, $payrollMonth, $employee);
             $this->processedCount++;
-            $this->processingProgress = ($this->processedCount / $this->totalCount) * 100;
-            
-            // Small delay to show progress
-            usleep(50000); // 0.05 second delay
+            $this->processingProgress = (int)(($this->processedCount / $this->totalCount) * 100);
         }
 
         $this->processingStatus = 'completed';
-        session()->flash('success', 'Bulk payroll processing completed! Processed ' . $this->processedCount . ' employees.');
+        session()->flash('success', "Bulk payroll completed for {$this->processedCount} employee(s).");
         $this->loadDashboardData();
     }
 
-    public function generatePayslips()
+    // ── Core: one employee — PayrollEntry + PayslipEntry ─────
+
+    private function processOneEmployee(TaxService $tax, PayrollMonth $payrollMonth, Employee $employee): void
     {
-        if (!$this->processingMonth) {
-            session()->flash('error', 'Please select a payroll month first.');
-            return;
+        $grossSalary = (float)($employee->monthly_salary ?? 0);
+
+        if ($grossSalary <= 0) {
+            return; // skip employees with no salary
         }
 
-        $entries = PayrollEntry::where('payroll_month_id', $this->processingMonth->id)->get();
-        $generatedCount = 0;
+        DB::transaction(function () use ($tax, $payrollMonth, $employee, $grossSalary) {
 
-        foreach ($entries as $entry) {
-            // Calculate deductions using Rwandan tax system
-            $grossPay = $entry->total_amount;
-            $pension = $grossPay * 0.05; // 5% employee pension
-            $maternity = $grossPay * 0.01; // 1% maternity fund
-            $cbhi = $grossPay * 0.01; // 1% CBHI
-            
-            // Calculate taxable income (gross - pension)
-            $taxableIncome = $grossPay - $pension;
-            
-            // Apply Rwandan progressive tax
-            $paye = $this->calculateRwandanPAYE($taxableIncome);
-            
-            // Calculate employer contribution
-            $employerContribution = $grossPay * 0.07; // 7% employer contribution
-            
-            // Calculate net pay
-            $netPay = $taxableIncome - $paye - $maternity - $cbhi;
-
-            // Create or update payslip entry
-            PayslipEntry::updateOrCreate(
-                ['payroll_entry_id' => $entry->id],
+            // 1. Create or find the PayrollEntry
+            $payrollEntry = PayrollEntry::firstOrCreate(
                 [
-                    'code' => 'PS-' . strtoupper(uniqid()),
-                    'gross_pay' => $grossPay,
-                    'taxable_income' => $taxableIncome, // Added for transparency
-                    'paye' => $paye,
-                    'pension' => $pension,
-                    'maternity' => $maternity,
-                    'cbhi' => $cbhi,
-                    'employer_contribution' => $employerContribution,
-                    'net_pay' => $netPay,
-                    'status' => 'Generated',
-                    'created_by' => auth()->id(),
-                    'tax_bracket_used' => $this->getTaxBracket($taxableIncome),
-                    'effective_tax_rate' => $grossPay > 0 ? ($paye / $grossPay) * 100 : 0,
+                    'payroll_month_id' => $payrollMonth->id,
+                    'employee_id'      => $employee->id,
+                ],
+                [
+                    'code'                   => 'PE-' . strtoupper(substr(uniqid(), -6)),
+                    'daily_rate'             => round($grossSalary / 22, 2),
+                    'work_days'              => 22,
+                    'work_days_pay'          => $grossSalary,
+                    'overtime_hour_rate'     => 0,
+                    'overtime_hours_worked'  => 0,
+                    'overtime_total_amount'  => 0,
+                    'total_amount'           => $grossSalary,
+                    'approval_status'        => 'approved',
+                    'created_by'             => auth()->id(),
                 ]
             );
-            $generatedCount++;
-        }
 
-        session()->flash('success', 'Generated ' . $generatedCount . ' payslips successfully with Rwandan tax calculations!');
+            // 2. Calculate taxes using TaxService (same logic as TaxCalculator)
+            $result = $tax->calculate(
+                grossSalary:   $grossSalary,
+                pensionRate:   $this->pensionRate,
+                maternityRate: $this->maternityRate,
+                cbhiRate:      $this->cbhiRate,
+                payeRate:      $this->payeRate,
+                useRwandanTax: $this->useRwandanTax,
+            );
+
+            // 3. Save PayslipEntry — updateOrCreate so re-running is safe
+            PayslipEntry::updateOrCreate(
+                ['payroll_entry_id' => $payrollEntry->id],
+                [
+                    'code'                  => 'PS-' . strtoupper(substr(uniqid(), -6)),
+                    'gross_pay'             => $result['gross_pay'],
+                    'taxable_income'        => $result['taxable_income'],
+                    'paye'                  => $result['paye'],
+                    'pension'               => $result['pension'],
+                    'maternity'             => $result['maternity'],
+                    'cbhi'                  => $result['cbhi'],
+                    'employer_contribution' => $result['employer_contribution'],
+                    'net_pay'               => $result['net_pay'],
+                    'effective_tax_rate'    => $result['effective_tax_rate'],
+                    'tax_bracket_used'      => $result['tax_bracket_used'],
+                    'status'                => 'Generated',
+                    'created_by'            => auth()->id(),
+                ]
+            );
+        });
     }
 
-    private function calculateRwandanPAYE($grossPay)
-    {
-        // Rwandan PAYE calculation (progressive rates)
-        if ($grossPay <= 30000) {
-            return 0;
-        } elseif ($grossPay <= 100000) {
-            return $grossPay * 0.20;
-        } elseif ($grossPay <= 500000) {
-            return 20000 + (($grossPay - 100000) * 0.30);
-        } else {
-            return 140000 + (($grossPay - 500000) * 0.35);
-        }
-    }
+    // ── Generate payslips (kept for blade button compatibility) ─
 
-    private function getTaxBracket($taxableIncome)
+    public function generatePayslips()
     {
-        if ($taxableIncome <= 30000) {
-            return '0% (Up to 30,000)';
-        } elseif ($taxableIncome <= 100000) {
-            return '20% (30,001 - 100,000)';
-        } elseif ($taxableIncome <= 500000) {
-            return '30% (100,001 - 500,000)';
-        } else {
-            return '35% (Above 500,000)';
-        }
+        session()->flash('info', 'Use "Process Payroll" or "Bulk Process" to generate payslips with tax calculations.');
     }
 
     public function render()

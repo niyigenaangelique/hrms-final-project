@@ -10,6 +10,7 @@ use Livewire\WithFileUploads;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 #[Title('TalentFlow Pro | My Profile')]
 class EmployeeProfile extends Component
@@ -33,6 +34,22 @@ class EmployeeProfile extends Component
     public $contactPhone;
     public $contactEmail;
     public $showContactModal = false;
+    
+    // Edit profile properties
+    public $showEditModal = false;
+    public $editFirstName;
+    public $editLastName;
+    public $editEmail;
+    public $editPhone;
+    public $editAddress;
+    public $editCity;
+    public $editState;
+    public $editCountry;
+    public $editNationality;
+    public $editNationalId;
+    public $editGender;
+    public $editBirthDate;
+    public $profilePhoto;
 
     public function mount($employeeId = null)
     {
@@ -73,7 +90,7 @@ class EmployeeProfile extends Component
 
     public function loadRelatedData()
     {
-        $this->contracts = $this->employee->contracts()->latest()->get();
+        $this->contracts = $this->employee->contracts()->with('position')->latest()->get();
         $this->documents = $this->employee->documents()->latest()->get();
         $this->emergencyContacts = $this->employee->emergencyContacts()->get();
     }
@@ -174,10 +191,189 @@ class EmployeeProfile extends Component
         $this->loadRelatedData();
         session()->flash('message', 'Emergency contact deleted successfully!');
     }
+    
+    // Edit profile methods
+    public function openEditModal()
+    {
+        $this->showEditModal = true;
+        $this->editFirstName = $this->employee->first_name;
+        $this->editLastName = $this->employee->last_name;
+        $this->editEmail = $this->employee->email;
+        $this->editPhone = $this->employee->phone_number;
+        $this->editAddress = $this->employee->address;
+        $this->editCity = $this->employee->city;
+        $this->editState = $this->employee->state;
+        $this->editCountry = $this->employee->country;
+        $this->editNationality = $this->employee->nationality;
+        $this->editNationalId = $this->employee->national_id;
+        $this->editGender = $this->employee->gender;
+        $this->editBirthDate = $this->employee->birth_date ? $this->employee->birth_date->format('Y-m-d') : '';
+    }
+    
+    public function updateProfile()
+    {
+        \Log::info('updateProfile method called');
+        \Log::info('profilePhoto property: ' . ($this->profilePhoto ? 'set' : 'not set'));
+        
+        try {
+            $this->validate([
+                'editFirstName' => 'required|string|max:255',
+                'editLastName' => 'required|string|max:255',
+                'editEmail' => 'required|email|max:255',
+                'editPhone' => 'nullable|string|max:20',
+                'editAddress' => 'nullable|string|max:255',
+                'editCity' => 'nullable|string|max:100',
+                'editState' => 'nullable|string|max:100',
+                'editCountry' => 'nullable|string|max:100',
+                'editNationality' => 'nullable|string|max:100',
+                'editNationalId' => 'nullable|string|max:50',
+                'editGender' => 'nullable|in:male,female,other',
+                'editBirthDate' => 'nullable|date|before:today',
+                'profilePhoto' => 'nullable|file|max:1024', // 1MB max to fit within PHP limit
+            ]);
+            
+            \Log::info('Validation passed');
+
+            // Handle profile photo upload
+            $photoPath = null;
+            if ($this->profilePhoto) {
+                try {
+                    \Log::info('Profile photo upload starting. File exists: ' . ($this->profilePhoto ? 'Yes' : 'No'));
+                    
+                    // Delete old photo if exists
+                    if ($this->employee->profile_photo) {
+                        Storage::disk('public')->delete($this->employee->profile_photo);
+                        \Log::info('Old photo deleted');
+                    }
+                    
+                    // Store new photo with explicit path
+                    $photoPath = $this->profilePhoto->store('profile-photos', 'public');
+                    \Log::info('Profile photo stored at: ' . $photoPath);
+                    
+                    // Verify file was actually stored
+                    if (Storage::disk('public')->exists($photoPath)) {
+                        \Log::info('File verified to exist in storage');
+                    } else {
+                        \Log::error('File does not exist in storage after upload');
+                    }
+                    
+                } catch (\Exception $e) {
+                    \Log::error('Profile photo upload failed: ' . $e->getMessage());
+                    \Log::error('Exception trace: ' . $e->getTraceAsString());
+                    session()->flash('error', 'Photo upload failed: ' . $e->getMessage());
+                    return;
+                }
+            } else {
+                \Log::info('No profile photo provided');
+            }
+
+            $this->employee->update([
+                'first_name' => $this->editFirstName,
+                'last_name' => $this->editLastName,
+                'email' => $this->editEmail,
+                'phone_number' => $this->editPhone,
+                'address' => $this->editAddress,
+                'city' => $this->editCity,
+                'state' => $this->editState,
+                'country' => $this->editCountry,
+                'nationality' => $this->editNationality,
+                'national_id' => $this->editNationalId,
+                'gender' => $this->editGender,
+                'birth_date' => $this->editBirthDate ? $this->editBirthDate : null,
+                'profile_photo' => $photoPath ?? $this->employee->profile_photo,
+            ]);
+
+            // Also update the associated user if exists
+            if ($this->employee->user) {
+                $this->employee->user->update([
+                    'first_name' => $this->editFirstName,
+                    'last_name' => $this->editLastName,
+                    'email' => $this->editEmail,
+                    'phone_number' => $this->editPhone,
+                ]);
+            }
+
+            $this->reset(['showEditModal', 'editFirstName', 'editLastName', 'editEmail', 'editPhone', 
+                         'editAddress', 'editCity', 'editState', 'editCountry', 'editNationality', 
+                         'editNationalId', 'editGender', 'editBirthDate', 'profilePhoto']);
+            
+            // Reload employee data
+            $this->employee = $this->employee->fresh();
+            
+            session()->flash('message', 'Profile updated successfully!');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation errors will be displayed automatically
+            \Log::error('Validation failed: ' . json_encode($e->errors()));
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Error updating profile: ' . $e->getMessage());
+            session()->flash('error', 'Error updating profile: ' . $e->getMessage());
+        }
+    }
+    
+    // Test method for debugging
+    public function testUpload()
+    {
+        \Log::info('Test upload method called');
+        session()->flash('message', 'Test method called successfully!');
+    }
 
     public function render()
     {
-        return view('livewire.employee.employee-profile')
-            ->layout('components.layouts.employee');
+        $employmentHistory = $this->getEmploymentHistory();
+        
+        // Prepare data for the new dashboard-style profile
+        $recentActivities = [
+            [
+                'type' => 'login',
+                'description' => 'Logged into system',
+                'time' => '2 hours ago'
+            ],
+            [
+                'type' => 'profile',
+                'description' => 'Updated profile information',
+                'time' => '1 day ago'
+            ],
+            [
+                'type' => 'leave',
+                'description' => 'Submitted leave request',
+                'time' => '3 days ago'
+            ]
+        ];
+        
+        $performanceChartData = [
+            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            'data' => [85, 88, 92, 87, 90, 93]
+        ];
+        
+        $leaveChartData = [
+            'labels' => ['Approved', 'Pending', 'Rejected'],
+            'data' => [3, 1, 0]
+        ];
+        
+        $attendanceChartData = [
+            'labels' => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+            'data' => [1, 1, 1, 0, 1]
+        ];
+        
+        $notifications = collect([]);
+        
+        // Load leave requests for the dashboard
+        $leaveRequests = $this->employee->leaveRequests()->with('leaveType')->latest()->take(5)->get();
+        
+        return view('livewire.employee.employee-profile', [
+            'employmentHistory' => $employmentHistory,
+            'recentActivities' => $recentActivities,
+            'performanceChartData' => $performanceChartData,
+            'leaveChartData' => $leaveChartData,
+            'attendanceChartData' => $attendanceChartData,
+            'notifications' => $notifications,
+            'contracts' => $this->contracts,
+            'documents' => $this->documents,
+            'emergencyContacts' => $this->emergencyContacts,
+            'leaveRequests' => $leaveRequests,
+            'attendances' => collect([]) // Empty for now
+        ])->layout('components.layouts.employee');
     }
 }

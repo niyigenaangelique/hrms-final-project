@@ -35,16 +35,22 @@ class EmployeeDashboard extends Component
     {
         $user = Auth::user();
         
-        // Get the employee record for the current user
+        // Get the employee record for current user
         $this->employee = Employee::where('user_id', $user->id)->first();
         
         if (!$this->employee) {
-            // Create a sample employee for the logged-in user with a unique code
-            $maxEmployee = Employee::where('code', 'like', 'EMP-%')->orderByRaw('CAST(SUBSTRING(code, 5) AS UNSIGNED) DESC')->first();
-            $nextNumber = $maxEmployee ? (int)substr($maxEmployee->code, 4) + 1 : 1;
+            // Create a sample employee for logged-in user with a unique code
+            $nextNumber = 1;
+            
+            // Find the next available employee code
+            do {
+                $newCode = 'EMP-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+                $exists = Employee::where('code', $newCode)->exists();
+                $nextNumber++;
+            } while ($exists);
             
             $this->employee = Employee::create([
-                'code' => 'EMP-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT),
+                'code' => $newCode,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'email' => $user->email,

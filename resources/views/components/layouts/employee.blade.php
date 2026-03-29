@@ -7,9 +7,8 @@
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet"/>
 
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -22,345 +21,408 @@
 
     <style>
         /* ══════════════════════════════════════════════════════
-           iOS 26 DEEP OCEAN SIDEBAR — wider + full white text
+           TalentFlow Pro — Design System
+           Sidebar: white bg, filled active pill, search, dark mode
         ══════════════════════════════════════════════════════ */
 
-        body {
-            background:
-                radial-gradient(ellipse 80% 60% at 10% 10%,  rgba(186,230,253,0.55) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 50% at 90% 5%,   rgba(216,180,254,0.45) 0%, transparent 55%),
-                radial-gradient(ellipse 70% 60% at 50% 100%, rgba(167,243,208,0.40) 0%, transparent 55%),
-                radial-gradient(ellipse 50% 40% at 80% 60%,  rgba(253,230,138,0.30) 0%, transparent 50%),
-                linear-gradient(160deg, #e0f2fe 0%, #f0fdf4 40%, #fdf4ff 80%, #fff7ed 100%) !important;
-            min-height: 100vh;
-        }
-
-        /* ── Wider sidebar via Flux's CSS var ────────────── */
+        /* ── Tokens (light) ───────────────────────────────── */
         :root {
-            --flux-sidebar-width: 280px !important;
+            --tf-blue:      #3B6FE8;
+            --tf-blue-lt:   rgba(59,111,232,0.10);
+            --tf-ink:       #1A1D2E;
+            --tf-ink2:      #3A3D52;
+            --tf-ink3:      #8A8FA8;
+            --tf-bg:        #EEF2F7;
+            --tf-white:     #FFFFFF;
+            --tf-border:    rgba(26,29,46,0.09);
+            --tf-search-bg: #F4F6FB;
         }
 
-        .emp-sidebar-glass {
-            width: 280px !important;
-            min-width: 280px !important;
-            background: linear-gradient(
-                175deg,
-                rgba(7, 28, 48, 0.97) 0%,
-                rgba(5, 38, 56, 0.97) 40%,
-                rgba(4, 30, 45, 0.98) 100%
-            ) !important;
-            backdrop-filter: blur(32px) saturate(1.6) !important;
-            -webkit-backdrop-filter: blur(32px) saturate(1.6) !important;
-            border-right: 1px solid rgba(32,178,170,0.18) !important;
-            box-shadow: 4px 0 40px rgba(0,0,0,0.35), inset -1px 0 0 rgba(32,178,170,0.08) !important;
-            position: relative !important;
-            overflow: hidden !important;
+        /* ── Tokens (dark) ────────────────────────────────── */
+        html.tf-dark {
+            --tf-blue:      #5B8FF9;
+            --tf-blue-lt:   rgba(91,143,249,0.12);
+            --tf-ink:       #E8EAF0;
+            --tf-ink2:      #B0B5C8;
+            --tf-ink3:      #5C6070;
+            --tf-bg:        #0F1117;
+            --tf-white:     #181C27;
+            --tf-border:    rgba(255,255,255,0.07);
+            --tf-search-bg: rgba(255,255,255,0.05);
         }
 
-        /* Specular teal top edge */
-        .emp-sidebar-glass::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(32,210,200,0.5), transparent);
-            z-index: 10;
-            pointer-events: none;
+        /* ── Global ───────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: var(--tf-bg) !important;
+            min-height: 100vh;
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: background 0.25s;
         }
 
-        /* Ocean glows */
-        .gs-glow-1 {
-            position: absolute;
-            top: -80px; left: -50px;
-            width: 340px; height: 340px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(20,184,166,0.16) 0%, transparent 65%);
-            pointer-events: none; z-index: 0;
+        /* ── Flux sidebar wrapper — force white bg ────────── */
+        [data-flux-sidebar],
+        [data-flux-sidebar] > div:first-child {
+            background: var(--tf-white) !important;
+            border-right: 1px solid var(--tf-border) !important;
+            box-shadow: 2px 0 20px rgba(26,29,46,0.06) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            width: 268px !important;
+            min-width: 268px !important;
+            transition: background 0.25s, border-color 0.25s !important;
         }
 
-        .gs-glow-2 {
-            position: absolute;
-            bottom: 20px; right: -70px;
-            width: 280px; height: 280px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 65%);
-            pointer-events: none; z-index: 0;
+        /* ── Main area ────────────────────────────────────── */
+        [data-flux-main] {
+            background: var(--tf-bg) !important;
+            transition: background 0.25s !important;
         }
 
-        .gs-glow-3 {
-            position: absolute;
-            top: 45%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px; height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(56,189,248,0.06) 0%, transparent 70%);
-            pointer-events: none; z-index: 0;
+        /* ══ NAV ITEMS — base reset ════════════════════════════ */
+        [data-flux-sidebar] a[href],
+        [data-flux-sidebar] [data-flux-navlist-item] {
+            display: flex !important;
+            align-items: center !important;
+            gap: 11px !important;
+            padding: 9px 12px !important;
+            border-radius: 10px !important;
+            text-decoration: none !important;
+            color: var(--tf-ink3) !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            font-family: 'DM Sans', sans-serif !important;
+            transition: background 0.15s, color 0.15s !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            border: none !important;
         }
 
-        .emp-sidebar-glass > *:not(.gs-glow-1):not(.gs-glow-2):not(.gs-glow-3) {
-            position: relative;
-            z-index: 1;
+        [data-flux-sidebar] a[href]:hover,
+        [data-flux-sidebar] [data-flux-navlist-item]:hover {
+            background: var(--tf-blue-lt) !important;
+            color: var(--tf-blue) !important;
         }
 
-        /* ── Logo ────────────────────────────────────────── */
-        .gs-logo {
-            display: flex;
-            align-items: center;
-            gap: 13px;
-            padding: 24px 22px 20px;
-            border-bottom: 1px solid rgba(32,178,170,0.14);
+        [data-flux-sidebar] a[href] svg,
+        [data-flux-sidebar] [data-flux-navlist-item] svg {
+            width: 18px !important;
+            height: 18px !important;
+            stroke: currentColor !important;
+            fill: none !important;
+            stroke-width: 1.75 !important;
+            flex-shrink: 0 !important;
+            opacity: 0.75 !important;
+            transition: opacity 0.15s !important;
         }
 
-        .gs-logo-mark {
-            width: 42px; height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+        [data-flux-sidebar] a[href]:hover svg { opacity: 1 !important; }
+
+        /* ══ ACTIVE — solid filled blue pill ══════════════════ */
+        [data-flux-sidebar] a[aria-current="page"],
+        [data-flux-sidebar] a[aria-current="true"],
+        [data-flux-sidebar] [data-flux-navlist-item][aria-current="page"],
+        [data-flux-sidebar] [data-active="true"] {
+            background: var(--tf-blue) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 14px rgba(59,111,232,0.28) !important;
+        }
+
+        [data-flux-sidebar] a[aria-current="page"] svg,
+        [data-flux-sidebar] a[aria-current="true"] svg,
+        [data-flux-sidebar] [data-flux-navlist-item][aria-current="page"] svg {
+            stroke: #ffffff !important;
+            opacity: 1 !important;
+            color: #ffffff !important;
+        }
+
+        [data-flux-sidebar] a[aria-current="page"] *,
+        [data-flux-sidebar] a[aria-current="true"] *,
+        [data-flux-sidebar] [data-flux-navlist-item][aria-current="page"] * {
+            color: #ffffff !important;
+            background: transparent !important;
+        }
+
+        /* ── Group heading buttons ────────────────────────── */
+        [data-flux-sidebar] button,
+        [data-flux-sidebar] [data-flux-navlist-group] > button {
+            color: var(--tf-ink3) !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.09em !important;
+            text-transform: uppercase !important;
+            font-family: 'DM Sans', sans-serif !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ── Separator ────────────────────────────────────── */
+        [data-flux-sidebar] hr { border-color: var(--tf-border) !important; }
+
+        /* ── Badges ───────────────────────────────────────── */
+        [data-flux-sidebar] [data-flux-badge] {
+            background: rgba(240,68,56,0.12) !important;
+            color: #D92D20 !important; font-weight: 700 !important;
+            border-radius: 100px !important; font-size: 10px !important;
+        }
+        [data-flux-sidebar] a[aria-current="page"] [data-flux-badge] {
+            background: rgba(255,255,255,0.25) !important;
+            color: #fff !important;
+        }
+
+        /* Kill Tailwind bg classes inside sidebar */
+        [data-flux-sidebar] [class*="bg-white"],
+        [data-flux-sidebar] [class*="bg-gray"],
+        [data-flux-sidebar] [class*="bg-zinc"],
+        [data-flux-sidebar] [class*="bg-slate"] {
+            background: transparent !important;
+        }
+
+        /* Scrollbar */
+        [data-flux-sidebar] ::-webkit-scrollbar { width: 3px; }
+        [data-flux-sidebar] ::-webkit-scrollbar-thumb { background: var(--tf-border); border-radius: 4px; }
+
+        /* ══ CUSTOM SIDEBAR COMPONENTS ════════════════════════ */
+
+        .tf-logo {
+            display: flex; align-items: center; gap: 12px;
+            padding: 22px 20px 20px;
+            border-bottom: 1px solid var(--tf-border);
+            flex-shrink: 0;
+        }
+        .tf-logo-mark {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg, #3B6FE8 0%, #6B4FDB 100%);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 4px 16px rgba(13,148,136,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+            box-shadow: 0 4px 14px rgba(59,111,232,0.35);
+        }
+        .tf-logo-mark svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
+        .tf-logo-name {
+            font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 800;
+            color: var(--tf-ink); letter-spacing: -0.3px; line-height: 1.2;
+        }
+        .tf-logo-sub {
+            font-size: 10px; font-weight: 700; color: var(--tf-blue);
+            letter-spacing: 0.10em; text-transform: uppercase; margin-top: 1px;
         }
 
-        .gs-logo-mark svg {
-            width: 20px; height: 20px;
-            stroke: #fff; fill: none; stroke-width: 2;
+        /* Search */
+        .tf-search-wrap { padding: 14px 12px 8px; }
+        .tf-search-box {
+            display: flex; align-items: center; gap: 9px;
+            background: var(--tf-search-bg);
+            border: 1px solid var(--tf-border);
+            border-radius: 10px; padding: 9px 13px;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
-
-        .gs-logo-name {
+        .tf-search-box:focus-within {
+            border-color: rgba(59,111,232,0.45);
+            box-shadow: 0 0 0 3px rgba(59,111,232,0.09);
+        }
+        .tf-search-box svg { width: 14px; height: 14px; stroke: var(--tf-ink3); fill: none; flex-shrink: 0; }
+        .tf-search-box input {
+            border: none; background: transparent; outline: none; width: 100%;
+            font-size: 13px; font-weight: 500; color: var(--tf-ink);
             font-family: 'DM Sans', sans-serif;
-            font-size: 16px; font-weight: 600;
-            color: #ffffff;
-            letter-spacing: -0.3px;
-            line-height: 1.2;
+        }
+        .tf-search-box input::placeholder { color: var(--tf-ink3); }
+
+        /* Bottom section */
+        .tf-sidebar-bottom {
+            border-top: 1px solid var(--tf-border);
+            padding: 10px 12px 14px;
         }
 
-        .gs-logo-sub {
+        /* User card */
+        .tf-user-card {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; background: var(--tf-search-bg);
+            border: 1px solid var(--tf-border); border-radius: 12px;
+            margin-bottom: 6px; cursor: pointer; transition: background 0.15s;
+        }
+        .tf-user-card:hover { background: var(--tf-blue-lt); }
+        .tf-user-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: linear-gradient(135deg, #3B6FE8, #6B4FDB);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+        }
+        .tf-user-info { flex: 1; min-width: 0; }
+        .tf-user-name { font-size: 13px; font-weight: 700; color: var(--tf-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tf-user-role { font-size: 11px; font-weight: 500; color: var(--tf-ink3); }
+        .tf-chevron { width: 14px; height: 14px; stroke: var(--tf-ink3); fill: none; flex-shrink: 0; }
+
+        /* Logout link */
+        .tf-logout {
+            display: flex; align-items: center; gap: 11px;
+            padding: 9px 12px; border-radius: 10px; text-decoration: none;
+            color: var(--tf-ink3); font-size: 13.5px; font-weight: 600;
             font-family: 'DM Sans', sans-serif;
-            font-size: 10px; font-weight: 500;
-            color: rgba(94,234,212,0.55);
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            margin-top: 1px;
+            transition: background 0.15s, color 0.15s;
+            margin-bottom: 2px;
         }
+        .tf-logout:hover { background: var(--tf-blue-lt); color: var(--tf-blue); }
+        .tf-logout svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.75; flex-shrink: 0; }
 
-        /* ── Nav links — full white ──────────────────────── */
-        .emp-sidebar-glass a[href] {
-            color: rgba(255, 255, 255, 0.72) !important;
-            font-family: 'DM Sans', sans-serif !important;
-            font-size: 14px !important;
-            border-radius: 11px !important;
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
-            transition: background 0.15s, color 0.15s, transform 0.12s !important;
+        /* Dark mode row */
+        .tf-darkmode-row {
+            display: flex; align-items: center; gap: 11px;
+            padding: 9px 12px; border-radius: 10px; cursor: pointer;
+            transition: background 0.15s;
         }
+        .tf-darkmode-row:hover { background: var(--tf-blue-lt); }
+        #darkModeIcon { width: 18px; height: 18px; stroke: var(--tf-ink3); fill: none; stroke-width: 1.75; flex-shrink: 0; }
+        .tf-darkmode-label { font-size: 13.5px; font-weight: 600; color: var(--tf-ink3); flex: 1; }
 
-        .emp-sidebar-glass a[href]:hover {
-            background: rgba(20,184,166,0.13) !important;
-            color: #ffffff !important;
-            transform: translateX(2px);
-            box-shadow: inset 0 0 0 1px rgba(20,184,166,0.18) !important;
+        /* Toggle switch */
+        .tf-toggle { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; }
+        .tf-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .tf-toggle-slider {
+            position: absolute; inset: 0; background: #DDE1EC;
+            border-radius: 100px; cursor: pointer; transition: background 0.2s;
         }
-
-        /* ── Active page — every selector Flux might use ── */
-        .emp-sidebar-glass a[aria-current="page"],
-        .emp-sidebar-glass a[aria-current="true"],
-        .emp-sidebar-glass a.active,
-        .emp-sidebar-glass [class*="navlist-item"][aria-current="page"],
-        .emp-sidebar-glass [class*="navlist-item"].active,
-        .emp-sidebar-glass li > a[aria-current="page"],
-        .emp-sidebar-glass [data-active="true"],
-        .emp-sidebar-glass [data-flux-navlist-item][aria-current="page"] {
-            background: rgba(13,148,136,0.28) !important;
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            box-shadow: inset 0 0 0 1px rgba(20,184,166,0.32), 0 2px 14px rgba(13,148,136,0.22) !important;
-            border-radius: 11px !important;
+        .tf-toggle-slider::before {
+            content: ''; position: absolute;
+            width: 16px; height: 16px; left: 3px; top: 3px;
+            background: #fff; border-radius: 50%;
+            transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.18);
         }
+        .tf-toggle input:checked + .tf-toggle-slider { background: var(--tf-blue); }
+        .tf-toggle input:checked + .tf-toggle-slider::before { transform: translateX(16px); }
 
-        /* Force ALL child elements of active item to stay white/teal */
-        .emp-sidebar-glass a[aria-current="page"] *,
-        .emp-sidebar-glass a[aria-current="true"] *,
-        .emp-sidebar-glass a.active *,
-        .emp-sidebar-glass [data-flux-navlist-item][aria-current="page"] * {
-            color: #ffffff !important;
-            background: transparent !important;
-        }
-
-        /* Active item icons — teal tint */
-        .emp-sidebar-glass a[aria-current="page"] svg,
-        .emp-sidebar-glass a[aria-current="true"] svg,
-        .emp-sidebar-glass a.active svg,
-        .emp-sidebar-glass [data-flux-navlist-item][aria-current="page"] svg {
-            stroke: #2dd4bf !important;
-            opacity: 1 !important;
-        }
-
-        /* Active left accent bar */
-        .emp-sidebar-glass a[aria-current="page"] {
-            position: relative;
-        }
-
-        /* Nuke any white/light bg Flux adds via Tailwind on active items */
-        .emp-sidebar-glass [class*="bg-white"],
-        .emp-sidebar-glass [class*="bg-gray"],
-        .emp-sidebar-glass [class*="bg-zinc"],
-        .emp-sidebar-glass [class*="bg-slate"] {
-            background: transparent !important;
-        }
-
-        /* Nav icons */
-        .emp-sidebar-glass a[href] svg,
-        .emp-sidebar-glass a[href] [data-flux-icon] {
-            opacity: 0.5;
-            transition: opacity 0.15s;
-        }
-
-        .emp-sidebar-glass a[href]:hover svg,
-        .emp-sidebar-glass a[href]:hover [data-flux-icon] {
-            opacity: 1 !important;
-        }
-
-        /* ── Group headings — white ───────────────────────── */
-        .emp-sidebar-glass [data-flux-navlist-group] > button,
-        .emp-sidebar-glass li > button {
-            color: rgba(255, 255, 255, 0.38) !important;
-            font-size: 10.5px !important;
-            letter-spacing: 0.12em !important;
-            text-transform: uppercase !important;
-            font-weight: 600 !important;
-            font-family: 'DM Sans', sans-serif !important;
-        }
-
-        /* Group heading text when collapsed/expanded */
-        .emp-sidebar-glass [data-flux-navlist-group] > button:hover {
-            color: rgba(255,255,255,0.65) !important;
-        }
-
-        /* Chevrons */
-        .emp-sidebar-glass [data-flux-navlist-group] > button svg {
-            color: rgba(255,255,255,0.3) !important;
-            opacity: 1 !important;
-        }
-
-        /* ── Separator ───────────────────────────────────── */
-        .emp-sidebar-glass hr,
-        .emp-sidebar-glass [data-flux-separator] {
-            border-color: rgba(32,178,170,0.12) !important;
-        }
-
-        /* ── Badges ──────────────────────────────────────── */
-        .emp-sidebar-glass [data-flux-badge],
-        .emp-sidebar-glass [class*="badge"] {
-            background: rgba(239,68,68,0.75) !important;
-            color: #fff !important;
-        }
-
-        /* ── Profile button ──────────────────────────────── */
-        .emp-sidebar-glass [data-flux-profile],
-        .emp-sidebar-glass button[class*="profile"] {
-            background: rgba(13,148,136,0.14) !important;
-            border: 1px solid rgba(32,178,170,0.2) !important;
-            border-radius: 13px !important;
-        }
-
-        .emp-sidebar-glass [data-flux-profile]:hover {
-            background: rgba(13,148,136,0.22) !important;
-        }
-
-        .emp-sidebar-glass [data-flux-profile] span,
-        .emp-sidebar-glass [data-flux-profile] p,
-        .emp-sidebar-glass [data-flux-profile] * {
-            color: #ffffff !important;
-        }
-
-        /* ── Dropdown menu ───────────────────────────────── */
-        [data-flux-menu],
-        [data-flux-dropdown] [role="menu"] {
-            background: rgba(5, 32, 46, 0.97) !important;
-            backdrop-filter: blur(24px) !important;
-            -webkit-backdrop-filter: blur(24px) !important;
-            border: 1px solid rgba(32,178,170,0.2) !important;
-            border-radius: 14px !important;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.45) !important;
-        }
-
-        [data-flux-menu] a,
-        [data-flux-menu] button {
-            color: rgba(255,255,255,0.8) !important;
-            border-radius: 8px !important;
-        }
-
-        [data-flux-menu] a:hover,
-        [data-flux-menu] button:hover {
-            background: rgba(20,184,166,0.14) !important;
-            color: #fff !important;
-        }
-
-        /* ── Toggle / close button ───────────────────────── */
-        .emp-sidebar-glass button {
-            color: rgba(255,255,255,0.45) !important;
-        }
-
-        /* ── Scrollbar ───────────────────────────────────── */
-        .emp-sidebar-glass ::-webkit-scrollbar { width: 3px; }
-        .emp-sidebar-glass ::-webkit-scrollbar-track { background: transparent; }
-        .emp-sidebar-glass ::-webkit-scrollbar-thumb { background: rgba(20,184,166,0.22); border-radius: 4px; }
-        .emp-sidebar-glass ::-webkit-scrollbar-thumb:hover { background: rgba(20,184,166,0.4); }
+        /* Global scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--tf-border); border-radius: 4px; }
     </style>
 </head>
 
-<body class="min-h-screen scrollbar-custom">
+<body class="min-h-screen">
 
-<flux:sidebar sticky stashable class="emp-sidebar-glass scrollbar-custom">
+<flux:sidebar sticky stashable>
 
-    <div class="gs-glow-1" aria-hidden="true"></div>
-    <div class="gs-glow-2" aria-hidden="true"></div>
-    <div class="gs-glow-3" aria-hidden="true"></div>
-
-    <div class="gs-logo">
-        <div class="gs-logo-mark">
-            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    {{-- Logo --}}
+    <div class="tf-logo">
+        <div class="tf-logo-mark">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
         </div>
         <div>
-            <div class="gs-logo-name">TalentFlow</div>
-            <div class="gs-logo-sub">Pro</div>
+            <div class="tf-logo-name">TalentFlow</div>
+            <div class="tf-logo-sub">Pro</div>
+        </div>
+    </div>
+
+    {{-- Search --}}
+    <div class="tf-search-wrap">
+        <div class="tf-search-box">
+            <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search...">
         </div>
     </div>
 
     <flux:sidebar.toggle class="lg:hidden" icon="x-mark"/>
-    <flux:separator/>
 
     @auth
         <flux:navlist variant="outline">
-            <flux:navlist.item icon="home" href="{{ route('employee.dashboard') }}" wire:navigate>Dashboard</flux:navlist.item>
+
+            <flux:navlist.item icon="home" href="{{ route('employee.dashboard') }}" wire:navigate>
+                Dashboard
+            </flux:navlist.item>
 
             <flux:navlist.group expandable heading="Personal" class="hidden lg:grid">
-                <flux:navlist.item icon="user" href="{{ route('employee.profile') }}" wire:navigate>My Profile</flux:navlist.item>
-                <flux:navlist.item icon="document-text" href="{{ route('employee.contracts') }}" wire:navigate>My Contracts</flux:navlist.item>
-                <flux:navlist.item icon="presentation-chart-line" href="{{ route('employee.performance') }}" wire:navigate>Performance</flux:navlist.item>
+                <flux:navlist.item icon="user" href="{{ route('employee.profile') }}" wire:navigate>
+                    My Profile
+                </flux:navlist.item>
+                <flux:navlist.item icon="document-text" href="{{ route('employee.contracts') }}" wire:navigate>
+                    My Contracts
+                </flux:navlist.item>
+                <flux:navlist.item icon="presentation-chart-line" href="{{ route('employee.performance') }}" wire:navigate>
+                    Performance
+                </flux:navlist.item>
             </flux:navlist.group>
 
             <flux:navlist.group expandable heading="Work Management" class="hidden lg:grid">
-                <flux:navlist.item icon="document-plus" href="{{ route('employee.leave.request') }}" wire:navigate>Request Leave</flux:navlist.item>
-                <flux:navlist.item icon="check-circle" href="{{ route('employee.leave-status') }}" wire:navigate>Leave Status</flux:navlist.item>
-                <flux:navlist.item icon="calendar" href="{{ route('employee.calendar') }}" wire:navigate>My Calendar</flux:navlist.item>
-                <flux:navlist.item icon="clock" href="{{ route('employee.attendance') }}" wire:navigate>Attendance</flux:navlist.item>
+                <flux:navlist.item icon="document-plus" href="{{ route('employee.leave.request') }}" wire:navigate>
+                    Request Leave
+                </flux:navlist.item>
+                <flux:navlist.item icon="check-circle" href="{{ route('employee.leave-status') }}" wire:navigate>
+                    Leave Status
+                </flux:navlist.item>
+                <flux:navlist.item icon="calendar" href="{{ route('employee.calendar') }}" wire:navigate>
+                    My Calendar
+                </flux:navlist.item>
+                <flux:navlist.item icon="clock" href="{{ route('employee.attendance') }}" wire:navigate>
+                    Attendance
+                </flux:navlist.item>
             </flux:navlist.group>
 
             <flux:navlist.group expandable heading="Communication" class="hidden lg:grid">
-                <flux:navlist.item icon="chat-bubble-left-right" href="{{ route('employee.communication') }}" wire:navigate>Messages</flux:navlist.item>
+                <flux:navlist.item icon="chat-bubble-left-right" href="{{ route('employee.communication') }}" wire:navigate>
+                    Messages
+                </flux:navlist.item>
             </flux:navlist.group>
 
             <flux:navlist.group expandable heading="Financial" class="hidden lg:grid">
-                <flux:navlist.item icon="banknotes" href="{{ route('employee.payroll') }}" wire:navigate>Payroll</flux:navlist.item>
+                <flux:navlist.item icon="banknotes" href="{{ route('employee.payroll') }}" wire:navigate>
+                    Payroll
+                </flux:navlist.item>
             </flux:navlist.group>
 
-            <flux:navlist.item icon="arrow-right" href="{{ route('logout') }}" wire:navigate>Logout</flux:navlist.item>
         </flux:navlist>
     @endauth
 
+    <flux:spacer/>
+
+    {{-- Bottom: user + logout + dark mode --}}
+    <div class="tf-sidebar-bottom">
+
+        @auth
+        <div class="tf-user-card">
+            <div class="tf-user-avatar">
+                {{ strtoupper(substr(Auth::user()->first_name ?? 'U', 0, 1)) }}{{ strtoupper(substr(Auth::user()->last_name ?? '', 0, 1)) }}
+            </div>
+            <div class="tf-user-info">
+                <div class="tf-user-name">{{ Auth::user()->first_name ?? '' }} {{ Auth::user()->last_name ?? '' }}</div>
+                <div class="tf-user-role">{{ ucfirst(Auth::user()->role->value ?? 'Employee') }}</div>
+            </div>
+            <svg class="tf-chevron" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        @endauth
+
+        <a href="{{ route('logout') }}" class="tf-logout" wire:navigate>
+            <svg viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Logout
+        </a>
+
+        <div class="tf-darkmode-row" id="darkModeRow">
+            <svg id="darkModeIcon" viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+            <span class="tf-darkmode-label" id="darkModeLabel">Dark Mode</span>
+            <label class="tf-toggle" onclick="event.stopPropagation()">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="tf-toggle-slider"></span>
+            </label>
+        </div>
+
+    </div>
+
 </flux:sidebar>
 
-<flux:main class="!p-0 overflow-scroll scrollbar-custom">
+<flux:main class="!p-0 overflow-scroll">
     {{ $slot }}
 </flux:main>
 
@@ -371,56 +433,114 @@
 @endpersist
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const sidebar = document.querySelector('.emp-sidebar-glass')
-        || document.querySelector('[data-flux-sidebar]');
+(function () {
+    var DARK_KEY  = 'tf-dark';
+    var SUN_PATH  = 'M12 17a5 5 0 100-10 5 5 0 000 10zm0-15v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42';
+    var MOON_PATH = 'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z';
 
-    if (sidebar) {
-        sidebar.style.setProperty('width', '280px', 'important');
-        sidebar.style.setProperty('min-width', '280px', 'important');
-        sidebar.style.setProperty('background', 'linear-gradient(175deg, rgba(7,28,48,0.97) 0%, rgba(5,38,56,0.97) 40%, rgba(4,30,45,0.98) 100%)', 'important');
-        sidebar.style.setProperty('backdrop-filter', 'blur(32px) saturate(1.6)', 'important');
-        sidebar.style.setProperty('-webkit-backdrop-filter', 'blur(32px) saturate(1.6)', 'important');
-        sidebar.style.setProperty('border-right', '1px solid rgba(32,178,170,0.18)', 'important');
-        sidebar.style.setProperty('box-shadow', '4px 0 40px rgba(0,0,0,0.35)', 'important');
+    /* ── Apply / remove dark mode ── */
+    function applyDark(on) {
+        var html = document.documentElement;
+        if (on) {
+            html.classList.add('tf-dark');
+            /* Flux uses 'dark' class for its own dark mode */
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('tf-dark', 'dark');
+        }
+
+        var toggle = document.getElementById('darkModeToggle');
+        var label  = document.getElementById('darkModeLabel');
+        var icon   = document.getElementById('darkModeIcon');
+
+        if (toggle) toggle.checked = on;
+        if (label)  label.textContent = on ? 'Light Mode' : 'Dark Mode';
+        if (icon) {
+            var path = icon.querySelector('path');
+            if (path) path.setAttribute('d', on ? SUN_PATH : MOON_PATH);
+        }
+
+        try { localStorage.setItem(DARK_KEY, on ? 'true' : 'false'); } catch(e){}
     }
 
-    function fixActiveNavItems() {
-        const sidebarEl = document.querySelector('.emp-sidebar-glass');
-        if (!sidebarEl) return;
-        const activeEls = sidebarEl.querySelectorAll('[aria-current="page"],[aria-current="true"],[data-active="true"]');
-        activeEls.forEach(el => {
-            el.style.setProperty('background', 'rgba(13,148,136,0.28)', 'important');
-            el.style.setProperty('color', '#ffffff', 'important');
-            el.style.setProperty('border-radius', '11px', 'important');
-            el.style.setProperty('box-shadow', 'inset 0 0 0 1px rgba(20,184,166,0.32)', 'important');
-            el.style.setProperty('font-weight', '600', 'important');
-            el.querySelectorAll('*').forEach(child => {
-                child.style.setProperty('color', '#ffffff', 'important');
-                if (['svg','path','circle','rect','line'].includes(child.tagName)) {
-                    child.style.setProperty('stroke', '#2dd4bf', 'important');
-                }
-                const bg = window.getComputedStyle(child).backgroundColor;
-                if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent' && !bg.includes('13, 148')) {
-                    child.style.setProperty('background-color', 'transparent', 'important');
-                    child.style.setProperty('background', 'transparent', 'important');
-                }
+    /* Apply saved preference before first paint */
+    var isDark = false;
+    try { isDark = localStorage.getItem(DARK_KEY) === 'true'; } catch(e){}
+    applyDark(isDark);
+
+    /* ── Enforce active nav item styling after Flux renders ── */
+    function enforceActiveNav() {
+        var sidebar = document.querySelector('[data-flux-sidebar]');
+        if (!sidebar) return;
+
+        var activeEls = sidebar.querySelectorAll(
+            '[aria-current="page"],[aria-current="true"],[data-active="true"]'
+        );
+
+        activeEls.forEach(function(el) {
+            el.style.setProperty('background',   'var(--tf-blue)',                'important');
+            el.style.setProperty('color',        '#ffffff',                       'important');
+            el.style.setProperty('font-weight',  '700',                           'important');
+            el.style.setProperty('box-shadow',   '0 4px 14px rgba(59,111,232,0.28)', 'important');
+            el.style.setProperty('border-radius','10px',                          'important');
+
+            el.querySelectorAll('svg, path, circle, rect, line, polyline').forEach(function(s) {
+                s.style.setProperty('stroke',  '#ffffff', 'important');
+                s.style.setProperty('opacity', '1',       'important');
+                s.style.setProperty('color',   '#ffffff', 'important');
+            });
+            el.querySelectorAll('span, p, div').forEach(function(t) {
+                t.style.setProperty('color', '#ffffff', 'important');
             });
         });
     }
 
-    fixActiveNavItems();
-    document.addEventListener('livewire:navigated', fixActiveNavItems);
-    document.addEventListener('livewire:navigate', fixActiveNavItems);
+    /* ── Wire up controls after DOM is ready ── */
+    function init() {
+        /* Dark mode toggle */
+        var toggle = document.getElementById('darkModeToggle');
+        if (toggle) {
+            toggle.checked = isDark;
+            toggle.addEventListener('change', function() { applyDark(this.checked); });
+        }
 
-    const sidebarEl = document.querySelector('.emp-sidebar-glass');
-    if (sidebarEl) {
-        new MutationObserver(fixActiveNavItems).observe(sidebarEl, {
-            subtree: true, attributes: true,
-            attributeFilter: ['aria-current', 'class', 'data-active']
-        });
+        /* Clicking the whole row also toggles */
+        var row = document.getElementById('darkModeRow');
+        if (row) {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('label') || e.target.tagName === 'INPUT') return;
+                var t = document.getElementById('darkModeToggle');
+                if (t) { t.checked = !t.checked; applyDark(t.checked); }
+            });
+        }
+
+        enforceActiveNav();
+
+        /* Watch for Flux updating aria-current / class */
+        var sb = document.querySelector('[data-flux-sidebar]');
+        if (sb && window.MutationObserver) {
+            new MutationObserver(enforceActiveNav).observe(sb, {
+                subtree: true, attributes: true,
+                attributeFilter: ['aria-current', 'class', 'data-active']
+            });
+        }
     }
-});
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    /* Re-apply after Livewire SPA navigation */
+    document.addEventListener('livewire:navigated', function() {
+        var dark = false;
+        try { dark = localStorage.getItem(DARK_KEY) === 'true'; } catch(e){}
+        applyDark(dark);
+        init();
+    });
+
+})();
 </script>
 
 </body>

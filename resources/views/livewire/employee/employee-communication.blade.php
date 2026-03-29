@@ -3,439 +3,431 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
-/* ── Variables ────────────────────────────────────────── */
+/* ── Reset & Root ─────────────────────────────────────── */
 .msg-root {
-    --glass-bg:       rgba(255,255,255,0.45);
-    --glass-strong:   rgba(255,255,255,0.70);
-    --glass-border:   rgba(255,255,255,0.70);
-    --glass-shadow:   0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
-    --blur:           blur(24px) saturate(1.8);
-    --radius:         24px;
-    --radius-sm:      14px;
-    --radius-pill:    100px;
-    --text-primary:   rgba(15,15,25,0.96);
-    --text-secondary: rgba(15,15,25,0.68);
-    --text-tertiary:  rgba(15,15,25,0.44);
-    --teal:           #0d9488;
-    --teal-light:     rgba(13,148,136,0.12);
+    --accent:         #3B6FE8;
+    --accent-light:   rgba(59,111,232,0.10);
+    --accent-hover:   #3B6FE8;
+    --bubble-sent:    #3B6FE8;
+    --bubble-recv:    #f4f5ee;
+    --sidebar-w:      250px; /* Reduced from 300px */
+    --text-primary:   #1a1a1a;
+    --text-secondary: #7d94c2;
+    --text-tertiary:  #b1bbc9;
+    --border:         #e8e8e8;
+    --bg:             #ffffff;
+    --nav-h:          72px;
     font-family: 'DM Sans', -apple-system, sans-serif;
-    padding: 36px 40px 120px;
+    padding: 12px 12px calc(var(--nav-h) + 16px); /* Reduced padding */
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px; /* Reduced gap */
     max-width: 100%;
-    min-height: 100vh;
+    height: 95vh; /* Take 95% of viewport height */
+    min-height: 700px; /* Increased minimum height */
+    background: #f8f8f7f8;
 }
 
-/* ── Glass card ───────────────────────────────────────── */
-.g-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    box-shadow: var(--glass-shadow);
-    overflow: hidden;
-    position: relative;
-}
-
-.g-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent);
-    pointer-events: none; z-index: 1;
-}
-
-/* ── Animated entrance ────────────────────────────────── */
-@keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeSlideIn {
-    from { opacity: 0; transform: translateX(-12px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.94); }
-    to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position: 200% center; }
-}
-
-@keyframes pulse-teal {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(13,148,136,0.4); }
-    50%       { box-shadow: 0 0 0 8px rgba(13,148,136,0); }
-}
-
-@keyframes bounce-in {
-    0%   { transform: scale(0.8); opacity: 0; }
-    60%  { transform: scale(1.05); }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes typing {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-    30%            { transform: translateY(-4px); opacity: 1; }
-}
-
-.anim-1 { animation: fadeSlideUp 0.4s ease both; }
-.anim-2 { animation: fadeSlideUp 0.4s 0.08s ease both; }
-.anim-3 { animation: fadeSlideUp 0.4s 0.16s ease both; }
-
-/* ── Page header ──────────────────────────────────────── */
-.msg-header {
-    padding: 26px 32px;
-    display: flex; justify-content: space-between; align-items: center; gap: 16px;
-}
-
-.msg-header-left { display: flex; align-items: center; gap: 14px; }
-
-.msg-icon-wrap {
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, #0d9488, #0891b2);
+/* ── Page header card ─────────────────────────────────── */
+.msg-top-bar {
+    background: #fff;
+    border: 1px solid var(--border);
     border-radius: 16px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+    width: 75vw; 
+    margin: 0 auto;
+}
+
+.msg-top-left { display: flex; align-items: center; gap: 12px; }
+
+.msg-top-icon {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 16px rgba(13,148,136,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
     flex-shrink: 0;
 }
+.msg-top-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
 
-.msg-icon-wrap svg { width: 22px; height: 22px; stroke: #fff; }
-
-.msg-header-left h1 { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.4px; margin: 0 0 2px; }
-.msg-header-left p  { font-size: 13.5px; font-weight: 500; color: var(--text-secondary); margin: 0; }
-
-.msg-header-right { display: flex; align-items: center; gap: 12px; }
+.msg-top-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0 0 2px; }
+.msg-top-sub   { font-size: 13px; color: var(--text-secondary); margin: 0; }
 
 .msg-unread-pill {
-    display: flex; align-items: center; gap: 7px;
-    background: rgba(239,68,68,0.1);
-    border: 1px solid rgba(239,68,68,0.25);
-    border-radius: var(--radius-pill);
-    padding: 6px 16px;
-    animation: bounce-in 0.5s 0.3s ease both;
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 100px;
+    padding: 5px 14px;
 }
+.msg-unread-dot  { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; flex-shrink: 0; }
+.msg-unread-text { font-size: 12.5px; font-weight: 700; color: #b91c1c; }
 
-.msg-unread-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #ef4444;
-    animation: pulse-teal 1.8s infinite;
-    box-shadow: 0 0 0 0 rgba(239,68,68,0.4);
-}
-
-.msg-unread-text { font-size: 13px; font-weight: 700; color: #b91c1c; }
-
-.btn-compose {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #0d9488, #0891b2);
-    color: #fff; border: none; border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13.5px; font-weight: 700; cursor: pointer;
-    box-shadow: 0 4px 14px rgba(13,148,136,0.3);
-    transition: transform 0.15s, box-shadow 0.15s;
-    animation: scaleIn 0.4s 0.2s ease both;
-}
-
-.btn-compose:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 6px 20px rgba(13,148,136,0.45); }
-.btn-compose svg   { width: 15px; height: 15px; stroke: #fff; transition: transform 0.2s; }
-.btn-compose:hover svg { transform: rotate(15deg) scale(1.1); }
-
-/* ── Main layout ──────────────────────────────────────── */
-.msg-layout {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 20px;
-    align-items: start;
-}
-
-/* ── Message feed ─────────────────────────────────────── */
-.msg-feed-wrap { display: flex; flex-direction: column; gap: 14px; }
-
-/* ── Conversation thread card ─────────────────────────── */
-.msg-thread {
-    background: var(--glass-bg);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    box-shadow: var(--glass-shadow);
+/* ── Chat shell ───────────────────────────────────────── */
+.chat-shell {
+    display: flex;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
     overflow: hidden;
-    position: relative;
-    animation: fadeSlideIn 0.35s ease both;
+    height: 85vh; /* Much larger - 85% of viewport height */
+    min-height: 700px; /* Increased minimum */
+    flex: 1;
+    width: 75vw; /* Use 95% of viewport width */
+    max-width: none; /* Remove max-width constraint */
+    margin: 0 auto; /* Center the whole chat */
 }
 
-.msg-thread::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
-    pointer-events: none;
+/* ── LEFT: Available Users Section ─────────────────────── */
+.chat-users {
+    width: 280px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background: #fff;
 }
 
-.msg-thread.unread {
-    border-color: rgba(37,99,235,0.25);
-    background: rgba(37,99,235,0.05);
-}
-
-.msg-thread.unread::after {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, #3b82f6, #6366f1);
-    border-radius: 0 3px 3px 0;
-}
-
-/* Thread header */
-.msg-thread-head {
-    display: flex; align-items: center; gap: 14px;
-    padding: 16px 20px 12px;
-}
-
-.msg-avatar-lg {
-    width: 42px; height: 42px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; font-size: 14px; font-weight: 700;
-    position: relative;
-}
-
-.avatar-sent     { background: linear-gradient(135deg, rgba(13,148,136,0.2), rgba(8,145,178,0.2)); color: #0d9488; border: 1.5px solid rgba(13,148,136,0.3); }
-.avatar-received { background: linear-gradient(135deg, rgba(37,99,235,0.15), rgba(99,102,241,0.15)); color: #3b82f6; border: 1.5px solid rgba(37,99,235,0.25); }
-
-.msg-avatar-lg svg { width: 18px; height: 18px; stroke: currentColor; }
-
-.msg-thread-info { flex: 1; min-width: 0; }
-.msg-thread-name { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0 0 2px; }
-.msg-thread-to   { font-size: 12px; font-weight: 500; color: var(--text-tertiary); margin: 0; }
-
-.msg-thread-meta { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.msg-thread-time { font-size: 11.5px; font-weight: 500; color: var(--text-tertiary); }
-
-.btn-mark-read {
-    font-size: 11px; font-weight: 600; color: #3b82f6;
-    background: rgba(37,99,235,0.08);
-    border: none; border-radius: 6px; cursor: pointer;
-    padding: 3px 9px;
-    font-family: 'DM Sans', sans-serif;
-    transition: background 0.15s;
-}
-
-.btn-mark-read:hover { background: rgba(37,99,235,0.15); }
-
-/* Chat bubble */
-.msg-bubble-body {
-    margin: 0 16px 16px;
-    padding: 14px 18px;
-    border-radius: 6px 18px 18px 18px;
-    position: relative;
-    transition: transform 0.15s;
-}
-
-.msg-thread.sent .msg-bubble-body {
-    background: linear-gradient(135deg, rgba(13,148,136,0.12), rgba(8,145,178,0.08));
-    border: 1px solid rgba(13,148,136,0.18);
-    border-radius: 18px 6px 18px 18px;
-    margin-left: 40px;
-}
-
-.msg-thread.received .msg-bubble-body {
-    background: rgba(255,255,255,0.65);
-    border: 1px solid rgba(255,255,255,0.9);
-    margin-right: 40px;
-}
-
-.msg-thread:hover .msg-bubble-body { transform: translateY(-1px); }
-
-.msg-subject { font-size: 14px; font-weight: 700; color: var(--text-primary); margin: 0 0 5px; }
-.msg-body    { font-size: 13.5px; font-weight: 400; color: var(--text-secondary); margin: 0; line-height: 1.6; }
-
-/* Thread footer */
-.msg-thread-footer {
-    display: flex; align-items: center; gap: 8px;
-    padding: 0 20px 14px;
-}
-
-.badge { display: inline-flex; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); }
-.badge-green { background: rgba(34,197,94,0.14); color: #15803d; }
-.badge-gray  { background: rgba(0,0,0,0.07);     color: var(--text-secondary); }
-.badge-blue  { background: rgba(37,99,235,0.12); color: #1d4ed8; }
-
-/* ── Empty feed ───────────────────────────────────────── */
-.msg-empty {
-    text-align: center; padding: 64px 24px;
-    animation: fadeSlideUp 0.5s ease both;
-}
-
-.msg-empty-icon-wrap {
-    width: 72px; height: 72px;
-    background: linear-gradient(135deg, rgba(13,148,136,0.1), rgba(8,145,178,0.08));
-    border: 1px solid rgba(13,148,136,0.15);
-    border-radius: 22px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 18px;
-}
-
-.msg-empty-icon-wrap svg { width: 32px; height: 32px; stroke: #0d9488; }
-.msg-empty-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
-.msg-empty-sub   { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin: 0 0 22px; }
-
-/* ── Compose sidebar ──────────────────────────────────── */
-.msg-compose {
-    position: sticky;
-    top: 24px;
-}
-
-.compose-inner {
-    background: var(--glass-strong);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    box-shadow: var(--glass-shadow);
-    overflow: hidden;
-    position: relative;
-    animation: scaleIn 0.4s 0.1s ease both;
-}
-
-.compose-inner::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent);
-    pointer-events: none;
-}
-
-/* Decorative glow inside compose */
-.compose-glow {
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 160px; height: 160px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(13,148,136,0.12) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.compose-head {
-    padding: 20px 22px 16px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    display: flex; align-items: center; gap: 10px;
-    position: relative; z-index: 1;
-}
-
-.compose-head-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, #0d9488, #0891b2);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 8px rgba(13,148,136,0.3);
+.users-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
 
-.compose-head-icon svg { width: 15px; height: 15px; stroke: #fff; }
-.compose-head-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.users-title {
+    font-size: 14px; font-weight: 700; color: var(--text-primary);
+    margin: 0 0 8px;
+}
 
-.compose-form { padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+.users-search {
+    display: flex; align-items: center; gap: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+.users-search svg { width: 14px; height: 14px; stroke: #999; flex-shrink: 0; }
+.users-search input {
+    border: none; background: transparent;
+    font-size: 12px; color: var(--text-primary);
+    outline: none; width: 100%;
+    font-family: 'DM Sans', sans-serif;
+}
+.users-search input::placeholder { color: #999; }
 
-/* Flash messages inside compose */
-.cmp-flash-ok  { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; color: #15803d; animation: bounce-in 0.4s ease; }
-.cmp-flash-err { background: rgba(239,68,68,0.10); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; color: #b91c1c; animation: bounce-in 0.4s ease; }
+.users-list { overflow-y: auto; flex: 1; padding: 8px; }
 
-.cmp-field { display: flex; flex-direction: column; gap: 5px; }
+.user-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.15s;
+    margin-bottom: 4px;
+}
+.user-item:hover { background: var(--accent-light); }
+.user-item.active { background: var(--accent); color: #fff; }
+.user-item.active .user-name { color: #fff; }
+.user-item.active .user-role { color: rgba(255,255,255,0.8); }
 
-.cmp-field label {
+.user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0; position: relative;
+    background: var(--accent-light); color: var(--accent);
+}
+.user-item.active .user-avatar { background: rgba(255,255,255,0.2); color: #fff; }
+
+.user-info { flex: 1; min-width: 0; }
+.user-name    { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── MIDDLE: Recent Messages Section ───────────────────── */
+.chat-conversations {
+    width: 320px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.conversations-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.conversations-title {
+    font-size: 14px; font-weight: 700; color: var(--text-primary);
+    margin: 0;
+}
+
+.conversations-list { overflow-y: auto; flex: 1; }
+
+.conversation-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    margin: 4px 8px;
+    transition: background 0.15s;
+    position: relative;
+}
+.conversation-item:hover { background: var(--accent-light); }
+.conversation-item.active { background: var(--accent); color: #fff; }
+.conversation-item.active .conv-name { color: #fff; }
+.conversation-item.active .conv-preview { color: rgba(255,255,255,0.8); }
+.conversation-item.active .conv-time { color: rgba(255,255,255,0.8); }
+
+.conv-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0; position: relative;
+    background: var(--accent-light); color: var(--accent);
+}
+.conversation-item.active .conv-avatar { background: rgba(255,255,255,0.2); color: #fff; }
+
+.conv-info { flex: 1; min-width: 0; }
+.conv-name    { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+.conv-preview { font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.conv-meta { text-align: right; flex-shrink: 0; }
+.conv-time  { font-size: 10.5px; color: var(--text-tertiary); display: block; margin-bottom: 3px; }
+.conv-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 100px; background: var(--accent);
+    color: #fff; font-size: 9.5px; font-weight: 700;
+}
+.conversation-item.active .conv-badge { background: rgba(255,255,255,0.3); }
+
+/* ── RIGHT CHAT AREA ──────────────────────────────────── */
+.chat-main {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden; background: #fff;
+}
+
+/* Chat header */
+.chat-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.chat-header-left { display: flex; align-items: center; gap: 10px; }
+
+.chat-user-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    background: #f6f7f4; color: #5377da;
+    flex-shrink: 0;
+}
+.chat-user-name   { font-size: 14.5px; font-weight: 700; color: var(--text-primary); margin: 0 0 1px; }
+.chat-user-status { font-size: 12px; color: var(--accent); }
+
+.chat-actions { display: flex; gap: 12px; }
+.chat-actions button {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    border-radius: 8px; transition: background 0.15s; line-height: 0;
+}
+.chat-actions button:hover { background: #f5f5ee; }
+.chat-actions svg { width: 18px; height: 18px; stroke: #bbb; fill: none; stroke-width: 1.75; transition: stroke 0.15s; }
+.chat-actions button:hover svg { stroke: var(--accent); }
+
+/* Messages area */
+.chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+    background: #fff;
+}
+
+/* No messages state */
+.chat-empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text-tertiary); gap: 10px;
+    text-align: center;
+}
+.chat-empty svg { width: 40px; height: 40px; stroke: #ddd; fill: none; stroke-width: 1.5; }
+.chat-empty p   { font-size: 14px; margin: 0; }
+
+/* Message rows */
+.msg-row { display: flex; align-items: flex-end; gap: 8px; }
+.msg-row.sent { flex-direction: row-reverse; }
+
+.msg-wrap { display: flex; flex-direction: column; max-width: 62%; }
+.msg-row.sent .msg-wrap { align-items: flex-end; }
+
+.bubble {
+    padding: 10px 15px;
+    font-size: 13.5px; line-height: 1.55;
+    border-radius: 18px;
+    word-break: break-word;
+}
+.bubble.recv {
+    background: var(--bubble-recv);
+    color: var(--text-primary);
+    border-radius: 4px 18px 18px 18px;
+}
+.bubble.sent {
+    background: var(--bubble-sent);
+    color: #fff;
+    border-radius: 18px 4px 18px 18px;
+}
+
+.msg-subject-label {
     font-size: 11px; font-weight: 700;
+    margin-bottom: 2px;
+    opacity: 0.75;
+}
+
+.bubble-meta {
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 4px; padding: 0 2px;
+}
+.bubble-time { font-size: 10.5px; color: var(--text-tertiary); }
+
+.badge-sm {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 100px;
+    display: inline-flex;
+}
+.badge-new  { background: rgba(124,143,58,0.15); color: var(--accent); }
+.badge-read { background: rgba(0,0,0,0.06); color: var(--text-secondary); }
+
+.btn-mark-read {
+    font-size: 10.5px; font-weight: 600; color: var(--accent);
+    background: rgba(124,143,58,0.1);
+    border: none; border-radius: 6px; cursor: pointer;
+    padding: 2px 8px;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+.btn-mark-read:hover { background: rgba(124,143,58,0.2); }
+
+/* ── COMPOSE PANEL (right side, inside chat-main) ─────── */
+/* Compose bar at bottom when a thread is selected */
+.compose-bar {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.compose-new-msg {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    background: #fff;
+    flex-shrink: 0;
+    max-width: 800px; /* Increased from 500px */
+    margin: 0 auto; /* Center within available space */
+}
+
+.compose-new-msg-title {
+    font-size: 13px; font-weight: 700; color: var(--text-primary);
+    margin: 0 0 14px;
+    display: flex; align-items: center; gap: 8px;
+}
+.compose-new-msg-title svg { width: 15px; height: 15px; stroke: var(--accent); fill: none; stroke-width: 2; }
+
+.cmp-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+
+.cmp-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.cmp-field label {
+    font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--text-tertiary);
 }
-
 .cmp-field input,
 .cmp-field select,
 .cmp-field textarea {
-    width: 100%; padding: 10px 13px;
-    background: rgba(255,255,255,0.65);
-    border: 1px solid rgba(0,0,0,0.09);
-    border-radius: 11px;
+    width: 100%; padding: 9px 12px;
+    background: #fff;
+    border: 1px solid #eff0f7;
+    border-radius: 10px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 13.5px; font-weight: 500;
+    font-size: 13px; font-weight: 500;
     color: var(--text-primary);
     outline: none; box-sizing: border-box;
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
     -webkit-appearance: none;
 }
-
 .cmp-field input:focus,
 .cmp-field select:focus,
 .cmp-field textarea:focus {
-    border-color: rgba(13,148,136,0.55);
-    box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
-    background: rgba(255,255,255,0.9);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,143,58,0.12);
+    background: #fff;
 }
-
-.cmp-field textarea { resize: vertical; min-height: 100px; }
-
+.cmp-field textarea { 
+    resize: none; 
+    height: 60px; 
+    font-size: 14px;
+    width: 100% !important; 
+    min-width: 700px !important; /* Force minimum width */
+}
 .cmp-field select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 32px;
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 32px; cursor: pointer;
+}
+.cmp-error { font-size: 11px; color: #dc2626; }
+
+.compose-bottom-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 10px;
 }
 
-.cmp-error { font-size: 11.5px; font-weight: 500; color: #dc2626; }
+.compose-actions { display: flex; gap: 6px; }
+.compose-actions button {
+    background: none; border: none; cursor: pointer; padding: 7px;
+    border-radius: 8px; transition: background 0.15s; line-height: 0;
+}
+.compose-actions button:hover { background: #f0f0e8; }
+.compose-actions svg { width: 17px; height: 17px; stroke: #bbb; fill: none; stroke-width: 2; transition: stroke 0.15s; }
+.compose-actions button:hover svg { stroke: var(--accent); }
 
-.btn-send-msg {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 13px;
-    background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
-    color: #fff; border: none; border-radius: 13px;
+.btn-send {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 20px;
+    background: var(--accent);
+    color: #fff; border: none; border-radius: 100px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px; font-weight: 700; cursor: pointer;
-    box-shadow: 0 4px 16px rgba(13,148,136,0.35);
-    transition: transform 0.15s, box-shadow 0.15s;
-    width: 100%;
-    position: relative; overflow: hidden;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
 }
+.btn-send:hover  { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-send:active { transform: scale(0.97); }
+.btn-send svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2; }
 
-/* Shimmer effect on button */
-.btn-send-msg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
-    background-size: 200% 100%;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.btn-send-msg:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13,148,136,0.45); }
-.btn-send-msg:hover::after { opacity: 1; animation: shimmer 1.2s infinite; }
-.btn-send-msg:active { transform: translateY(0) scale(0.98); }
-.btn-send-msg svg { width: 17px; height: 17px; stroke: #fff; transition: transform 0.2s; }
-.btn-send-msg:hover svg { transform: translateX(3px) rotate(-30deg); }
+/* Flash messages */
+.flash-ok  { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; color: #15803d; margin-bottom: 10px; }
+.flash-err { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; color: #b91c1c; margin-bottom: 10px; }
 
 /* ── Floating nav ─────────────────────────────────────── */
 .ios-nav {
-    position: fixed; bottom: 24px; left: 50%;
+    position: fixed; bottom: 24px; left: 55%;
     transform: translateX(-50%); z-index: 100;
     display: flex; align-items: center; gap: 2px;
-    background: rgba(15,15,25,0.75);
+    background: rgba(15,15,25,0.80);
     backdrop-filter: blur(32px) saturate(2);
     -webkit-backdrop-filter: blur(32px) saturate(2);
-    border: 1px solid rgba(255,255,255,0.13);
+    border: 1px solid rgba(255,255,255,0.12);
     border-radius: 28px; padding: 8px 10px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.1);
+  
+ 
 }
-
-.ios-nav::before {
-    content: ''; position: absolute;
-    top: 0; left: 16px; right: 16px; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
-}
-
 .ios-nav-item {
     display: flex; flex-direction: column; align-items: center; gap: 3px;
     padding: 8px 18px; border-radius: 20px; text-decoration: none;
@@ -443,180 +435,226 @@
     letter-spacing: 0.03em; min-width: 64px; position: relative;
     transition: background 0.2s, color 0.2s, transform 0.15s;
 }
-
 .ios-nav-item svg { width: 20px; height: 20px; stroke: currentColor; transition: transform 0.2s; }
 .ios-nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.08); transform: translateY(-1px); }
-.ios-nav-item:hover svg { transform: scale(1.1); }
-.ios-nav-item.active { color: #fff; background: rgba(255,255,255,0.15); }
-.ios-nav-item.active svg { stroke: #60a5fa; }
-.ios-nav-active-dot { position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: #60a5fa; }
-.ios-nav-unread { position: absolute; top: 5px; right: 10px; width: 7px; height: 7px; border-radius: 50%; background: #ef4444; border: 1.5px solid rgba(15,15,25,0.75); }
+.ios-nav-item.active { color: #fff; background: rgba(255,255,255,0.12); }
+.ios-nav-item.active svg { stroke: #a3b855; }
+.ios-nav-active-dot { position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: #a3b855; }
+.ios-nav-unread { position: absolute; top: 5px; right: 10px; width: 7px; height: 7px; border-radius: 50%; background: #ef4444; border: 1.5px solid rgba(15,15,25,0.8); }
 
 /* ── Responsive ───────────────────────────────────────── */
-@media (max-width: 1024px) {
-    .msg-layout { grid-template-columns: 1fr; }
-    .msg-compose { position: static; }
-}
-
-@media (max-width: 640px) {
-    .msg-root { padding: 20px 16px 110px; }
-    .msg-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+@media (max-width: 768px) {
+    .msg-root { padding: 16px 12px calc(var(--nav-h) + 24px); }
+    .chat-sidebar { width: 240px; }
     .ios-nav-item { padding: 7px 12px; min-width: 48px; font-size: 9px; }
-    .ios-nav-item svg { width: 18px; height: 18px; }
+}
+@media (max-width: 580px) {
+    .chat-sidebar { display: none; }
 }
 </style>
 
-{{-- ── Page header ──────────────────────────────────────── --}}
-<div class="g-card anim-1">
-    <div class="msg-header">
-        <div class="msg-header-left">
-            <div class="msg-icon-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            </div>
-            <div>
-                <h1>Messages</h1>
-                <p>Communicate with the HR team</p>
+{{-- ── Page header ───────────────────────────────────────── --}}
+<div class="msg-top-bar">
+    <div class="msg-top-left">
+        <div class="msg-top-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <div>
+            <p class="msg-top-title">Messages</p>
+            <p class="msg-top-sub">Communicate with the team</p>
+        </div>
+    </div>
+    @if($unreadCount > 0)
+        <div class="msg-unread-pill">
+            <span class="msg-unread-dot"></span>
+            <span class="msg-unread-text">{{ $unreadCount }} unread</span>
+        </div>
+    @endif
+</div>
+
+{{-- ── Chat shell ────────────────────────────────────────── --}}
+<div class="chat-shell">
+
+    {{-- LEFT: Available users section --}}
+    <div class="chat-users">
+        <div class="users-header">
+            <h3 class="users-title">Available Users</h3>
+            <div class="users-search">
+                <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" placeholder="Search users...">
             </div>
         </div>
-        <div class="msg-header-right">
-            @if($unreadCount > 0)
-                <div class="msg-unread-pill">
-                    <span class="msg-unread-dot"></span>
-                    <span class="msg-unread-text">{{ $unreadCount }} unread</span>
+
+        <div class="users-list">
+            @foreach($hrUsers as $hrUser)
+                @php
+                    $initials = strtoupper(substr($hrUser->first_name, 0, 1) . substr($hrUser->last_name, 0, 1));
+                    $isActive = $selectedConversation === $hrUser->id;
+                @endphp
+                <div class="user-item {{ $isActive ? 'active' : '' }}" 
+                     wire:click="selectConversation('{{ $hrUser->id }}')"
+                     style="cursor: pointer;">
+                    <div class="user-avatar">{{ $initials }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ $hrUser->first_name }} {{ $hrUser->last_name }}</div>
+                        <div class="user-role">{{ ucfirst($hrUser->role->value) }}</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- MIDDLE: Recent conversations section --}}
+    <div class="chat-conversations">
+        <div class="conversations-header">
+            <h3 class="conversations-title">Recent Messages</h3>
+        </div>
+
+        <div class="conversations-list">
+            @if($messageList->count() > 0)
+                @php
+                    $grouped = $messageList->groupBy(function($msg) {
+                        return $msg->sender_id === Auth::id()
+                            ? $msg->receiver_id
+                            : $msg->sender_id;
+                    });
+                @endphp
+
+                @foreach($grouped as $personId => $msgs)
+                    @php
+                        $latest  = $msgs->first();
+                        $isSent  = $latest->sender_id === Auth::id();
+                        $person  = $isSent ? $latest->receiver : $latest->sender;
+                        $unread  = $msgs->where('receiver_id', Auth::id())->where('is_read', false)->count();
+                        $initials = strtoupper(substr($person->first_name, 0, 1) . substr($person->last_name, 0, 1));
+                        $isActive = $selectedConversation === $personId;
+                    @endphp
+                    <div class="conversation-item {{ $isActive ? 'active' : '' }}" 
+                         wire:click="selectConversation('{{ $personId }}')"
+                         style="cursor: pointer;">
+                        <div class="conv-avatar">{{ $initials }}</div>
+                        <div class="conv-info">
+                            <div class="conv-name">{{ $person->first_name }} {{ $person->last_name }}</div>
+                            <div class="conv-preview">{{ Str::limit($latest->message, 35) }}</div>
+                        </div>
+                        <div class="conv-meta">
+                            <span class="conv-time">{{ $latest->created_at->format('M d') }}</span>
+                            @if($unread > 0)
+                                <span class="conv-badge">{{ $unread }}</span>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            @else
+                <div style="padding: 32px 16px; text-align:center; color:#999; font-size:13px;">
+                    No recent messages
                 </div>
             @endif
         </div>
     </div>
-</div>
 
-{{-- ── Main layout: feed left, compose right ────────────── --}}
-<div class="msg-layout">
+    {{-- RIGHT: chat main area --}}
+    <div class="chat-main">
 
-    {{-- ── Message feed ──────────────────────────────────── --}}
-    <div class="msg-feed-wrap anim-2">
-        @if($messageList->count() > 0)
-            @foreach($messageList as $i => $message)
-                @php
-                    $isSent   = $message->sender_id === Auth::id();
-                    $isUnread = $message->receiver_id === Auth::id() && !$message->is_read;
-                @endphp
-                <div class="msg-thread {{ $isSent ? 'sent' : 'received' }} {{ $isUnread ? 'unread' : '' }}"
-                     style="animation-delay: {{ $i * 0.06 }}s">
-
-                    {{-- Thread header --}}
-                    <div class="msg-thread-head">
-                        <div class="msg-avatar-lg {{ $isSent ? 'avatar-sent' : 'avatar-received' }}">
-                            @if($isSent)
-                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                            @else
-                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                            @endif
-                        </div>
-                        <div class="msg-thread-info">
-                            <p class="msg-thread-name">
-                                {{ $isSent ? 'You → ' . $message->receiver->first_name . ' ' . $message->receiver->last_name : $message->sender->first_name . ' ' . $message->sender->last_name }}
-                            </p>
-                            <p class="msg-thread-to">
-                                {{ $isSent ? 'Sent message' : 'Received message' }}
-                            </p>
-                        </div>
-                        <div class="msg-thread-meta">
-                            <span class="msg-thread-time">{{ $message->created_at->format('M d · H:i') }}</span>
-                            @if($isUnread)
-                                <button class="btn-mark-read" wire:click="markAsRead({{ $message->id }})">Mark read</button>
-                            @endif
-                        </div>
+        {{-- Chat header (shows selected person) --}}
+        @if($selectedConversation && $conversationMessages && $conversationMessages->count() > 0)
+            @php
+                $latest   = $conversationMessages->first();
+                $isSent   = $latest->sender_id === Auth::id();
+                $chatWith = $isSent ? $latest->receiver : $latest->sender;
+                $chatInitials = strtoupper(substr($chatWith->first_name, 0, 1) . substr($chatWith->last_name, 0, 1));
+            @endphp
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-user-avatar">{{ $chatInitials }}</div>
+                    <div>
+                        <p class="chat-user-name">{{ $chatWith->first_name }} {{ $chatWith->last_name }}</p>
+                        <p class="chat-user-status">Online</p>
                     </div>
-
-                    {{-- Chat bubble --}}
-                    <div class="msg-bubble-body">
-                        <p class="msg-subject">{{ $message->subject }}</p>
-                        <p class="msg-body">{{ $message->message }}</p>
-                    </div>
-
-                    {{-- Footer badges --}}
-                    <div class="msg-thread-footer">
-                        <span class="badge {{ $message->status === 'sent' ? 'badge-green' : 'badge-gray' }}">
-                            {{ ucfirst($message->status) }}
-                        </span>
-                        @if($isUnread)
-                            <span class="badge badge-blue">New</span>
-                        @endif
-                    </div>
-
                 </div>
-            @endforeach
+                
+            </div>
         @else
-            <div class="g-card">
-                <div class="msg-empty">
-                    <div class="msg-empty-icon-wrap">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-user-avatar" style="background:#f0f0ea;color:#aaa">HR</div>
+                    <div>
+                        <p class="chat-user-name" style="color:#aaa">No conversation selected</p>
+                        <p class="chat-user-status" style="color:#ccc">Send a message to start</p>
                     </div>
-                    <p class="msg-empty-title">No messages yet</p>
-                    <p class="msg-empty-sub">Send your first message to the HR team using the form →</p>
                 </div>
             </div>
         @endif
-    </div>
 
-    {{-- ── Compose sidebar ───────────────────────────────── --}}
-    <div class="msg-compose anim-3">
-        <div class="compose-inner">
-            <div class="compose-glow"></div>
-
-            <div class="compose-head">
-                <div class="compose-head-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        {{-- Messages feed --}}
+        <div class="chat-messages">
+            @if($conversationMessages && $conversationMessages->count() > 0)
+                @foreach($conversationMessages as $message)
+                    @php
+                        $isSent   = $message->sender_id === Auth::id();
+                        $isUnread = $message->receiver_id === Auth::id() && !$message->is_read;
+                    @endphp
+                    <div class="msg-row {{ $isSent ? 'sent' : 'recv' }}">
+                        <div class="msg-wrap">
+                            @if($message->subject)
+                                <div class="msg-subject-label" style="color: {{ $isSent ? '#a9b2e4' : '#888' }}">
+                                    {{ $message->subject }}
+                                </div>
+                            @endif
+                            <div class="bubble {{ $isSent ? 'sent' : 'recv' }}">
+                                {{ $message->message }}
+                            </div>
+                            <div class="bubble-meta">
+                                <span class="bubble-time">{{ $message->created_at->format('M d · H:i') }}</span>
+                                @if($isUnread)
+                                    <span class="badge-sm badge-new">New</span>
+                                    <button class="btn-mark-read" wire:click="markAsRead({{ $message->id }})">Mark read</button>
+                                @else
+                                    <span class="badge-sm badge-read">{{ ucfirst($message->status) }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @else
+                <div class="chat-empty">
+                    <svg viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <p>Select a conversation to view messages</p>
+                    <p style="font-size:12px">Click on a contact from the left sidebar to start chatting</p>
                 </div>
-                <span class="compose-head-title">New Message</span>
-            </div>
+            @endif
+        </div>
+
+        {{-- Compose new message --}}
+        <div class="compose-new-msg">
+           
 
             @if(session()->has('success'))
-                <div style="padding: 0 22px;">
-                    <div class="cmp-flash-ok">{{ session('success') }}</div>
-                </div>
+                <div class="flash-ok">{{ session('success') }}</div>
             @endif
             @if(session()->has('error'))
-                <div style="padding: 0 22px;">
-                    <div class="cmp-flash-err">{{ session('error') }}</div>
-                </div>
+                <div class="flash-err">{{ session('error') }}</div>
             @endif
 
-            <form wire:submit="sendMessage" class="compose-form">
-                <div class="cmp-field">
-                    <label>Send To</label>
-                    <select wire:model="selectedHrUser">
-                        <option value="">Select HR Personnel</option>
-                        @foreach($hrUsers as $hrUser)
-                            <option value="{{ $hrUser->id }}">
-                                {{ $hrUser->first_name }} {{ $hrUser->last_name }} ({{ $hrUser->role->value }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('selectedHrUser') <span class="cmp-error">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="cmp-field">
-                    <label>Subject</label>
-                    <input type="text" wire:model="subject" placeholder="What's this about?">
-                    @error('subject') <span class="cmp-error">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="cmp-field">
+            <form wire:submit="sendMessage">
+                <div class="cmp-field" style="margin-bottom:0">
                     <label>Message</label>
                     <textarea wire:model="messageContent" placeholder="Type your message here..."></textarea>
                     @error('messageContent') <span class="cmp-error">{{ $message }}</span> @enderror
                 </div>
 
-                <button type="submit" class="btn-send-msg">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    Send Message
-                </button>
+                <div class="compose-bottom-row">
+                   
+                    <button type="submit" class="btn-send">
+                        <svg viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        Send Message
+                    </button>
+                </div>
             </form>
         </div>
-    </div>
 
-</div>{{-- /msg-layout --}}
+    </div>{{-- /chat-main --}}
+</div>{{-- /chat-shell --}}
 
 {{-- ── Floating nav ──────────────────────────────────────── --}}
 <nav class="ios-nav">

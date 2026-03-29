@@ -95,6 +95,12 @@ Route::middleware(['web'])->group(function () {
         Route::get('/admin/database-management', \App\Livewire\Admin\DatabaseManagement::class)->name('admin.database-management');
         Route::get('/admin/system-analytics', \App\Livewire\Admin\SystemAnalytics::class)->name('admin.system-analytics');
         
+        // Additional Admin Routes
+        Route::get('/admin/notifications', \App\Livewire\Admin\NotificationsManagement::class)->name('admin.notifications');
+        Route::get('/admin/access-control', \App\Livewire\Admin\AccessControlManagement::class)->name('admin.access-control');
+        Route::get('/admin/imports', \App\Livewire\Admin\ImportsManagement::class)->name('admin.imports');
+        Route::get('/admin/banks', \App\Livewire\Admin\BanksManagement::class)->name('admin.banks');
+        
         // Test route for user creation
         Route::get('/test-user-creation', function () {
             try {

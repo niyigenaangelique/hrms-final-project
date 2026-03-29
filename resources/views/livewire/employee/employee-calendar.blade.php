@@ -105,6 +105,7 @@
     background: rgba(255,255,255,0.3);
     transition: background 0.12s, box-shadow 0.12s;
     overflow: hidden;
+    position: relative;
 }
 
 .cal-day:hover { background: rgba(255,255,255,0.6); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -158,6 +159,9 @@
 
 .leg-today   { background: rgba(37,99,235,0.2); border: 1px solid rgba(37,99,235,0.35); }
 .leg-weekend { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+.leg-work    { background: rgba(59,111,232,0.2); border: 1px solid rgba(59,111,232,0.3); }
+.leg-scheduled { background: rgba(147,197,253,0.2); border: 1px solid rgba(147,197,253,0.3); }
+.leg-custom  { background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.3); }
 .leg-leave   { background: rgba(245,158,11,0.2); }
 .leg-holiday { background: rgba(34,197,94,0.2); }
 
@@ -194,6 +198,184 @@
 .badge-gray   { background: rgba(0,0,0,0.07);      color: var(--text-secondary); }
 
 .cal-empty { text-align: center; padding: 28px 16px; font-size: 13px; font-weight: 500; color: var(--text-tertiary); }
+
+/* ── Work Schedule Events ───────────────────────────── */
+.cal-event-work {
+    background: rgba(59,111,232,0.15);
+    color: #1e40af;
+    border: 1px solid rgba(59,111,232,0.25);
+    font-weight: 600;
+}
+
+.cal-event-scheduled {
+    background: rgba(147,197,253,0.15);
+    color: #1e40af;
+    border: 1px solid rgba(147,197,253,0.25);
+    font-weight: 500;
+}
+
+.cal-event-custom {
+    background: rgba(168,85,247,0.15);
+    color: #6b21a8;
+    border: 1px solid rgba(168,85,247,0.25);
+    font-weight: 600;
+}
+
+.cal-add-schedule {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    background: rgba(59,111,232,0.15);
+    border: 1px solid rgba(59,111,232,0.3);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #3B6FE8;
+    z-index: 10;
+}
+
+.cal-add-schedule:hover {
+    background: rgba(59,111,232,0.25);
+    border-color: #3B6FE8;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(59,111,232,0.3);
+}
+
+/* ── Schedule Modal ─────────────────────────────────── */
+.cal-modal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.cal-modal {
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--glass-shadow);
+}
+
+.cal-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 24px 0;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.cal-field {
+    margin-bottom: 20px;
+}
+
+.cal-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.cal-field input,
+.cal-field textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+}
+
+.cal-field input:focus,
+.cal-field textarea:focus {
+    outline: none;
+    border-color: #3B6FE8;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 0 3px rgba(59,111,232,0.1);
+}
+
+.cal-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.cal-time-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.cal-modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.cal-btn-cancel {
+    background: rgba(255,255,255,0.5);
+    color: var(--text-primary);
+    border: 1px solid rgba(255,255,255,0.8);
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+}
+
+.cal-btn-cancel:hover {
+    background: rgba(255,255,255,0.8);
+}
+
+.cal-btn-save {
+    background: linear-gradient(135deg, #3B6FE8 0%, #6095ff 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+}
+
+.cal-btn-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59,111,232,0.3);
+}
+
+.cal-error {
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 4px;
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+}
 
 /* ── Floating nav ─────────────────────────────────────── */
 .ios-nav {
@@ -292,6 +474,40 @@
                     <div class="{{ $cls }}">
                         <div class="cal-day-num">{{ $day['date'] }}</div>
                         <div class="cal-day-events">
+                            {{-- Work Schedule Indicator --}}
+                            @if($day['hasWorkSchedule'])
+                                @if($day['attendance'])
+                                    <div class="cal-event cal-event-work" title="Work: {{ $day['attendance']->check_in ? $day['attendance']->check_in->format('H:i') : 'N/A' }} - {{ $day['attendance']->check_out ? $day['attendance']->check_out->format('H:i') : 'N/A' }}">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                        {{ $day['attendance']->check_in ? 'Checked In' : 'Scheduled' }}
+                                    </div>
+                                @else
+                                    <div class="cal-event cal-event-scheduled" title="Work Day - Click to add schedule">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="16" y1="2" x2="16" y2="6"/>
+                                            <line x1="8" y1="2" x2="8" y2="6"/>
+                                            <line x1="3" y1="10" x2="21" y2="10"/>
+                                        </svg>
+                                        Work Day
+                                    </div>
+                                @endif
+                            @endif
+
+                            {{-- Custom Work Schedules --}}
+                            @foreach($day['workSchedules'] as $schedule)
+                                <div class="cal-event cal-event-custom" title="{{ $schedule['title'] }}: {{ $schedule['start_time'] }} - {{ $schedule['end_time'] }}">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    {{ $schedule['title'] }}
+                                </div>
+                            @endforeach
+
                             @foreach($day['leaveRequests'] as $lr)
                                 <div class="cal-event cal-event-leave" title="{{ $lr->leaveType->name }}">
                                     {{ $lr->leaveType->name }}
@@ -302,6 +518,16 @@
                                     {{ $h->name }}
                                 </div>
                             @endforeach
+
+                            {{-- Add Schedule Button --}}
+                            @if($day['isCurrentMonth'] && $day['hasWorkSchedule'] && !$day['attendance'])
+                                <button class="cal-add-schedule" wire:click="openScheduleModal({{ $day['date'] }})" title="Add work schedule">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -313,6 +539,9 @@
         <div class="cal-legend">
             <div class="cal-legend-item"><div class="cal-legend-dot leg-today"></div>Today</div>
             <div class="cal-legend-item"><div class="cal-legend-dot leg-weekend"></div>Weekend</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot leg-work"></div>Work/Attendance</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot leg-scheduled"></div>Scheduled Work</div>
+            <div class="cal-legend-item"><div class="cal-legend-dot leg-custom"></div>Custom Schedule</div>
             <div class="cal-legend-item"><div class="cal-legend-dot leg-leave"></div>Leave</div>
             <div class="cal-legend-item"><div class="cal-legend-dot leg-holiday"></div>Holiday</div>
         </div>
@@ -377,4 +606,45 @@
     </a>
 </nav>
 
-</div>{{-- /cal-root --}}
+{{-- ── Work Schedule Modal ───────────────────────────── --}}
+@if($showScheduleModal)
+<div class="cal-modal-bg">
+    <div class="cal-modal">
+        <h3 class="cal-modal-title">Add Work Schedule</h3>
+        <form wire:submit="saveWorkSchedule">
+            <div class="cal-field">
+                <label>Title *</label>
+                <input type="text" wire:model="scheduleTitle" placeholder="e.g., Team Meeting, Project Work">
+                @error('scheduleTitle') <span class="cal-error">{{ $message }}</span> @enderror
+            </div>
+            
+            <div class="cal-field">
+                <label>Description</label>
+                <textarea wire:model="scheduleDescription" placeholder="Optional description of the work activity..."></textarea>
+                @error('scheduleDescription') <span class="cal-error">{{ $message }}</span> @enderror
+            </div>
+            
+            <div class="cal-time-inputs">
+                <div class="cal-field">
+                    <label>Start Time *</label>
+                    <input type="time" wire:model="scheduleStartTime">
+                    @error('scheduleStartTime') <span class="cal-error">{{ $message }}</span> @enderror
+                </div>
+                
+                <div class="cal-field">
+                    <label>End Time *</label>
+                    <input type="time" wire:model="scheduleEndTime">
+                    @error('scheduleEndTime') <span class="cal-error">{{ $message }}</span> @enderror
+                </div>
+            </div>
+            
+            <div class="cal-modal-footer">
+                <button type="button" class="cal-btn-cancel" wire:click="closeScheduleModal">Cancel</button>
+                <button type="submit" class="cal-btn-save">Save Schedule</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
+</div>

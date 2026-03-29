@@ -24,6 +24,7 @@ class EmployeePerformance extends Component
     public $goalDescription = '';
     public $goalTargetDate = '';
     public $goalStatus = 'active';
+    public $activeSection = 'overview';
     
     // Self performance evaluation properties
     public $showSelfEvaluationForm = false;
@@ -46,6 +47,40 @@ class EmployeePerformance extends Component
         
         if ($this->employee) {
             $this->loadPerformanceData();
+        } else {
+            // Create employee record if it doesn't exist
+            $this->createEmployeeRecord($user);
+        }
+    }
+    
+    public function createEmployeeRecord($user)
+    {
+        try {
+            // Generate unique employee code
+            $lastEmployee = Employee::orderBy('created_at', 'desc')->first();
+            $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -4)) : 0;
+            $newCode = 'EMP-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
+            
+            // Ensure code is unique
+            while (Employee::where('code', $newCode)->exists()) {
+                $lastCode++;
+                $newCode = 'EMP-' . str_pad($lastCode, 4, '0', STR_PAD_LEFT);
+            }
+            
+            $this->employee = Employee::create([
+                'code' => $newCode,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'user_id' => $user->id,
+                'approval_status' => \App\Enum\ApprovalStatus::Approved,
+            ]);
+            
+            $this->loadPerformanceData();
+        } catch (\Exception $e) {
+            \Log::error('Failed to create employee record: ' . $e->getMessage());
+            session()->flash('error', 'Unable to initialize employee profile. Please contact HR.');
         }
     }
 
@@ -65,15 +100,50 @@ class EmployeePerformance extends Component
             ->get();
     }
 
-    public function viewReview($reviewId)
+    public function testClick()
     {
-        $this->selectedReview = PerformanceReview::with(['reviewer'])
-            ->find($reviewId);
+        session()->flash('success', 'Test button clicked! Livewire is working.');
+    }
+
+    public function viewReview($reviewId = null)
+    {
+        if ($reviewId) {
+            // Specific review requested
+            $this->selectedReview = PerformanceReview::with(['reviewer', 'items'])
+                ->find($reviewId);
+                
+            if ($this->selectedReview) {
+                session()->flash('success', 'Review opened: ' . $this->selectedReview->type);
+            } else {
+                session()->flash('error', 'Review not found.');
+            }
+        } else {
+            // No specific review, show first available
+            if ($this->performanceReviews && $this->performanceReviews->count() > 0) {
+                $firstReview = $this->performanceReviews->first();
+                $this->selectedReview = PerformanceReview::with(['reviewer', 'items'])
+                    ->find($firstReview->id);
+                    
+                if ($this->selectedReview) {
+                    session()->flash('success', 'Review opened: ' . $this->selectedReview->type);
+                } else {
+                    session()->flash('error', 'Failed to load review details.');
+                }
+            } else {
+                session()->flash('error', 'No reviews available to view.');
+            }
+        }
     }
 
     public function viewGoal($goalId)
     {
         $this->selectedGoal = Goal::find($goalId);
+        
+        if ($this->selectedGoal) {
+            session()->flash('success', 'Goal opened: ' . $this->selectedGoal->title);
+        } else {
+            session()->flash('error', 'Goal not found.');
+        }
     }
 
     public function closeModals()
@@ -162,6 +232,12 @@ class EmployeePerformance extends Component
     
     public function submitSelfEvaluation()
     {
+        // Check if employee exists
+        if (!$this->employee) {
+            session()->flash('error', 'Employee profile not found. Please contact HR.');
+            return;
+        }
+        
         $this->validate([
             'selfEvaluationPeriod' => 'required|date',
             'selfTechnicalSkills' => 'required|numeric|min:1|max:5',
@@ -179,8 +255,22 @@ class EmployeePerformance extends Component
         try {
             // Generate performance review code
             $lastReview = PerformanceReview::orderBy('created_at', 'desc')->first();
-            $lastCode = $lastReview ? intval(substr($lastReview->code, -4)) : 0;
+            $lastCode = 0;
+            if ($lastReview && !empty($lastReview->code)) {
+                // Extract numeric part from code (handle formats like PERF-0001, PERF-1234, etc.)
+                $codeParts = explode('-', $lastReview->code);
+                if (count($codeParts) >= 2) {
+                    $numericPart = end($codeParts);
+                    $lastCode = is_numeric($numericPart) ? intval($numericPart) : 0;
+                }
+            }
             $newCode = 'PERF-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
+            
+            // Ensure code is unique
+            while (PerformanceReview::where('code', $newCode)->exists()) {
+                $lastCode++;
+                $newCode = 'PERF-' . str_pad($lastCode, 4, '0', STR_PAD_LEFT);
+            }
 
             // Calculate overall score
             $overallScore = (
@@ -236,8 +326,22 @@ class EmployeePerformance extends Component
             foreach ($metrics as $criteria => $score) {
                 // Generate item code
                 $lastItem = \App\Models\PerformanceReviewItem::orderBy('created_at', 'desc')->first();
-                $lastItemCode = $lastItem ? intval(substr($lastItem->code, -4)) : 0;
+                $lastItemCode = 0;
+                if ($lastItem && !empty($lastItem->code)) {
+                    // Extract numeric part from code (handle formats like ITEM-0001, ITEM-1234, etc.)
+                    $codeParts = explode('-', $lastItem->code);
+                    if (count($codeParts) >= 2) {
+                        $numericPart = end($codeParts);
+                        $lastItemCode = is_numeric($numericPart) ? intval($numericPart) : 0;
+                    }
+                }
                 $newItemCode = 'ITEM-' . str_pad($lastItemCode + 1, 4, '0', STR_PAD_LEFT);
+                
+                // Ensure code is unique
+                while (\App\Models\PerformanceReviewItem::where('code', $newItemCode)->exists()) {
+                    $lastItemCode++;
+                    $newItemCode = 'ITEM-' . str_pad($lastItemCode, 4, '0', STR_PAD_LEFT);
+                }
 
                 \App\Models\PerformanceReviewItem::create([
                     'code' => $newItemCode,
@@ -257,7 +361,8 @@ class EmployeePerformance extends Component
             session()->flash('success', 'Self evaluation submitted successfully!');
         } catch (\Exception $e) {
             \Log::error('Self evaluation submission failed: ' . $e->getMessage());
-            session()->flash('error', 'Failed to submit self evaluation. Please try again.');
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            session()->flash('error', 'Failed to submit self evaluation: ' . $e->getMessage());
         }
     }
 

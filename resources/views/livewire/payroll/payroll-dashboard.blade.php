@@ -461,7 +461,7 @@ table.prl-table { width:100%; border-collapse:collapse; }
                 <div class="prl-modal-body">
                     <div class="prl-field">
                         <label>Select Payroll Month</label>
-                        <select wire:model.live="processingMonth.id">
+                        <select wire:model.live="processingMonthId">
                             <option value="">Select a payroll month</option>
                             @foreach($upcomingPayrolls as $payroll)
                                 <option value="{{ $payroll->id }}">{{ $payroll->name }} ({{ Carbon\Carbon::parse($payroll->start_date)->format('M Y') }})</option>
@@ -517,7 +517,7 @@ table.prl-table { width:100%; border-collapse:collapse; }
                 <div class="prl-modal-body">
                     <div class="prl-field">
                         <label>Select Payroll Month</label>
-                        <select wire:model.live="processingMonth.id">
+                        <select wire:model.live="processingMonthId">
                             <option value="">Select a payroll month</option>
                             @foreach($upcomingPayrolls as $payroll)
                                 <option value="{{ $payroll->id }}">{{ $payroll->name }} ({{ Carbon\Carbon::parse($payroll->start_date)->format('M Y') }})</option>

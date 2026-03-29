@@ -34,10 +34,18 @@ class EmployeePayroll extends Component
         $this->employee = Employee::where('email', $user->email)->first();
         
         if (!$this->employee) {
-            // Get the highest existing employee code number
-            $lastEmployee = Employee::orderBy('id', 'desc')->first();
-            $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -4)) : 0;
-            $newCode = 'EMP-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
+            // Get the highest existing employee code with EMP prefix
+            $lastEmployee = Employee::where('code', 'like', 'EMP-%')
+                ->orderBy('code', 'desc')
+                ->first();
+            $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -3)) : 0;
+            $newCode = 'EMP-' . str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
+            
+            // Check if the code already exists to avoid duplicates
+            while (Employee::where('code', $newCode)->exists()) {
+                $lastCode++;
+                $newCode = 'EMP-' . str_pad($lastCode, 3, '0', STR_PAD_LEFT);
+            }
             
             $this->employee = Employee::create([
                 'code' => $newCode,

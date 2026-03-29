@@ -104,7 +104,7 @@
             <div class="absolute inset-0 bg-primary-900/70"></div>
             <div class="relative z-10 flex flex-col justify-center h-full p-12 text-white">
                 <h2 class="text-4xl font-bold mb-6">
-                    Casual- HRMS
+                    TalentFlowPro- HRMS
                     Features
                 </h2>
                 <p class="text-xl mb-8 leading-relaxed">

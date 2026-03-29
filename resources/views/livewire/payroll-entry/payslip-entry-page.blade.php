@@ -19,6 +19,7 @@
     gap: 20px;
     height: 100vh;
     overflow-y: auto;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 @keyframes fadeSlideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
@@ -196,9 +197,9 @@
 
 <div class="pse-main-root">
 
-    {{-- Debug Test - This should show if the new design is loading --}}
-    <div style="background: linear-gradient(135deg, #2563eb, #6366f1); color: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: bold;">
-        🎉 NEW iOS 26 DESIGN LOADING! 🎉
+    {{-- DEBUG MESSAGE - This should be visible if the file is loading --}}
+    <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; font-weight: bold; font-size: 18px; box-shadow: 0 10px 30px rgba(238, 90, 36, 0.3);">
+        🔥 DESIGN UPDATE TEST - IF YOU SEE THIS, THE FILE IS LOADING! 🔥
     </div>
 
     {{-- Header --}}

@@ -421,12 +421,7 @@
                     <flux:navlist.item icon="document-text" href="{{ route('analytics.report-builder') }}" wire:navigate>Report Builder</flux:navlist.item>
                 </flux:navlist.group>
 
-                <flux:navlist.group expandable heading="System & Settings">
-                    <flux:navlist.item icon="bell" href="{{ route('notifications.center') }}" wire:navigate>Notifications</flux:navlist.item>
-                    <flux:navlist.item icon="shield-check" href="{{ route('access-control.dashboard') }}" wire:navigate>Access Control</flux:navlist.item>
-                    <flux:navlist.item icon="arrow-down-tray" href="{{ route('imports') }}" wire:navigate>Imports/Exports</flux:navlist.item>
-                    <flux:navlist.item icon="adjustments-horizontal" href="{{ route('banks') }}" wire:navigate>Banks</flux:navlist.item>
-                </flux:navlist.group>
+                
             </flux:navlist>
         @endauth
     </div>
@@ -435,13 +430,17 @@
         <flux:navlist variant="outline">
             <flux:navlist.item icon="cog" href="#">Settings</flux:navlist.item>
             <flux:navlist.item icon="question-mark-circle" href="#">Help</flux:navlist.item>
+            <flux:navlist.item icon="arrow-right" href="{{ route('logout') }}" wire:navigate>Logout</flux:navlist.item>
         </flux:navlist>
 
-        <flux:dropdown position="top" align="start" class="max-lg:hidden">
+        <flux:dropdown position="top" align="start">
             <flux:profile avatar="{{ asset('images/user.svg') }}"
                           name="{{Auth::user()->first_name ?? ''}} {{Auth::user()->last_name ?? ''}}"/>
             <flux:menu>
-                <flux:menu.item icon="arrow-right" href="{{ route('logout') }}">Logout</flux:menu.item>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <flux:menu.item icon="arrow-right" type="submit">Logout</flux:menu.item>
+                </form>
             </flux:menu>
         </flux:dropdown>
     </div>
@@ -474,15 +473,17 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebar.style.setProperty('box-shadow', '4px 0 40px rgba(0,0,0,0.35)', 'important');
     }
 
-    /* FIX: disable pointer events on the Flux stash overlay when hidden */
+    /* FIX: disable pointer events on the Flux sidebar overlay when hidden */
     function fixOverlay() {
-        document.querySelectorAll('.fixed.inset-0').forEach(el => {
-            if (el.classList.contains('hidden') ||
-                el.style.display === 'none' ||
-                getComputedStyle(el).display === 'none') {
-                el.style.setProperty('pointer-events', 'none', 'important');
+        // Only target sidebar overlay, not all fixed overlays
+        const sidebarOverlay = document.querySelector('[data-flux-sidebar-overlay]');
+        if (sidebarOverlay) {
+            if (sidebarOverlay.classList.contains('hidden') ||
+                sidebarOverlay.style.display === 'none' ||
+                getComputedStyle(sidebarOverlay).display === 'none') {
+                sidebarOverlay.style.setProperty('pointer-events', 'none', 'important');
             }
-        });
+        }
     }
     fixOverlay();
 
