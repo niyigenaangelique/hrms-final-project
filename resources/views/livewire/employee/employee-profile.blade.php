@@ -170,7 +170,7 @@
 .ep-hero-row {
     display: flex; align-items: flex-end;
     justify-content: space-between;
-    margin-top: -36px; margin-bottom: 16px; gap: 14px;
+    margin-top: -0px; margin-bottom: 16px; gap: 14px;
 }
 .ep-hero-left { display: flex; align-items: flex-end; gap: 14px; }
 
@@ -550,6 +550,93 @@
     display: flex; align-items: center; justify-content: space-between;
 }
 
+/* Document Viewer Modal */
+.ep-modal-large { max-width: 900px; width: 90%; }
+.ep-doc-viewer { }
+.ep-doc-viewer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+}
+.ep-doc-viewer-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+}
+.ep-doc-viewer-actions {
+    display: flex;
+    gap: 8px;
+}
+.ep-doc-viewer-content {
+    margin-bottom: 20px;
+}
+.ep-doc-viewer-footer {
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+/* Modal Styles */
+.ep-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+.ep-modal-content {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+.ep-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+.ep-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+}
+.ep-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--ink3);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+.ep-modal-close:hover {
+    background: var(--border);
+    color: var(--ink);
+}
+.ep-modal-body {
+    padding: 24px;
+}
+
 /* Upload drop zone */
 .ep-upload-zone {
     border: 2px dashed var(--blue-brd);
@@ -889,10 +976,12 @@
                     <div class="ep-hero-row">
                         <div class="ep-hero-left">
                             <div class="ep-av">
-                                @if($employee->profile_photo)
+                                @if($employee && $employee->profile_photo)
                                     <img src="{{ asset('storage/' . $employee->profile_photo) }}" alt="{{ $employee->full_name }}">
-                                @else
+                                @elseif($employee)
                                     {{ substr($employee->first_name,0,1) }}{{ substr($employee->last_name,0,1) }}
+                                @else
+                                    NA
                                 @endif
                                 <button class="ep-av-cam" type="button" onclick="document.getElementById('avatarFileInput').click()">
                                     <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -900,11 +989,17 @@
                                 <span class="ep-av-online"></span>
                             </div>
                             <div class="ep-hero-name-col">
-                                <div class="ep-hero-name">{{ $employee->full_name }}</div>
+                                <div class="ep-hero-name">
+                                    @if($employee)
+                                        {{ $employee->full_name }}
+                                    @else
+                                        No Employee Data
+                                    @endif
+                                </div>
                                 <div class="ep-hero-role">
-                                    <strong>{{ $employee->position->name ?? 'No Position' }}</strong>
+                                    <strong>{{ $employee?->position?->name ?? 'No Position' }}</strong>
                                     &nbsp;·&nbsp;
-                                    {{ $employee->department->name ?? 'No Department' }}
+                                    {{ $employee?->department?->name ?? 'No Department' }}
                                 </div>
                                 <div class="ep-hero-contacts" style="margin-top:8px;">
                                     @if($employee->email)
@@ -926,12 +1021,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="ep-hero-actions">
-                            <button class="ep-btn ep-btn-outline ep-btn-sm">
-                                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                Export
-                            </button>
-                        </div>
+                       
                     </div>
                 </div>
 
@@ -1211,12 +1301,7 @@
                             Open-ended contract
                         @endif
                     </span>
-                    <div style="display:flex;gap:8px;">
-                        <button class="ep-btn ep-btn-ghost ep-btn-sm">
-                            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            Download
-                        </button>
-                    </div>
+                   
                 </div>
             </div>
         @endforeach
@@ -1240,17 +1325,16 @@
             <div class="ep-toolbar-title">My Documents</div>
             <div class="ep-toolbar-sub">{{ $documents->count() }} document(s) uploaded</div>
         </div>
-        <button class="ep-btn ep-btn-primary" wire:click="$set('showDocumentModal', true)">
-            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div style="display: flex; gap: 8px;">
+           
+            <button class="ep-btn ep-btn-primary" wire:click="$set('showDocumentModal', true)">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Upload Document
-        </button>
+            </button>
+        </div>
     </div>
 
-    <div class="ep-upload-zone" onclick="document.getElementById('docDropInput').click()">
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p>Drag & drop files here or click to browse</p>
-        <span>PDF, DOC, JPG — max 10 MB per file</span>
-    </div>
+   
 
     @if($documents->isNotEmpty())
         <div class="ep-doc-grid">
@@ -1272,12 +1356,14 @@
                         <div class="ep-doc-card-date">Uploaded {{ $document->created_at->format('M d, Y') }}</div>
                     </div>
                     <div class="ep-doc-card-footer">
-                        <a href="{{ asset('storage/' . $document->file_path) }}" target="_blank" class="ep-btn ep-btn-ghost ep-btn-sm">
-                            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            Open
-                        </a>
+                        <button class="ep-btn ep-btn-ghost ep-btn-sm"
+                                wire:click="viewDocument('{{ $document->id }}')">
+                            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            View
+                        </button>
+                        
                         <button class="ep-btn ep-btn-danger ep-btn-sm"
-                                wire:click="deleteDocument({{ $document->id }})">
+                                wire:click="deleteDocument('{{ $document->id }}')">
                             <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                             Delete
                         </button>
@@ -1348,12 +1434,13 @@
                     </div>
                 </div>
                 <div class="ep-ec-footer">
-                    <button class="ep-btn ep-btn-ghost ep-btn-sm">
+                    <button class="ep-btn ep-btn-ghost ep-btn-sm"
+                            wire:click="editEmergencyContact('{{ $contact->id }}')">
                         <svg viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                         Edit
                     </button>
                     <button class="ep-btn ep-btn-danger ep-btn-sm"
-                            wire:click="deleteEmergencyContact({{ $contact->id }})">
+                            wire:click="deleteEmergencyContact('{{ $contact->id }}')">
                         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                         Delete
                     </button>
@@ -1475,7 +1562,9 @@
 <div class="ep-modal-bg">
     <div class="ep-modal">
         <div class="ep-modal-hd">
-            <div class="ep-modal-title">Add Emergency Contact</div>
+            <div class="ep-modal-title">
+    {{ $editingContactId ? 'Edit Emergency Contact' : 'Add Emergency Contact' }}
+</div>
             <button class="ep-modal-close" wire:click="$set('showContactModal', false)">
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -1705,6 +1794,184 @@
 
     document.addEventListener('livewire:navigated', init);
 })();
+
+/* ── Handle Document Download Events ── */
+document.addEventListener('livewire:init', () => {
+    Livewire.on('downloadDocument', (e) => {
+        console.log('downloadDocument event received:', e);
+        
+        // Method 1: Try direct download link (no CSRF needed for GET)
+        const downloadUrl = `/employee/documents/download/${e.documentId}`;
+        console.log('Attempting download via:', downloadUrl);
+        
+        // Create a temporary link element
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.style.display = 'none';
+        link.download = ''; // This suggests it's a download
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Fallback: If direct link doesn't work, try form submission
+        setTimeout(() => {
+            console.log('Fallback: trying POST method');
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/employee/documents/download';
+            form.style.display = 'none';
+            
+            // Add CSRF token from multiple possible sources
+            let csrfToken = null;
+            
+            // Try meta tag first
+            const metaTag = document.querySelector('meta[name="csrf-token"]');
+            if (metaTag) {
+                csrfToken = metaTag.getAttribute('content');
+            }
+            
+            // Try input field
+            if (!csrfToken) {
+                const csrfInput = document.querySelector('input[name="_token"]');
+                if (csrfInput) {
+                    csrfToken = csrfInput.value;
+                }
+            }
+            
+            // Try Livewire's CSRF token
+            if (!csrfToken && window.Livewire) {
+                const livewireCsrf = document.querySelector('[data-csrf]');
+                if (livewireCsrf) {
+                    csrfToken = livewireCsrf.getAttribute('data-csrf');
+                }
+            }
+            
+            console.log('CSRF token found:', csrfToken ? 'yes' : 'no');
+            
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+            }
+            
+            // Add document ID
+            const documentIdInput = document.createElement('input');
+            documentIdInput.type = 'hidden';
+            documentIdInput.name = 'document_id';
+            documentIdInput.value = e.documentId;
+            form.appendChild(documentIdInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }, 1000);
+    });
+});
 </script>
+
+{{-- Document View Modal --}}
+@if($selectedDocument)
+<div class="ep-modal-overlay" wire:click="closeDocumentModal">
+    <div class="ep-modal-content ep-modal-large" wire:click.stop>
+        <div class="ep-modal-header">
+            <h3>Document Viewer</h3>
+            <button class="ep-modal-close" wire:click="closeDocumentModal">×</button>
+        </div>
+        <div class="ep-modal-body">
+            <div class="ep-doc-viewer">
+                <div class="ep-doc-viewer-header">
+                    <h4>{{ $selectedDocument->name }}</h4>
+                    <div class="ep-doc-viewer-actions">
+                        <button class="ep-btn ep-btn-ghost ep-btn-sm" wire:click="downloadDocument('{{ $selectedDocument->id }}')">
+                            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download PDF
+                        </button>
+                        <a href="{{ asset('storage/' . $selectedDocument->file_path) }}" 
+                           target="_blank" class="ep-btn ep-btn-primary ep-btn-sm">
+                            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Open Original
+                        </a>
+                    </div>
+                </div>
+                <div class="ep-doc-viewer-content">
+                    @php
+                        $ext = strtolower(pathinfo($selectedDocument->file_path, PATHINFO_EXTENSION));
+                    @endphp
+                    
+                    @if(in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']))
+                        <div class="ep-doc-image-view">
+                            @php
+                                $imagePath = storage_path('app/public/' . $selectedDocument->file_path);
+                                $imageUrl = asset('storage/' . $selectedDocument->file_path);
+                            @endphp
+                            <img src="{{ $imageUrl }}" 
+                                 alt="{{ $selectedDocument->name }}" 
+                                 style="max-width: 100%; max-height: 500px; border-radius: 8px;" />
+                        </div>
+                    @elseif($ext === 'pdf')
+                        <div class="ep-doc-pdf-view">
+                            <iframe src="{{ asset('storage/' . $selectedDocument->file_path) }}" 
+                                    style="width: 100%; height: 500px; border: 1px solid #e8eaf0; border-radius: 8px;"
+                                    title="{{ $selectedDocument->name }}"></iframe>
+                        </div>
+                    @elseif(in_array($ext, ['txt', 'rtf', 'doc', 'docx']))
+                        <div class="ep-doc-text-view">
+                            <div class="ep-doc-preview">
+                                @php
+                                    $filePath = storage_path('app/public/' . $selectedDocument->file_path);
+                                    if (file_exists($filePath)) {
+                                        $content = file_get_contents($filePath);
+                                        if ($ext === 'txt' || $ext === 'rtf') {
+                                            $content = preg_replace('/\\{\\\\[^}]*\\}/', '', $content);
+                                            $content = strip_tags($content);
+                                        }
+                                        $preview = substr($content, 0, 2000);
+                                    } else {
+                                        $preview = 'File not found or cannot be read.';
+                                    }
+                                @endphp
+                                <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 12px; line-height: 1.4;">{{ $preview }}</pre>
+                                @if(isset($content) && strlen($content) > 2000)
+                                    <p style="margin-top: 10px; color: #6B7094; font-size: 11px;">
+                                        <em>Document preview truncated. Download to view full content.</em>
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <div class="ep-doc-unsupported">
+                            <div style="text-align: center; padding: 40px; color: #6B7094;">
+                                <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5;">
+                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+                                </svg>
+                                <p><strong>Preview not available</strong></p>
+                                <p>This file type ({{ strtoupper($ext) }}) cannot be previewed in the browser.</p>
+                                <p style="margin-top: 16px;">
+                                    <button class="ep-btn ep-btn-primary" wire:click="downloadDocument('{{ $selectedDocument->id }}')">
+                                        Download to View
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                <div class="ep-doc-viewer-footer">
+                    <div style="font-size: 11px; color: #6B7094;">
+                        @php
+                            $filePath = storage_path('app/public/' . $selectedDocument->file_path);
+                            $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
+                        @endphp
+                        Uploaded: {{ $selectedDocument->created_at->format('M d, Y H:i') }} | 
+                        Size: {{ number_format($fileSize / 1024, 2) }} KB
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 </div>{{-- /ep-root --}}

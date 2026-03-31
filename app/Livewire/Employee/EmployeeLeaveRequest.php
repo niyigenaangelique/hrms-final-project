@@ -15,6 +15,8 @@ class EmployeeLeaveRequest extends Component
 {
     public $leaveTypes;
     public $employee;
+    public $leaveRequests;
+    public $selectedRequest;
     public $leave_type_id;
     public $start_date;
     public $end_date;
@@ -51,6 +53,7 @@ class EmployeeLeaveRequest extends Component
         }
 
         $this->leaveTypes = LeaveType::where('is_active', true)->get();
+        $this->loadLeaveRequests();
     }
 
     public function submit()
@@ -82,11 +85,32 @@ class EmployeeLeaveRequest extends Component
             $this->reset(['leave_type_id', 'start_date', 'end_date', 'reason', 'attachments']);
             
             session()->flash('success', 'Leave request submitted successfully!');
+            $this->loadLeaveRequests(); // Reload leave requests to show new one
             
         } catch (\Exception $e) {
             \Log::error('Leave request submission failed: ' . $e->getMessage());
             session()->flash('error', 'Failed to submit leave request. Please try again.');
         }
+    }
+
+    public function loadLeaveRequests()
+    {
+        $this->leaveRequests = LeaveRequest::with('leaveType')
+            ->where('employee_id', $this->employee->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function viewRequest($requestId)
+    {
+        $this->selectedRequest = LeaveRequest::with('leaveType')
+            ->where('employee_id', $this->employee->id)
+            ->find($requestId);
+    }
+
+    public function closeModal()
+    {
+        $this->selectedRequest = null;
     }
 
     public function render()

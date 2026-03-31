@@ -69,7 +69,11 @@ Route::middleware(['web'])->group(function () {
         // Employee Routes
         Route::get('/employee/profile', EmployeeProfile::class)->name('employee.profile');
         Route::get('/employee/profile/{id}', EmployeeProfile::class)->name('employee.profile.show');
+        Route::get('/employee/documents/download/{documentId}', [\App\Http\Controllers\DocumentDownloadController::class, 'download'])->name('employee.documents.download.get');
+        Route::post('/employee/documents/download', [\App\Http\Controllers\DocumentDownloadController::class, 'download'])->name('employee.documents.download');
         Route::get('/employee/contracts', EmployeeContracts::class)->name('employee.contracts');
+        Route::get('/employee/contracts/download/{contractId}', [\App\Http\Controllers\ContractDownloadController::class, 'download'])->name('employee.contracts.download.get');
+        Route::post('/employee/contracts/download', [\App\Http\Controllers\ContractDownloadController::class, 'download'])->name('employee.contracts.download');
         Route::get('/employee/leave-request', EmployeeLeaveRequest::class)->name('employee.leave.request');
         Route::get('/employee/leave-status', EmployeeLeaveStatus::class)->name('employee.leave-status');
         Route::get('/employee/leave-types', EmployeeLeaveTypes::class)->name('employee.leave-types');

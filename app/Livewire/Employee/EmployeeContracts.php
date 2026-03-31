@@ -6,6 +6,8 @@ use App\Models\Contract;
 use App\Models\Employee;
 use App\Services\ContractPdfService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -45,6 +47,12 @@ class EmployeeContracts extends Component
         $this->selectedContract = null;
     }
 
+    public function openPdfModal($contractId)
+    {
+        $this->selectedContract = Contract::with(['position'])
+            ->find($contractId);
+    }
+
     public function downloadContract($contractId)
     {
         try {
@@ -56,8 +64,11 @@ class EmployeeContracts extends Component
                 return;
             }
 
-            $pdfService = new ContractPdfService();
-            return $pdfService->downloadContract($contract);
+            // Store the contract ID in session for the download route
+            session(['download_contract_id' => $contractId]);
+            
+            // Return JavaScript to trigger the download
+            $this->dispatch('downloadContract', contractId: $contractId);
             
         } catch (\Exception $e) {
             \Log::error('Contract download failed: ' . $e->getMessage());

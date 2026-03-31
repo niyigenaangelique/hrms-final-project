@@ -352,11 +352,9 @@
 
             <flux:navlist.group expandable heading="Work Management" class="hidden lg:grid">
                 <flux:navlist.item icon="document-plus" href="{{ route('employee.leave.request') }}" wire:navigate>
-                    Request Leave
+                    Manage Leave
                 </flux:navlist.item>
-                <flux:navlist.item icon="check-circle" href="{{ route('employee.leave-status') }}" wire:navigate>
-                    Leave Status
-                </flux:navlist.item>
+               
                 <flux:navlist.item icon="calendar" href="{{ route('employee.calendar') }}" wire:navigate>
                     My Calendar
                 </flux:navlist.item>

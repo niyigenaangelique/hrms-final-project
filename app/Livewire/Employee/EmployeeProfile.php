@@ -22,6 +22,7 @@ class EmployeeProfile extends Component
     public $contracts;
     public $documents;
     public $emergencyContacts;
+    public $selectedDocument = null;
     
     // Document upload properties
     public $documentName;
@@ -34,6 +35,7 @@ class EmployeeProfile extends Component
     public $contactPhone;
     public $contactEmail;
     public $showContactModal = false;
+    public $editingContactId = null;
     
     // Edit profile properties
     public $showEditModal = false;
@@ -71,28 +73,39 @@ class EmployeeProfile extends Component
                 // Get the highest existing employee code number
             $lastEmployee = Employee::orderBy('id', 'desc')->first();
             $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -4)) : 0;
-            $newCode = 'EMP-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
-            
-            $this->employee = Employee::create([
-                'code' => $newCode,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'email' => $user->email,
-                    'phone_number' => $user->phone_number,
+                $newCode = 'EMP-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
+                
+                $this->employee = Employee::create([
                     'user_id' => $user->id,
+                    'code' => $newCode,
+                    'first_name' => $user->name ?? 'First',
+                    'last_name' => 'Last',
+                    'email' => $user->email,
+                    'phone_number' => '',
+                    'address' => '',
+                    'city' => '',
+                    'state' => '',
+                    'country' => '',
+                    'nationality' => '',
+                    'national_id' => '',
+                    'gender' => 'male',
+                    'birth_date' => now()->subYears(25),
+                    'hire_date' => now(),
+                    'employment_status' => 'active',
+                    'work_schedule' => 'full_time',
+                    'salary_currency' => 'RWF',
+                    'is_taxable' => true,
+                    'rssb_rate' => 5.5,
                     'approval_status' => \App\Enum\ApprovalStatus::Approved,
+                    'created_by' => $user->id,
                 ]);
             }
         }
         
+        // Debug: Log employee data
+        \Log::info('Employee loaded for profile: ' . ($this->employee ? $this->employee->full_name : 'NULL'));
+        
         $this->loadRelatedData();
-    }
-
-    public function loadRelatedData()
-    {
-        $this->contracts = $this->employee->contracts()->with('position')->latest()->get();
-        $this->documents = $this->employee->documents()->latest()->get();
-        $this->emergencyContacts = $this->employee->emergencyContacts()->get();
     }
 
     public function setActiveTab($tab)
@@ -116,6 +129,13 @@ class EmployeeProfile extends Component
                     'description' => $contract->job_description ?? 'Employee role and responsibilities'
                 ];
             });
+    }
+
+    public function loadRelatedData()
+    {
+        $this->contracts = $this->employee->contracts()->with('position')->latest()->get();
+        $this->documents = $this->employee->documents()->latest()->get();
+        $this->emergencyContacts = $this->employee->emergencyContacts()->get();
     }
 
     // Document upload methods
@@ -157,31 +177,164 @@ class EmployeeProfile extends Component
             'contactEmail' => 'nullable|email|max:255',
         ]);
 
-        EmergencyContact::create([
-            'employee_id' => $this->employee->id,
-            'code' => 'EC-' . str_pad(EmergencyContact::query()->count() + 1, 3, '0', STR_PAD_LEFT),
-            'name' => $this->contactName,
-            'relationship' => $this->contactRelationship,
-            'phone' => $this->contactPhone,
-            'email' => $this->contactEmail,
-            'address' => '',
-            'is_primary' => false,
-            'approval_status' => \App\Enum\ApprovalStatus::Approved,
-            'created_by' => $this->employee->user_id,
-        ]);
+        if ($this->editingContactId) {
+            // Update existing contact
+            $contact = EmergencyContact::where('employee_id', $this->employee->id)
+                ->findOrFail($this->editingContactId);
+            
+            $contact->update([
+                'name' => $this->contactName,
+                'relationship' => $this->contactRelationship,
+                'phone' => $this->contactPhone,
+                'email' => $this->contactEmail,
+            ]);
+            
+            session()->flash('message', 'Emergency contact updated successfully!');
+        } else {
+            // Create new contact
+            EmergencyContact::create([
+                'employee_id' => $this->employee->id,
+                'code' => 'EC-' . str_pad(EmergencyContact::query()->count() + 1, 3, '0', STR_PAD_LEFT),
+                'name' => $this->contactName,
+                'relationship' => $this->contactRelationship,
+                'phone' => $this->contactPhone,
+                'email' => $this->contactEmail,
+                'address' => '',
+                'is_primary' => false,
+                'approval_status' => \App\Enum\ApprovalStatus::Approved,
+                'created_by' => $this->employee->user_id,
+            ]);
+            
+            session()->flash('message', 'Emergency contact added successfully!');
+        }
 
-        $this->reset(['contactName', 'contactRelationship', 'contactPhone', 'contactEmail', 'showContactModal']);
+        $this->reset(['contactName', 'contactRelationship', 'contactPhone', 'contactEmail', 'showContactModal', 'editingContactId']);
         $this->loadRelatedData();
-        
-        session()->flash('message', 'Emergency contact added successfully!');
     }
 
     public function deleteDocument($documentId)
     {
         $document = Document::where('employee_id', $this->employee->id)->findOrFail($documentId);
         $document->delete();
-        $this->loadRelatedData();
+        
+        // Reload documents
+        $this->documents = Document::where('employee_id', $this->employee->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
         session()->flash('message', 'Document deleted successfully!');
+    }
+
+    public function viewDocument($documentId)
+    {
+        try {
+            $document = Document::where('employee_id', $this->employee->id)
+                ->findOrFail($documentId);
+            
+            // Debug: Log the document being viewed
+            \Log::info('Viewing document: ' . $documentId . ' - ' . $document->name);
+            
+            $this->selectedDocument = $document;
+            
+            // Debug: Log that selectedDocument is set
+            \Log::info('selectedDocument set: ' . ($this->selectedDocument ? 'yes' : 'no'));
+            
+        } catch (\Exception $e) {
+            \Log::error('Error viewing document: ' . $e->getMessage());
+            session()->flash('error', 'Document not found or access denied.');
+        }
+    }
+
+    public function downloadDocument($documentId)
+    {
+        try {
+            $document = Document::where('employee_id', $this->employee->id)
+                ->findOrFail($documentId);
+            
+            // Debug: Log the download attempt
+            \Log::info('Attempting to download document: ' . $documentId . ' - ' . $document->name);
+            
+            // Store document ID in session for download route
+            session(['download_document_id' => $documentId]);
+            
+            // Dispatch event to trigger JavaScript download
+            $this->dispatch('downloadDocument', documentId: $documentId);
+            
+            // Debug: Log that event was dispatched
+            \Log::info('downloadDocument event dispatched for: ' . $documentId);
+            
+        } catch (\Exception $e) {
+            \Log::error('Document download failed: ' . $e->getMessage());
+            session()->flash('error', 'Failed to download document. Please try again.');
+        }
+    }
+
+    private function convertImageToPdf($imagePath, $originalName, $fileName)
+    {
+        try {
+            // Use DomPDF to convert image to PDF
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.image-document', [
+                'imagePath' => $imagePath,
+                'imageName' => $originalName,
+                'employee' => $this->employee
+            ]);
+            
+            $pdf->setPaper('A4', 'portrait');
+            $pdfFilename = $fileName . '.pdf';
+            
+            return $pdf->download($pdfFilename);
+        } catch (\Exception $e) {
+            \Log::error('Image to PDF conversion failed: ' . $e->getMessage());
+            // Fallback to original image download
+            return response()->download($imagePath, $originalName);
+        }
+    }
+
+    private function convertTextToPdf($filePath, $originalName, $fileName, $extension)
+    {
+        try {
+            $content = file_get_contents($filePath);
+            
+            if ($extension === 'txt' || $extension === 'rtf') {
+                // Clean RTF tags if present
+                $content = preg_replace('/\\{\\\\[^}]*\\}/', '', $content);
+                $content = strip_tags($content);
+            }
+            
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.text-document', [
+                'content' => $content,
+                'title' => $originalName,
+                'employee' => $this->employee
+            ]);
+            
+            $pdf->setPaper('A4', 'portrait');
+            $pdfFilename = $fileName . '.pdf';
+            
+            return $pdf->download($pdfFilename);
+        } catch (\Exception $e) {
+            \Log::error('Text to PDF conversion failed: ' . $e->getMessage());
+            // Fallback to original file download
+            return response()->download($filePath, $originalName);
+        }
+    }
+
+    public function closeDocumentModal()
+    {
+        $this->selectedDocument = null;
+    }
+
+    public function testModal()
+    {
+        // Create a fake document for testing the modal
+        $fakeDocument = new \stdClass();
+        $fakeDocument->id = 'test-123';
+        $fakeDocument->name = 'Test Document';
+        $fakeDocument->file_path = 'test/test.txt';
+        $fakeDocument->created_at = now();
+        
+        $this->selectedDocument = $fakeDocument;
+        
+        session()->flash('message', 'Test modal opened with fake document');
     }
 
     public function deleteEmergencyContact($contactId)
@@ -190,6 +343,23 @@ class EmployeeProfile extends Component
         $contact->delete();
         $this->loadRelatedData();
         session()->flash('message', 'Emergency contact deleted successfully!');
+    }
+
+    public function editEmergencyContact($contactId)
+    {
+        $contact = EmergencyContact::where('employee_id', $this->employee->id)->findOrFail($contactId);
+        
+        // Set the form fields with the contact data
+        $this->contactName = $contact->name;
+        $this->contactRelationship = $contact->relationship;
+        $this->contactPhone = $contact->phone;
+        $this->contactEmail = $contact->email;
+        
+        // Store the contact ID for updating
+        $this->editingContactId = $contactId;
+        
+        // Show the modal
+        $this->showContactModal = true;
     }
     
     // Edit profile methods

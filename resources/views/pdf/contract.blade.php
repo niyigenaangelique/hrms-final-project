@@ -103,19 +103,19 @@
             <h3>Employee Information</h3>
             <div class="info-row">
                 <span class="info-label">Name:</span>
-                <span class="info-value">{{ $contract->employee->first_name }} {{ $contract->employee->last_name }}</span>
+                <span class="info-value">{{ $contract->employee->first_name ?? 'N/A' }} {{ $contract->employee->last_name ?? 'N/A' }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Employee Code:</span>
-                <span class="info-value">{{ $contract->employee->code }}</span>
+                <span class="info-value">{{ $contract->employee->code ?? 'N/A' }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Email:</span>
-                <span class="info-value">{{ $contract->employee->email }}</span>
+                <span class="info-value">{{ $contract->employee->email ?? 'N/A' }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Phone:</span>
-                <span class="info-value">{{ $contract->employee->phone_number }}</span>
+                <span class="info-value">{{ $contract->employee->phone_number ?? 'N/A' }}</span>
             </div>
         </div>
 
@@ -149,15 +149,15 @@
             <h3>Employment Period</h3>
             <div class="info-row">
                 <span class="info-label">Start Date:</span>
-                <span class="info-value">{{ $contract->start_date->format('F d, Y') }}</span>
+                <span class="info-value">{{ $contract->start_date ? $contract->start_date->format('F d, Y') : 'N/A' }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">End Date:</span>
-                <span class="info-value">{{ $contract->end_date->format('F d, Y') }}</span>
+                <span class="info-value">{{ $contract->end_date ? $contract->end_date->format('F d, Y') : 'N/A' }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Contract Duration:</span>
-                <span class="info-value">{{ $contract->start_date->diffInDays($contract->end_date) }} days</span>
+                <span class="info-value">{{ $contract->start_date && $contract->end_date ? $contract->start_date->diffInDays($contract->end_date) . ' days' : 'N/A' }}</span>
             </div>
         </div>
 
@@ -201,7 +201,7 @@
     <div class="signature-section">
         <div class="signature-box">
             <p><strong>Employee Signature</strong></p>
-            <p>{{ $contract->employee->first_name }} {{ $contract->employee->last_name }}</p>
+            <p>{{ $contract->employee->first_name ?? 'N/A' }} {{ $contract->employee->last_name ?? 'N/A' }}</p>
             <p>Date: _________________</p>
         </div>
         <div class="signature-box">

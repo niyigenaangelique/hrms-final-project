@@ -101,7 +101,7 @@
 .pf-page-hero-body {
     padding: 16px 24px 20px;
     display: flex; align-items: flex-end; justify-content: space-between; gap:16px;
-    margin-top: -28px;
+    margin-top: -18px;
 }
 .pf-page-hero-icon {
     width: 56px; height: 56px; border-radius: 16px;
