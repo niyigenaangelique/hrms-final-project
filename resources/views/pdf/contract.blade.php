@@ -123,7 +123,11 @@
             <h3>Contract Details</h3>
             <div class="info-row">
                 <span class="info-label">Position:</span>
-                <span class="info-value">{{ $contract->position->name ?? 'Not specified' }}</span>
+                <span class="info-value">{{ $position->name ?? 'Not specified' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Department:</span>
+                <span class="info-value">{{ $department->name ?? 'Not specified' }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Employee Category:</span>
@@ -140,6 +144,18 @@
                         {{ ucfirst($contract->status->value) }}
                     </span>
                 </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Approval Status:</span>
+                <span class="info-value">
+                    <span class="status-badge status-{{ $contract->approval_status->value }}">
+                        {{ ucfirst($contract->approval_status->value) }}
+                    </span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Created Date:</span>
+                <span class="info-value">{{ $contract->created_at ? $contract->created_at->format('F d, Y H:i') : 'N/A' }}</span>
             </div>
         </div>
     </div>

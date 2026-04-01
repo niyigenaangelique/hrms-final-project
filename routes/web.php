@@ -24,6 +24,9 @@ use App\Livewire\Contract\ContractImportData;
 use App\Livewire\Contract\ContractPage;
 use App\Livewire\DataImportExport;
 use App\Livewire\Employee\EmployeePage;
+use App\Livewire\HR\EmployeeManager;
+use App\Livewire\HR\ContractManager;
+use App\Livewire\HR\TestComponent;
 use App\Livewire\HomePage;
 use App\Livewire\LoginPage;
 use App\Livewire\PasswordResetPage;
@@ -348,6 +351,8 @@ Route::middleware(['web'])->group(function () {
         Route::get('/contracts', ContractPage::class)->name('contracts');
         Route::get('/contracts/{id}', ContractPage::class)->name('contract');
         Route::get('/importContracts', ContractImportData::class)->name('importContracts');
+// HR
+        Route::get('/hr/hr-employee-manager', EmployeeManager::class)->name('employee-management');
 
 //        payroll
         Route::get('/payroll/dashboard', PayrollDashboard::class)->name('payroll.dashboard');

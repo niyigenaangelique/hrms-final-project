@@ -42,9 +42,8 @@ class ContractDownloadController extends Controller
                 return redirect()->back()->with('error', 'Contract not specified.');
             }
 
-            // Find the contract with relationships
+            // Find the contract without broken relationships
             $contract = Contract::where('employee_id', $employee->id)
-                ->with(['employee', 'position'])
                 ->find($contractIdToUse);
             
             if (!$contract) {
@@ -54,11 +53,18 @@ class ContractDownloadController extends Controller
                 return redirect()->back()->with('error', 'Contract not found or access denied.');
             }
 
+            // Get employee and position using direct queries
+            $employeeData = Employee::find($contract->employee_id);
+            $positionData = \App\Models\Position::find($employeeData->position_id);
+            $departmentData = \App\Models\Department::find($employeeData->department_id);
+
             // Generate PDF
             $pdfService = new ContractPdfService();
             $cleanData = $pdfService->cleanDataForPdf([
                 'contract' => $contract,
-                'employee' => $contract->employee,
+                'employee' => $employeeData,
+                'position' => $positionData,
+                'department' => $departmentData,
                 'orgName' => 'ZIBITECH',
                 'docTitle' => 'Employment Contract',
                 'showSalary' => true,

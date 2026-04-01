@@ -512,7 +512,7 @@
                     <div class="ctr-banner-chips">
                         <span class="ctr-banner-chip">
                             <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                            {{ $contract->position->name ?? 'No Position' }}
+                            {{ \App\Models\Position::find($employee->position_id)?->name ?? 'No Position' }}
                         </span>
                         <span class="ctr-banner-chip">
                             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -575,7 +575,7 @@
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">Department</span>
-                            <span class="ctr-field-val">{{ $employee?->department?->name ?? '—' }}</span>
+                            <span class="ctr-field-val">{{ \App\Models\Department::find($employee->department_id)?->name ?? '—' }}</span>
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">National ID</span>
@@ -597,7 +597,7 @@
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">Position</span>
-                            <span class="ctr-field-val">{{ $contract->position->name ?? '—' }}</span>
+                            <span class="ctr-field-val">{{ \App\Models\Position::find($employee->position_id)?->name ?? '—' }}</span>
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">Employee Category</span>
@@ -863,8 +863,8 @@
                             <div class="ctr-pdf-grid">
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">Full Name</div><div class="ctr-pdf-value">{{ $employee?->full_name ?? '—' }}</div></div>
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">Employee ID</div><div class="ctr-pdf-value">{{ $employee?->code ?? '—' }}</div></div>
-                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Department</div><div class="ctr-pdf-value">{{ $employee?->department?->name ?? '—' }}</div></div>
-                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Position</div><div class="ctr-pdf-value">{{ $selectedContract->position->name ?? '—' }}</div></div>
+                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Department</div><div class="ctr-pdf-value">{{ \App\Models\Department::find($employee->department_id)?->name ?? '—' }}</div></div>
+                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Position</div><div class="ctr-pdf-value">{{ \App\Models\Position::find($employee->position_id)?->name ?? '—' }}</div></div>
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">National ID</div><div class="ctr-pdf-value">{{ $employee?->national_id ?? '—' }}</div></div>
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">Category</div><div class="ctr-pdf-value">{{ ucfirst($selectedContract->employee_category->value ?? '—') }}</div></div>
                             </div>

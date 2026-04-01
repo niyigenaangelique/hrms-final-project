@@ -997,9 +997,9 @@
                                     @endif
                                 </div>
                                 <div class="ep-hero-role">
-                                    <strong>{{ $employee?->position?->name ?? 'No Position' }}</strong>
+                                    <strong>{{ \App\Models\Position::find($employee->position_id)?->name ?? 'No Position' }}</strong>
                                     &nbsp;·&nbsp;
-                                    {{ $employee?->department?->name ?? 'No Department' }}
+                                    {{ \App\Models\Department::find($employee->department_id)?->name ?? 'No Department' }}
                                 </div>
                                 <div class="ep-hero-contacts" style="margin-top:8px;">
                                     @if($employee->email)
@@ -1105,19 +1105,33 @@
                             <label>Department</label>
                             <p>
                                 <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                                {{ $employee->department->name ?? '—' }}
+                                {{ \App\Models\Department::find($employee->department_id)?->name ?? '—' }}
                             </p>
                         </div>
                         <div class="ep-info-item">
                             <label>Position / Role</label>
                             <p>
                                 <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                                {{ $employee->position->name ?? '—' }}
+                                {{ \App\Models\Position::find($employee->position_id)?->name ?? '—' }}
                             </p>
                         </div>
                         <div class="ep-info-item">
                             <label>Contract Type</label>
-                            <p>{{ $contracts->first()->contract_type ?? '—' }}</p>
+                            <p>
+                                @php
+                                    $category = $contracts->first()->employee_category;
+                                    $categoryValue = $category instanceof \App\Enum\EmployeeCategory ? $category->value : $category;
+                                @endphp
+                                @if($categoryValue === 'full_time')Full Time
+                                @elseif($categoryValue === 'part_time')Part Time
+                                @elseif($categoryValue === 'contract')Contract
+                                @elseif($categoryValue === 'intern')Intern
+                                @elseif($categoryValue === 'consultant')Consultant
+                                @elseif($categoryValue === 'temporary')Temporary
+                                @elseif($categoryValue === 'freelance')Freelance
+                                @else{{ ucfirst($categoryValue ?? '—') }}
+                                @endif
+                            </p>
                         </div>
                         <div class="ep-info-item">
                             <label>Employment Status</label>
@@ -1251,7 +1265,21 @@
                             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         </div>
                         <div>
-                            <div class="ep-contract-type">{{ $contract->contract_type ?? 'Employment Contract' }}</div>
+                            <div class="ep-contract-type">
+                                @php
+                                    $category = $contract->employee_category;
+                                    $categoryValue = $category instanceof \App\Enum\EmployeeCategory ? $category->value : $category;
+                                @endphp
+                                @if($categoryValue === 'full_time')Full Time
+                                @elseif($categoryValue === 'part_time')Part Time
+                                @elseif($categoryValue === 'contract')Contract
+                                @elseif($categoryValue === 'intern')Intern
+                                @elseif($categoryValue === 'consultant')Consultant
+                                @elseif($categoryValue === 'temporary')Temporary
+                                @elseif($categoryValue === 'freelance')Freelance
+                                @else{{ ucfirst($categoryValue ?? 'Employment Contract') }}
+                                @endif
+                            </div>
                             <div class="ep-contract-num">{{ $employee->employee_number ?? $employee->code }}</div>
                         </div>
                     </div>
@@ -1272,7 +1300,7 @@
                         </div>
                         <div class="ep-contract-meta-item">
                             <label>Position</label>
-                            <p>{{ $contract->position->name ?? '—' }}</p>
+                            <p>{{ \App\Models\Position::find($contract->position_id)?->name ?? '—' }}</p>
                         </div>
                         <div class="ep-contract-meta-item">
                             <label>Duration</label>
@@ -1498,7 +1526,7 @@
                             </div>
                             <div class="ep-hist-full-field">
                                 <label>Department</label>
-                                <p>{{ $item['department'] ?? $employee->department->name ?? '—' }}</p>
+                                <p>{{ $item['department'] ?? \App\Models\Department::find($employee->department_id)?->name ?? '—' }}</p>
                             </div>
                         </div>
                         @if(!empty($item['description']))

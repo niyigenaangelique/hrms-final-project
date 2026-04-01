@@ -16,7 +16,8 @@ class EmployeeAttendance extends Component
     public $attendances;
     public $todayAttendance;
     public $notes;
-    public $isClockedIn = false;
+    public $isClockedIn  = false;
+    public $todayMinutes = 0;   // total minutes worked today (passed to blade)
 
     // Africa/Kigali = UTC+2
     private const TZ = 'Africa/Kigali';
@@ -56,85 +57,30 @@ class EmployeeAttendance extends Component
     public function loadAttendanceData(): void
     {
         $today = $this->now()->format('Y-m-d');
-        $monthStart = $this->now()->startOfMonth()->format('Y-m-d');
 
-        // Load all attendance records for the current month
         $this->attendances = Attendance::where('employee_id', $this->employee->id)
-            ->where('date', '>=', $monthStart)
             ->orderBy('date', 'desc')
+            ->take(30)
             ->get();
 
         $this->todayAttendance = Attendance::where('employee_id', $this->employee->id)
             ->where('date', $today)
             ->first();
 
-        // Calculate today's hours worked (stored as total minutes for precision)
-        $this->todayHours = 0;
-        
-        // Simple debugging - write to a separate log file
-        $debugInfo = [
-            'has_attendance' => $this->todayAttendance ? 'yes' : 'no',
-            'attendance_id' => $this->todayAttendance?->id,
-            'check_in' => $this->todayAttendance?->check_in,
-            'check_out' => $this->todayAttendance?->check_out,
-            'check_in_type' => gettype($this->todayAttendance?->check_in),
-            'check_out_type' => gettype($this->todayAttendance?->check_out),
-        ];
-        
-        // Write to a simple debug file
-        file_put_contents(storage_path('debug_attendance.log'), 
-            date('Y-m-d H:i:s') . " - " . json_encode($debugInfo) . "\n", 
-            FILE_APPEND
-        );
-        
-        if ($this->todayAttendance && $this->todayAttendance->check_in) {
+        // Calculate today's minutes worked
+        $this->todayMinutes = 0;
+        if ($this->todayAttendance?->check_in && $this->todayAttendance?->check_out) {
             try {
-                $ci = $this->todayAttendance->check_in;
-                $co = $this->todayAttendance->check_out;
+                $checkIn  = $this->parseTimeValue($this->todayAttendance->check_in);
+                $checkOut = $this->parseTimeValue($this->todayAttendance->check_out);
 
-                // Simple string handling for check-in
-                if (is_string($ci)) {
-                    $checkIn = Carbon::createFromFormat('H:i:s', $ci, self::TZ);
-                } elseif ($ci instanceof Carbon) {
-                    $checkIn = $ci->copy()->setTimezone(self::TZ);
-                } else {
-                    throw new \Exception('Invalid check_in type: ' . gettype($ci));
-                }
-
-                if ($co) {
-                    // Has check-out - calculate full hours
-                    if (is_string($co)) {
-                        $checkOut = Carbon::createFromFormat('H:i:s', $co, self::TZ);
-                    } elseif ($co instanceof Carbon) {
-                        $checkOut = $co->copy()->setTimezone(self::TZ);
-                    } else {
-                        throw new \Exception('Invalid check_out type: ' . gettype($co));
-                    }
-
-                    $minutes = $checkIn->diffInMinutes($checkOut, false);
-                    $this->todayHours = max(0, $minutes);
-                    
-                    file_put_contents(storage_path('debug_attendance.log'), 
-                        date('Y-m-d H:i:s') . " - Full hours: {$minutes} minutes\n", 
-                        FILE_APPEND
-                    );
-                } else {
-                    // Only check-in - calculate hours worked so far
-                    $now = Carbon::now(self::TZ);
-                    $minutes = $checkIn->diffInMinutes($now, false);
-                    $this->todayHours = max(0, $minutes);
-                    
-                    file_put_contents(storage_path('debug_attendance.log'), 
-                        date('Y-m-d H:i:s') . " - Partial hours: {$minutes} minutes\n", 
-                        FILE_APPEND
-                    );
+                if ($checkIn && $checkOut) {
+                    $diff = $checkIn->diffInMinutes($checkOut, false); // false = signed
+                    $this->todayMinutes = max(0, (int) $diff);
                 }
             } catch (\Exception $e) {
-                file_put_contents(storage_path('debug_attendance.log'), 
-                    date('Y-m-d H:i:s') . " - ERROR: " . $e->getMessage() . "\n", 
-                    FILE_APPEND
-                );
-                $this->todayHours = 0;
+                \Log::error('todayMinutes calculation failed', ['error' => $e->getMessage()]);
+                $this->todayMinutes = 0;
             }
         }
 
@@ -200,16 +146,15 @@ class EmployeeAttendance extends Component
 
         // Parse stored check_in in the same timezone
         try {
-            $checkIn = Carbon::createFromFormat('H:i:s', $this->todayAttendance->check_in, self::TZ);
-            $checkOut = Carbon::createFromFormat('H:i:s', $currentTime, self::TZ);
+            $checkIn  = $this->parseTimeValue($this->todayAttendance->check_in);
+            $checkOut = $this->parseTimeValue($currentTime);
 
-            if ($checkOut->lt($checkIn)) {
+            if ($checkIn && $checkOut && $checkOut->lt($checkIn)) {
                 session()->flash('error', 'Clock-out time cannot be before clock-in time.');
                 return;
             }
         } catch (\Exception $e) {
             \Log::error('Attendance time parse error', ['error' => $e->getMessage()]);
-            // Continue anyway — don't block the employee
         }
 
         $this->todayAttendance->update([
@@ -221,6 +166,40 @@ class EmployeeAttendance extends Component
         $this->notes = '';
         $this->loadAttendanceData();
         session()->flash('success', 'Clocked out at ' . $currentTime);
+    }
+
+    /**
+     * Parse a time value into a Carbon instance in Africa/Kigali.
+     * Handles: Carbon objects, "H:i:s" strings, "Y-m-d H:i:s" strings.
+     */
+    private function parseTimeValue(mixed $value): ?Carbon
+    {
+        if (!$value) return null;
+
+        // Already a Carbon — just normalise timezone
+        if ($value instanceof Carbon) {
+            return $value->copy()->setTimezone(self::TZ);
+        }
+
+        $str = (string) $value;
+
+        // Try formats from most to least specific
+        $formats = ['H:i:s', 'H:i', 'Y-m-d H:i:s', 'Y-m-d H:i'];
+        foreach ($formats as $fmt) {
+            try {
+                $c = Carbon::createFromFormat($fmt, $str, self::TZ);
+                if ($c !== false) return $c;
+            } catch (\Exception) {
+                // try next format
+            }
+        }
+
+        // Last resort — flexible parse
+        try {
+            return Carbon::parse($str, self::TZ);
+        } catch (\Exception) {
+            return null;
+        }
     }
 
     public function render()
