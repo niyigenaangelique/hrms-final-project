@@ -267,41 +267,31 @@ table.att-table { width: 100%; border-collapse: collapse; }
 
 {{-- ══ PAGE HERO ══ --}}
 @php
-    // Always use Africa/Kigali (UTC+2) for display
     $kigali = \Carbon\Carbon::now('Africa/Kigali');
 
-    // $todayHours from the component is now TOTAL MINUTES (int).
-    // Prefer the component value; recalculate in blade only as a fallback.
-    $todayMinutes = 0;
-    if (isset($todayHours) && $todayHours > 0) {
-        // Component already calculated total minutes
-        $todayMinutes = (int) $todayHours;
-    } elseif ($todayAttendance && $todayAttendance->check_in) {
-        try {
-            $ci = \Carbon\Carbon::createFromFormat('H:i:s', $todayAttendance->check_in,  'Africa/Kigali');
-            
-            if ($todayAttendance->check_out) {
-                // Has check-out - calculate full hours
-                $co = \Carbon\Carbon::createFromFormat('H:i:s', $todayAttendance->check_out, 'Africa/Kigali');
-                $todayMinutes = max(0, $ci->diffInMinutes($co, false));
-            } else {
-                // Only check-in - calculate hours worked so far
-                $now = \Carbon\Carbon::now('Africa/Kigali');
-                $todayMinutes = max(0, $ci->diffInMinutes($now, false));
-            }
-        } catch (\Exception $e) {
-            $todayMinutes = 0;
+    // todayMinutes comes from the component (public $todayMinutes).
+    // Fallback: recalculate in blade using Carbon::parse (handles full datetimes).
+    if (!isset($todayMinutes) || $todayMinutes === 0) {
+        $todayMinutes = 0;
+        if (!empty($todayAttendance->check_in) && !empty($todayAttendance->check_out)) {
+            try {
+                $ci = \Carbon\Carbon::parse($todayAttendance->check_in,  'Africa/Kigali');
+                $co = \Carbon\Carbon::parse($todayAttendance->check_out, 'Africa/Kigali');
+                if ($co->gt($ci)) {
+                    $todayMinutes = (int) $ci->diffInMinutes($co);
+                }
+            } catch (\Exception $e) { $todayMinutes = 0; }
         }
     }
 
-    // Human-readable: "7h 30m"
     $todayH   = (int) floor($todayMinutes / 60);
     $todayM   = (int) ($todayMinutes % 60);
-    $todayFmt = $todayH . 'h' . ($todayM > 0 ? ' ' . $todayM . 'm' : '');
+    $todayFmt = ($todayH > 0 || $todayM > 0)
+        ? $todayH . 'h' . ($todayM > 0 ? ' ' . $todayM . 'm' : '')
+        : '—';
 
-    $monthPresentCount = isset($attendances) ? $attendances->filter(fn($a) => $a->check_in)->count() : 0;
-    $monthAbsentCount  = isset($attendances) ? $attendances->filter(fn($a) => !$a->check_in && $a->date < \Carbon\Carbon::now('Africa/Kigali')->format('Y-m-d'))->count() : 0;
-    $monthLateCount    = isset($attendances) ? $attendances->filter(fn($a) => $a->check_in && $a->check_in->format('H:i') > '09:00')->count() : 0;
+    // Counts come from the component (already correct).
+    // monthPresentCount counts any record with check_in (status = "Entered" = showed up).
 @endphp
 
 <div class="att-hero">
@@ -325,20 +315,32 @@ table.att-table { width: 100%; border-collapse: collapse; }
     </div>
 
     {{-- Stat strip --}}
+    @php
+        $statCiDisplay = '—';
+        $statCoDisplay = '—';
+        if ($todayAttendance?->check_in) {
+            try { $statCiDisplay = \Carbon\Carbon::parse($todayAttendance->check_in, 'Africa/Kigali')->format('H:i'); }
+            catch (\Exception $e) { $statCiDisplay = $todayAttendance->check_in; }
+        }
+        if ($todayAttendance?->check_out) {
+            try { $statCoDisplay = \Carbon\Carbon::parse($todayAttendance->check_out, 'Africa/Kigali')->format('H:i'); }
+            catch (\Exception $e) { $statCoDisplay = $todayAttendance->check_out; }
+        }
+    @endphp
     <div class="att-stat-strip">
         <div class="att-stat-cell">
             <div class="att-stat-cell-icon" style="background:var(--blue-lt);">
                 <svg viewBox="0 0 24 24" style="stroke:var(--blue)"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
             </div>
             <div class="att-stat-cell-label">Clocked In</div>
-            <div class="att-stat-cell-val">{{ $todayAttendance?->check_in ?? '—' }}</div>
+            <div class="att-stat-cell-val">{{ $statCiDisplay }}</div>
         </div>
         <div class="att-stat-cell">
             <div class="att-stat-cell-icon" style="background:var(--green-lt);">
                 <svg viewBox="0 0 24 24" style="stroke:var(--green)"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             </div>
             <div class="att-stat-cell-label">Clocked Out</div>
-            <div class="att-stat-cell-val">{{ $todayAttendance?->check_out ?? '—' }}</div>
+            <div class="att-stat-cell-val">{{ $statCoDisplay }}</div>
         </div>
         <div class="att-stat-cell">
             <div class="att-stat-cell-icon" style="background:var(--green-lt);">
@@ -436,7 +438,7 @@ table.att-table { width: 100%; border-collapse: collapse; }
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 3"/>
                         </svg>
-                        Session started at {{ $todayAttendance->check_in }}
+                        Session started at {{ $statCiDisplay }}
                     </div>
                 @endif
             </div>
@@ -476,28 +478,46 @@ table.att-table { width: 100%; border-collapse: collapse; }
                             @foreach($attendances as $att)
                                 @php
                                     $as = $att->status?->value ?? 'unknown';
-                                    $ac = match($as) {
-                                        'present' => 'badge-green',
-                                        'absent'  => 'badge-red',
-                                        'late'    => 'badge-amber',
-                                        default   => 'badge-gray',
+                                    // "Entered" = employee was present
+                                    $ac = match(strtolower($as)) {
+                                        'present','entered' => 'badge-green',
+                                        'absent'            => 'badge-red',
+                                        'late'              => 'badge-amber',
+                                        default             => 'badge-gray',
                                     };
-                                    $hrs = '—';
+
+                                    // Format check_in / check_out for display (show time only)
+                                    $ciDisplay = '—';
+                                    $coDisplay = '—';
+                                    $hrs       = '—';
+
+                                    if ($att->check_in) {
+                                        try {
+                                            $ciDisplay = \Carbon\Carbon::parse($att->check_in, 'Africa/Kigali')->format('H:i');
+                                        } catch (\Exception $e) { $ciDisplay = $att->check_in; }
+                                    }
+                                    if ($att->check_out) {
+                                        try {
+                                            $coDisplay = \Carbon\Carbon::parse($att->check_out, 'Africa/Kigali')->format('H:i');
+                                        } catch (\Exception $e) { $coDisplay = $att->check_out; }
+                                    }
+
+                                    // Calculate hours between check_in and check_out
                                     if ($att->check_in && $att->check_out) {
                                         try {
-                                            $ci = \Carbon\Carbon::createFromFormat('H:i:s', $att->check_in,  'Africa/Kigali');
-                                            $co = \Carbon\Carbon::createFromFormat('H:i:s', $att->check_out, 'Africa/Kigali');
-                                            $diff = max(0, $ci->diffInMinutes($co));
-                                            $hrs  = floor($diff / 60) . 'h ' . ($diff % 60) . 'm';
-                                        } catch (\Exception $e) {
-                                            $hrs = '—';
-                                        }
+                                            $ci   = \Carbon\Carbon::parse($att->check_in,  'Africa/Kigali');
+                                            $co   = \Carbon\Carbon::parse($att->check_out, 'Africa/Kigali');
+                                            if ($co->gt($ci)) {
+                                                $diff = (int) $ci->diffInMinutes($co);
+                                                $hrs  = floor($diff / 60) . 'h' . ($diff % 60 > 0 ? ' ' . ($diff % 60) . 'm' : '');
+                                            }
+                                        } catch (\Exception $e) { $hrs = '—'; }
                                     }
                                 @endphp
                                 <tr>
                                     <td class="bold">{{ $att->date->format('M d, Y') }}</td>
-                                    <td class="muted">{{ $att->check_in  ?? '—' }}</td>
-                                    <td class="muted">{{ $att->check_out ?? '—' }}</td>
+                                    <td class="muted">{{ $ciDisplay }}</td>
+                                    <td class="muted">{{ $coDisplay }}</td>
                                     <td style="font-weight:700;color:var(--blue-2);">{{ $hrs }}</td>
                                     <td>
                                         <span class="att-badge {{ $ac }}">
@@ -591,13 +611,13 @@ table.att-table { width: 100%; border-collapse: collapse; }
                 <div class="att-detail-row">
                     <span class="att-detail-label">Clocked In</span>
                     <span class="att-detail-value" style="color:var(--blue-2);">
-                        {{ $todayAttendance->check_in ?? '—' }}
+                        {{ $statCiDisplay }}
                     </span>
                 </div>
                 <div class="att-detail-row">
                     <span class="att-detail-label">Clocked Out</span>
                     <span class="att-detail-value">
-                        {{ $todayAttendance->check_out ?? '—' }}
+                        {{ $statCoDisplay }}
                     </span>
                 </div>
                 <div class="att-detail-row">

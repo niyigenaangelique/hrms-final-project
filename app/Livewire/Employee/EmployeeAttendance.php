@@ -13,24 +13,26 @@ use Carbon\Carbon;
 class EmployeeAttendance extends Component
 {
     public $employee;
-    public $attendances;
+    public $attendances;        // current month only
     public $todayAttendance;
     public $notes;
-    public $isClockedIn  = false;
-    public $todayMinutes = 0;   // total minutes worked today (passed to blade)
+    public $isClockedIn   = false;
+    public $todayMinutes  = 0;  // total minutes worked today
 
-    // Africa/Kigali = UTC+2
+    // All counts for the stat strip
+    public $monthPresentCount = 0;
+    public $monthAbsentCount  = 0;
+    public $monthLateCount    = 0;
+
+    // Africa/Kigali = UTC+2, no DST
     private const TZ = 'Africa/Kigali';
 
-    /**
-     * Return "now" in the local timezone (Africa/Kigali).
-     */
     private function now(): Carbon
     {
         return Carbon::now(self::TZ);
     }
 
-    public function mount()
+    public function mount(): void
     {
         $user = Auth::user();
         $this->employee = Employee::where('user_id', $user->id)->first();
@@ -56,35 +58,53 @@ class EmployeeAttendance extends Component
 
     public function loadAttendanceData(): void
     {
-        $today = $this->now()->format('Y-m-d');
+        $now   = $this->now();
+        $today = $now->format('Y-m-d');
 
+        // ── Current month only ──────────────────────────────────────────────
         $this->attendances = Attendance::where('employee_id', $this->employee->id)
+            ->whereYear('date',  $now->year)
+            ->whereMonth('date', $now->month)
             ->orderBy('date', 'desc')
-            ->take(30)
             ->get();
 
+        // ── Today's record ──────────────────────────────────────────────────
         $this->todayAttendance = Attendance::where('employee_id', $this->employee->id)
             ->where('date', $today)
             ->first();
 
-        // Calculate today's minutes worked
+        // ── Minutes worked today ────────────────────────────────────────────
+        // The DB stores check_in/check_out as full datetimes: "2026-03-31 00:19:28"
+        // We use Carbon::parse() which handles any format reliably.
         $this->todayMinutes = 0;
         if ($this->todayAttendance?->check_in && $this->todayAttendance?->check_out) {
             try {
-                $checkIn  = $this->parseTimeValue($this->todayAttendance->check_in);
-                $checkOut = $this->parseTimeValue($this->todayAttendance->check_out);
-
-                if ($checkIn && $checkOut) {
-                    $diff = $checkIn->diffInMinutes($checkOut, false); // false = signed
-                    $this->todayMinutes = max(0, (int) $diff);
+                $ci = $this->toCarbon($this->todayAttendance->check_in);
+                $co = $this->toCarbon($this->todayAttendance->check_out);
+                if ($ci && $co && $co->gt($ci)) {
+                    $this->todayMinutes = (int) $ci->diffInMinutes($co);
                 }
             } catch (\Exception $e) {
-                \Log::error('todayMinutes calculation failed', ['error' => $e->getMessage()]);
-                $this->todayMinutes = 0;
+                \Log::error('todayMinutes error', ['err' => $e->getMessage()]);
             }
         }
 
-        // Clocked in = has check_in AND no check_out yet
+        // ── Monthly stat counts ─────────────────────────────────────────────
+        // Status is "Entered" (= employee showed up), not "present".
+        // Count "present" OR "Entered" OR any record that has a check_in.
+        $this->monthPresentCount = $this->attendances->filter(
+            fn($a) => $a->check_in !== null
+        )->count();
+
+        $this->monthAbsentCount = $this->attendances->filter(
+            fn($a) => strtolower($a->status?->value ?? '') === 'absent'
+        )->count();
+
+        $this->monthLateCount = $this->attendances->filter(
+            fn($a) => strtolower($a->status?->value ?? '') === 'late'
+        )->count();
+
+        // ── Is clocked in? ──────────────────────────────────────────────────
         $this->isClockedIn = $this->todayAttendance
             && $this->todayAttendance->check_in
             && !$this->todayAttendance->check_out;
@@ -96,7 +116,6 @@ class EmployeeAttendance extends Component
         $today       = $now->format('Y-m-d');
         $currentTime = $now->format('H:i:s');
 
-        // Already clocked in today?
         $existing = Attendance::where('employee_id', $this->employee->id)
             ->where('date', $today)
             ->first();
@@ -106,26 +125,22 @@ class EmployeeAttendance extends Component
             return;
         }
 
-        // Generate unique code
         $maxNum  = Attendance::where('code', 'like', 'ATT-%')
             ->selectRaw('MAX(CAST(SUBSTRING(code, 5) AS UNSIGNED)) as max_num')
             ->value('max_num') ?? 0;
         $newCode = 'ATT-' . str_pad($maxNum + 1, 4, '0', STR_PAD_LEFT);
 
         Attendance::updateOrCreate(
+            ['employee_id' => $this->employee->id, 'date' => $today],
             [
-                'employee_id' => $this->employee->id,
-                'date'        => $today,
-            ],
-            [
-                'code'             => $newCode,
-                'check_in'         => $currentTime,
-                'check_in_method'  => \App\Enum\AttendanceMethod::Manuel_Input->value,
-                'status'           => \App\Enum\AttendanceStatus::Entered,
-                'approval_status'  => \App\Enum\ApprovalStatus::NotApplicable,
-                'notes'            => $this->notes,
-                'created_by'       => Auth::id(),
-                'device_id'        => null,
+                'code'            => $newCode,
+                'check_in'        => $currentTime,
+                'check_in_method' => \App\Enum\AttendanceMethod::Manuel_Input->value,
+                'status'          => \App\Enum\AttendanceStatus::Entered,
+                'approval_status' => \App\Enum\ApprovalStatus::NotApplicable,
+                'notes'           => $this->notes,
+                'created_by'      => Auth::id(),
+                'device_id'       => null,
             ]
         );
 
@@ -136,7 +151,7 @@ class EmployeeAttendance extends Component
 
     public function clockOut(): void
     {
-        if (!$this->todayAttendance || !$this->todayAttendance->check_in) {
+        if (!$this->todayAttendance?->check_in) {
             session()->flash('error', 'You need to clock in first.');
             return;
         }
@@ -144,17 +159,12 @@ class EmployeeAttendance extends Component
         $now         = $this->now();
         $currentTime = $now->format('H:i:s');
 
-        // Parse stored check_in in the same timezone
-        try {
-            $checkIn  = $this->parseTimeValue($this->todayAttendance->check_in);
-            $checkOut = $this->parseTimeValue($currentTime);
-
-            if ($checkIn && $checkOut && $checkOut->lt($checkIn)) {
-                session()->flash('error', 'Clock-out time cannot be before clock-in time.');
-                return;
-            }
-        } catch (\Exception $e) {
-            \Log::error('Attendance time parse error', ['error' => $e->getMessage()]);
+        // Prevent clock-out before clock-in
+        $ci = $this->toCarbon($this->todayAttendance->check_in);
+        $co = $this->toCarbon($currentTime);
+        if ($ci && $co && $co->lt($ci)) {
+            session()->flash('error', 'Clock-out time cannot be before clock-in time.');
+            return;
         }
 
         $this->todayAttendance->update([
@@ -169,34 +179,20 @@ class EmployeeAttendance extends Component
     }
 
     /**
-     * Parse a time value into a Carbon instance in Africa/Kigali.
-     * Handles: Carbon objects, "H:i:s" strings, "Y-m-d H:i:s" strings.
+     * Convert any time/datetime value to a Carbon in Africa/Kigali.
+     * Handles: Carbon, "H:i:s", "Y-m-d H:i:s", or any parseable string.
      */
-    private function parseTimeValue(mixed $value): ?Carbon
+    private function toCarbon(mixed $value): ?Carbon
     {
         if (!$value) return null;
 
-        // Already a Carbon — just normalise timezone
         if ($value instanceof Carbon) {
             return $value->copy()->setTimezone(self::TZ);
         }
 
-        $str = (string) $value;
-
-        // Try formats from most to least specific
-        $formats = ['H:i:s', 'H:i', 'Y-m-d H:i:s', 'Y-m-d H:i'];
-        foreach ($formats as $fmt) {
-            try {
-                $c = Carbon::createFromFormat($fmt, $str, self::TZ);
-                if ($c !== false) return $c;
-            } catch (\Exception) {
-                // try next format
-            }
-        }
-
-        // Last resort — flexible parse
+        // Carbon::parse handles both "H:i:s" and "Y-m-d H:i:s" reliably
         try {
-            return Carbon::parse($str, self::TZ);
+            return Carbon::parse((string) $value, self::TZ);
         } catch (\Exception) {
             return null;
         }
