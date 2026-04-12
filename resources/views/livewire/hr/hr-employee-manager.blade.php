@@ -52,7 +52,7 @@
 .em-hero-body {
     padding: 0 24px 18px;
     display: flex; align-items: flex-end; justify-content: space-between; gap:16px;
-    margin-top: -26px;
+    margin-top: -2px;
 }
 .em-hero-icon {
     width: 52px; height: 52px; border-radius: 15px;

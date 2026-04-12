@@ -6,6 +6,7 @@ use App\Enum\ApprovalStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
@@ -77,6 +78,8 @@ class Department extends Model
     {
         return $this->hasMany(Employee::class);
     }
+
+    // Note: positions relationship removed as department_id column doesn't exist in positions table
 
     /**
      * Get the manager of the department.

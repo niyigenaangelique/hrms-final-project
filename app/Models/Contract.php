@@ -118,15 +118,12 @@ class Contract extends Model
             if (is_null($contract->code)) {
                 $contract->code = FormattedCodeHelper::getNextFormattedCode(Contract::class, 'SGA', 5);
             }
-            // Set project_id to null since projects table doesn't exist
-            $contract->project_id = null;
         });
     }
-    // public function project(): BelongsTo
-    // {
-    //     // Return null relationship since Project model doesn't exist yet
-    //     return $this->belongsTo(Project::class);
-    // }
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
 
     public function employee(): BelongsTo
     {

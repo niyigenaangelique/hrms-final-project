@@ -129,11 +129,25 @@ class PayslipEntry extends Model
 
     public function employee():HasOneThrough
     {
-        return $this->hasOneThrough(Employee::class, PayrollEntry::class);
+        return $this->hasOneThrough(
+            Employee::class,
+            PayrollEntry::class,
+            'id', // Foreign key on PayrollEntry table
+            'id', // Foreign key on Employee table
+            'payroll_entry_id', // Local key on PayslipEntry table
+            'employee_id'  // Local key on PayrollEntry table
+        );
     }
-    public function payroll_month():HasOneThrough
+    public function payrollMonth():HasOneThrough
     {
-        return $this->hasOneThrough(PayrollMonth::class, PayrollEntry::class);
+        return $this->hasOneThrough(
+            PayrollMonth::class,
+            PayrollEntry::class,
+            'id', // Foreign key on PayrollEntry table (payslip_entry_id doesn't exist, so use id)
+            'id', // Foreign key on PayrollMonth table
+            'payroll_entry_id', // Local key on PayslipEntry table
+            'payroll_month_id'  // Local key on PayrollEntry table
+        );
     }
 
 

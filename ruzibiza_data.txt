@@ -1,0 +1,6 @@
+Employee Name: Ruzibiza Kelia
+Employee Position ID: 019c007f-61dc-708c-8675-ffca1a728b32
+Employee Position Name: Accountant
+Contract ID: 019c11ad-9ac0-706c-bae3-685bda542d8d
+Contract Position ID: 019c007f-61f9-73df-ad5c-92b97919708b
+Contract Position Name: Data Analyst

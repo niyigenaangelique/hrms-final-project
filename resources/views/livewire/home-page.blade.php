@@ -366,15 +366,15 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Employees
         </a>
-        <a href="{{ route('leave-attendance.hr-leave-management') }}" class="ios-nav-item">
+        <a href="{{ route('hr.leaves-attendance') }}" class="ios-nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             Leave
         </a>
-        <a href="{{ route('leave-attendance.hr-calendar') }}" class="ios-nav-item">
+        <a href="{{ route('hr.leaves-attendance') }}#calendar" class="ios-nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
             Calendar
         </a>
-        <a href="{{ route('payroll.dashboard') }}" class="ios-nav-item">
+        <a href="{{ route('manage-payroll') }}" class="ios-nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Payroll
         </a>
@@ -472,7 +472,7 @@
                 $attendanceData = [];
                 for($i = 6; $i >= 0; $i--) {
                     $date = now()->subDays($i);
-                    $present = App\Models\Attendance::whereDate('date', $date)->whereNotNull('check_in')->count();
+                    $present = App\Models\Attendance::query()->whereDate('date', '=', $date->format('Y-m-d'))->whereNotNull('check_in')->count();
                     $total = App\Models\Employee::where('is_active', true)->count();
                     $rate = $total > 0 ? round(($present / $total) * 100, 1) : 0;
                     $attendanceData[] = [

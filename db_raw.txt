@@ -1,0 +1,4 @@
+RAW DATABASE VALUES:
+ID: 019c1162-5ff0-735d-a6bf-ea8716e2ed22 | Status: approved
+ID: 019c11ad-9ac0-706c-bae3-685bda542d8d | Status: active
+ID: 019c150c-f695-716b-8675-c6355f730fcc | Status: approved

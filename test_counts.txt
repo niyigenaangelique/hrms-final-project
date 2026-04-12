@@ -1,0 +1,2 @@
+String count: 1
+Enum count: 1

@@ -86,7 +86,7 @@ class Position extends Model
     }
 
     protected $hidden = [
-
+        //
     ];
 
     public function scopeCode($query, string $code): Builder
@@ -98,6 +98,13 @@ class Position extends Model
     {
         return $this->hasMany(Contract::class);
     }
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
+    }
+
+    // Note: department relationship removed as department_id column doesn't exist in database
 
 
     /**

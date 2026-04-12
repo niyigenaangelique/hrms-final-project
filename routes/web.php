@@ -25,8 +25,12 @@ use App\Livewire\Contract\ContractPage;
 use App\Livewire\DataImportExport;
 use App\Livewire\Employee\EmployeePage;
 use App\Livewire\HR\EmployeeManager;
-use App\Livewire\HR\ContractManager;
+use App\Livewire\HR\HrEmployeeContract as ContractManager;
+use App\Livewire\HR\DepartmentManager;
+use App\Livewire\HR\PositionManager;
+use App\Livewire\HR\HrManageDashboard;
 use App\Livewire\HR\TestComponent;
+use App\Livewire\HR\HRPerformanceManager;
 use App\Livewire\HomePage;
 use App\Livewire\LoginPage;
 use App\Livewire\PasswordResetPage;
@@ -78,6 +82,31 @@ Route::middleware(['web'])->group(function () {
         Route::get('/employee/contracts/download/{contractId}', [\App\Http\Controllers\ContractDownloadController::class, 'download'])->name('employee.contracts.download.get');
         Route::post('/employee/contracts/download', [\App\Http\Controllers\ContractDownloadController::class, 'download'])->name('employee.contracts.download');
         Route::get('/employee/leave-request', EmployeeLeaveRequest::class)->name('employee.leave.request');
+        Route::post('/employee/leave/store', function() {
+            $validated = request()->validate([
+                'leave_type_id' => 'required|exists:leave_types,id',
+                'start_date' => 'required|date|after_or_equal:today',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'reason' => 'required|string|max:500',
+            ]);
+            
+            $employee = \App\Models\Employee::where('user_id', auth()->id())->first();
+            
+            $leaveRequest = \App\Models\LeaveRequest::create([
+                'code' => 'LR-' . date('Y') . '-' . str_pad(\App\Models\LeaveRequest::count() + 1, 4, '0', STR_PAD_LEFT),
+                'employee_id' => $employee->id,
+                'leave_type_id' => $validated['leave_type_id'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+                'total_days' => \Carbon\Carbon::parse($validated['start_date'])->diffInDays(\Carbon\Carbon::parse($validated['end_date'])) + 1,
+                'reason' => $validated['reason'],
+                'status' => 'pending',
+                'approval_status' => 'pending',
+                'created_by' => auth()->id(),
+            ]);
+            
+            return redirect()->back()->with('success', 'Leave request submitted successfully!');
+        })->name('employee.leave.store');
         Route::get('/employee/leave-status', EmployeeLeaveStatus::class)->name('employee.leave-status');
         Route::get('/employee/leave-types', EmployeeLeaveTypes::class)->name('employee.leave-types');
         Route::get('/employee/calendar', EmployeeCalendar::class)->name('employee.calendar');
@@ -306,15 +335,14 @@ Route::middleware(['web'])->group(function () {
 //        users
         Route::get('/users', UserPage::class)->name('users');
         Route::get('/users/{id}', UserPage::class)->name('user');
-//        positions
-        Route::get('/positions', PositionPage::class)->name('positions');
-        Route::get('/positions/{id}', PositionPage::class)->name('position');
+
 //        banks
         Route::get('/banks', BankPage::class)->name('banks');
         Route::get('/banks/{id}', BankPage::class)->name('bank');
 //        employees
-        Route::get('/employees', EmployeePage::class)->name('employees');
-        Route::get('/employees/{id}', EmployeePage::class)->name('employee');
+        //Route::get('/employees', EmployeePage::class)->name('employees');
+        // Route::get('/employees/{id}', EmployeePage::class)->name('employee');
+        Route::get('/employees/{id}', \App\Livewire\HR\EmployeeManager::class)->name('employee');
         
         // Test route for user creation
         Route::get('/test-user-creation', function () {
@@ -348,32 +376,94 @@ Route::middleware(['web'])->group(function () {
             }
         });
 
-        Route::get('/contracts', ContractPage::class)->name('contracts');
-        Route::get('/contracts/{id}', ContractPage::class)->name('contract');
-        Route::get('/importContracts', ContractImportData::class)->name('importContracts');
+        Route::get('/contracts', \App\Livewire\HR\HrEmployeeContract::class)->name('contracts');
+        Route::get('/contracts/{id}', \App\Livewire\HR\HrEmployeeContract::class)->name('contract');
+        //Route::get('/importContracts', ContractImportData::class)->name('importContracts');
 // HR
+        // HR Management
         Route::get('/hr/hr-employee-manager', EmployeeManager::class)->name('employee-management');
+        Route::get('/hr/employee-contract', \App\Livewire\HR\HrEmployeeContract::class)->name('hr-employee-contract');
+        Route::get('/hr/manage', HrManageDashboard::class)->name('manage');
+        Route::get('/hr/departments', DepartmentManager::class)->name('department-manager');
+        Route::get('/hr/positions', PositionManager::class)->name('position-manager');
+        
+        Route::get('/hr/leaves-attendance', \App\Livewire\LeaveAttendance\ManageLeavesAttendance::class)->name('hr.leaves-attendance');
 
-//        payroll
-        Route::get('/payroll/dashboard', PayrollDashboard::class)->name('payroll.dashboard');
-        Route::get('/payroll/entries', PayrollEntryPage::class)->name('payroll.entries');
-        Route::get('/payroll/entries/{id}', PayrollEntryPage::class)->name('payroll.entry');
-        Route::get('/payroll/months', PayrollMonthPage::class)->name('payroll.months');
-        Route::get('/payroll/months/{id}', PayrollMonthPage::class)->name('payroll.month');
-        Route::get('/payroll/payslip-generator', PayslipGenerator::class)->name('payroll.payslip-generator');
-        Route::get('/payroll/tax-calculator', TaxCalculator::class)->name('payroll.tax-calculator');
+// Payroll Management
+        Route::get('/manage-payroll', function() {
+            return view('livewire.payroll.manage-payroll');
+        })->name('manage-payroll');
+        
+        // Payroll Management Routes
+        // Commented out until components are created
+        // Route::get('/payroll/dashboard', \App\Livewire\Payroll\PayrollDashboard::class)->name('payroll.dashboard');
+        Route::get('/payroll/months', \App\Livewire\Payroll\PayrollMonthManager::class)->name('payroll.months');
+        Route::get('/payroll/entries', \App\Livewire\Payroll\PayrollEntryManager::class)->name('payroll.entries');
+        Route::get('/payroll/payments', \App\Livewire\Payroll\PaymentHistoryManager::class)->name('payroll.payments');
+        Route::get('/entries', \App\Livewire\Payroll\PayslipEntryManager::class)->name('entries');
+        // Route::get('/payroll/payslip-generator', PayslipGenerator::class)->name('payroll.payslip-generator');
+        // Route::get('/payroll/tax-calculator', TaxCalculator::class)->name('payroll.tax-calculator');
 
-//        leave & attendance
-        Route::get('/leave-attendance/dashboard', LeaveAttendanceDashboard::class)->name('leave-attendance.dashboard');
-        Route::get('/leave-attendance/requests', LeaveRequestForm::class)->name('leave-attendance.requests');
-        Route::get('/leave-attendance/calendar', LeaveAttendanceDashboard::class)->name('leave-attendance.calendar');
-        Route::get('/leave-attendance/hr-communication', HrCommunication::class)->name('leave-attendance.hr-communication');
-        Route::get('/leave-attendance/hr-leave-management', HrLeaveManagement::class)->name('leave-attendance.hr-leave-management');
-        Route::get('/leave-attendance/hr-calendar', HrUnifiedCalendar::class)->name('leave-attendance.hr-calendar');
+// Leave & Attendance
+        Route::get('/leave-attendance/dashboard', \App\Livewire\LeaveAttendance\LeaveAttendanceDashboard::class)->name('leave-attendance.dashboard');
+        Route::get('/leave-attendance/requests', \App\Livewire\LeaveAttendance\LeaveRequestForm::class)->name('leave-attendance.requests');
+        Route::get('/leave-attendance/calendar', \App\Livewire\LeaveAttendance\LeaveAttendanceDashboard::class)->name('leave-attendance.calendar');
+        Route::get('/leave-attendance/hr-communication', \App\Livewire\LeaveAttendance\HrCommunication::class)->name('leave-attendance.hr-communication');
+        Route::get('/leave-attendance/hr-leave-management', \App\Livewire\LeaveAttendance\HrLeaveManagement::class)->name('leave-attendance.hr-leave-management');
+        Route::get('/leave-attendance/hr-calendar', \App\Livewire\LeaveAttendance\HrUnifiedCalendar::class)->name('leave-attendance.hr-calendar');
+        Route::post('/hr/communication/send', function(Request $request) {
+            try {
+                $request->validate([
+                    'receiver_id' => 'required|exists:employees,id',
+                    'message' => 'required|string|max:1000'
+                ]);
+                
+                $message = new \App\Models\Message();
+                $message->sender_id = auth()->id();
+                $message->receiver_id = $request->receiver_id;
+                $message->message = $request->message;
+                $message->is_read = false;
+                $message->save();
+                
+                return redirect()->back()->with('success', 'Message sent successfully!');
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'Failed to send message: ' . $e->getMessage());
+            }
+        })->name('hr.communication.send');
+        Route::get('/hr/leaves/approve/{id}', function($id) {
+            $leaveRequest = \App\Models\LeaveRequest::findOrFail($id);
+            $leaveRequest->status = 'approved';
+            $leaveRequest->approval_status = 'approved';
+            $leaveRequest->approved_at = now();
+            $leaveRequest->approved_by = auth()->id();
+            $leaveRequest->save();
+            return redirect()->back()->with('success', 'Leave request approved successfully!');
+        })->name('hr.leaves.approve');
+        Route::get('/hr/leaves/reject/{id}', function($id) {
+            $leaveRequest = \App\Models\LeaveRequest::findOrFail($id);
+            $leaveRequest->status = 'rejected';
+            $leaveRequest->approval_status = 'rejected';
+            $leaveRequest->rejection_reason = request('reason');
+            $leaveRequest->save();
+            return redirect()->back()->with('success', 'Leave request rejected successfully!');
+        })->name('hr.leaves.reject');
 
 //        performance
         Route::get('/performance/dashboard', PerformanceDashboard::class)->name('performance.dashboard');
         Route::get('/performance/kpi-management', KPIManagement::class)->name('performance.kpi-management');
+        Route::get('/performance/kpis',    KpiManager::class)->name('performance.kpis');
+        Route::get('/performance/targets', KpiTargetManager::class)->name('performance.kpi-targets');
+
+        Route::middleware(['auth'])->group(function () {
+
+    // HR page — accessible from app.blade nav
+        Route::get('/hr/performance', HRPerformanceManager::class)->name('hr.performance');
+         
+
+    // Employee self-service page
+        Route::get('/my/performance', EmployeePerformance::class)->name('employee.performance');
+        
+        });
 
 //        analytics
         Route::get('/analytics/dashboard', AnalyticsDashboard::class)->name('analytics.dashboard');

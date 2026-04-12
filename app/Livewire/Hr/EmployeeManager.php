@@ -31,8 +31,8 @@ class EmployeeManager extends Component
     public bool   $showModal    = false;
     public bool   $showView     = false;
     public bool   $showDelete   = false;
-    public ?string $editingId    = null;
-    public ?string $deletingId   = null;
+    public ?string   $editingId    = null;
+    public ?string   $deletingId   = null;
     public ?Employee $viewEmployee = null;
 
     // ── Active form tab ────────────────────────────────────
