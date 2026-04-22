@@ -31,30 +31,42 @@ class EmployeePayroll extends Component
     public function mount()
     {
         $user = Auth::user();
-        $this->employee = Employee::where('email', $user->email)->first();
-        
+        $this->employee = Employee::where('user_id', $user->id)
+            ->with(['position', 'department'])
+            ->first();
+
         if (!$this->employee) {
-            // Get the highest existing employee code with EMP prefix
-            $lastEmployee = Employee::where('code', 'like', 'EMP-%')
-                ->orderBy('code', 'desc')
+            // Smart Link: Check by email
+            $this->employee = Employee::where('email', $user->email)
+                ->with(['position', 'department'])
                 ->first();
-            $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -3)) : 0;
-            $newCode = 'EMP-' . str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
-            
-            // Check if the code already exists to avoid duplicates
-            while (Employee::where('code', $newCode)->exists()) {
-                $lastCode++;
-                $newCode = 'EMP-' . str_pad($lastCode, 3, '0', STR_PAD_LEFT);
+                
+            if ($this->employee) {
+                $this->employee->update(['user_id' => $user->id]);
+            } else {
+                // Get the highest existing employee code with EMP prefix
+                $lastEmployee = Employee::where('code', 'like', 'EMP-%')
+                    ->orderBy('code', 'desc')
+                    ->first();
+                $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -3)) : 0;
+                $newCode = 'EMP-' . str_pad($lastCode + 1, 3, '0', STR_PAD_LEFT);
+                
+                // Check if the code already exists to avoid duplicates
+                while (Employee::where('code', $newCode)->exists()) {
+                    $lastCode++;
+                    $newCode = 'EMP-' . str_pad($lastCode, 3, '0', STR_PAD_LEFT);
+                }
+                
+                $this->employee = Employee::create([
+                    'code' => $newCode,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number,
+                    'user_id' => $user->id,
+                    'approval_status' => \App\Enum\ApprovalStatus::Approved,
+                ]);
             }
-            
-            $this->employee = Employee::create([
-                'code' => $newCode,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'phone_number' => $user->phone_number,
-                'approval_status' => \App\Enum\ApprovalStatus::Approved,
-            ]);
         }
 
         $this->selectedMonth = now()->format('Y-m');

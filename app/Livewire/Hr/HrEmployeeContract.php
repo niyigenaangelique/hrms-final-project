@@ -86,19 +86,32 @@ class HrEmployeeContract extends Component
     // ── Auto-retrieve position and salary when employee is selected ─────
     public function updatedEmployeeId(): void
     {
+        \Log::info('updatedEmployeeId called with: ' . $this->employeeId);
+        
         if ($this->employeeId) {
             $employee = Employee::find($this->employeeId);
             if ($employee) {
+                \Log::info('Employee found: ' . $employee->first_name . ' ' . $employee->last_name);
+                
                 if ($employee->position_id) {
                     $this->positionId = $employee->position_id;
+                    \Log::info('Position set to: ' . $employee->position_id);
                 }
                 if ($employee->basic_salary) {
                     $this->remuneration = (string) $employee->basic_salary;
+                    \Log::info('Remuneration set to: ' . $this->remuneration);
+                }
+                // Auto-load employee's hire date as contract start date
+                if ($employee->join_date) {
+                    $this->startDate = $employee->join_date->format('Y-m-d');
+                    \Log::info('Start date set to: ' . $this->startDate);
                 }
             }
         } else {
             $this->positionId = '';
             $this->remuneration = '';
+            $this->startDate = '';
+            \Log::info('Fields cleared');
         }
     }
 

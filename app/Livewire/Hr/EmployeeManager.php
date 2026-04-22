@@ -319,10 +319,11 @@ class EmployeeManager extends Component
     {
         Log::info('openView called with ID: ' . $id);
         try {
-            $this->viewEmployee = Employee::findOrFail($id);
+            $this->viewEmployee = Employee::with('emergencyContacts')->findOrFail($id);
             Log::info('openView - Employee loaded: ' . $this->viewEmployee->code);
             Log::info('openView - Department ID: ' . ($this->viewEmployee->department_id ?? 'null'));
             Log::info('openView - Position ID: ' . ($this->viewEmployee->position_id ?? 'null'));
+            Log::info('openView - Emergency contacts count: ' . $this->viewEmployee->emergencyContacts->count());
             $this->showView     = true;
             Log::info('View modal should be open now');
         } catch (\Exception $e) {

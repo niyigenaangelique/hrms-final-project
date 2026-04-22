@@ -43,13 +43,27 @@ class EmployeePerformance extends Component
     public function mount()
     {
         $user = Auth::user();
-        $this->employee = Employee::where('user_id', $user->id)->first();
+        $this->employee = Employee::where('user_id', $user->id)
+            ->with(['position', 'department'])
+            ->first();
+
+        if (!$this->employee) {
+            // Smart Link: Check by email
+            $this->employee = Employee::where('email', $user->email)
+                ->with(['position', 'department'])
+                ->first();
+                
+            if ($this->employee) {
+                // Link found employee to current user
+                $this->employee->update(['user_id' => $user->id]);
+            } else {
+                // Create if still not found
+                $this->createEmployeeRecord($user);
+            }
+        }
         
         if ($this->employee) {
             $this->loadPerformanceData();
-        } else {
-            // Create employee record if it doesn't exist
-            $this->createEmployeeRecord($user);
         }
     }
     
@@ -75,7 +89,7 @@ class EmployeePerformance extends Component
                 'phone_number' => $user->phone_number,
                 'user_id' => $user->id,
                 'approval_status' => \App\Enum\ApprovalStatus::Approved,
-            ]);
+            ])->load(['position', 'department']);
             
             $this->loadPerformanceData();
         } catch (\Exception $e) {

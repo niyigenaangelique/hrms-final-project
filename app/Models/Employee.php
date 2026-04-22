@@ -228,6 +228,11 @@ class Employee extends Model
         return $this->hasMany(Goal::class);
     }
 
+    public function achievements(): HasMany
+    {
+        return $this->hasMany(Achievement::class);
+    }
+
     public function managedGoals(): HasMany
     {
         return $this->hasMany(Goal::class, 'manager_id');

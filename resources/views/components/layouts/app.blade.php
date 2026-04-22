@@ -9,10 +9,8 @@
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap"
-        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
 
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -25,597 +23,511 @@
 
     <style>
         /* ════════════════════════════════════════════════════
-           iOS 26 DEEP OCEAN SIDEBAR — HR Edition
+           TalentFlow Pro — HR Floating Pill Sidebar
+           Glassmorphism white pill, blue accent, icon-only default.
+           Expands on hover to show labels. Pin button locks it open.
         ════════════════════════════════════════════════════ */
 
-        body {
-            background:
-                radial-gradient(ellipse 80% 60% at 10% 10%, rgba(186, 230, 253, 0.55) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 50% at 90% 5%, rgba(216, 180, 254, 0.45) 0%, transparent 55%),
-                radial-gradient(ellipse 70% 60% at 50% 100%, rgba(167, 243, 208, 0.40) 0%, transparent 55%),
-                radial-gradient(ellipse 50% 40% at 80% 60%, rgba(253, 230, 138, 0.30) 0%, transparent 50%),
-                linear-gradient(160deg, #e0f2fe 0%, #f0fdf4 40%, #fdf4ff 80%, #fff7ed 100%) !important;
-            min-height: 100vh;
-        }
-
-        /* ── Wider sidebar via Flux's CSS var ────────────── */
         :root {
-            --flux-sidebar-width: 280px !important;
+            --tf-bg:              #EDEAF8;
+            --tf-blue:            #3B6FE8;
+            --tf-blue-lt:         rgba(59,111,232,0.09);
+            --tf-blue-pill:       rgba(59,111,232,0.12);
+            --tf-icon:            #9FA3BB;
+            --tf-sidebar-bg:      rgba(255,255,255,0.75);
+            --tf-sidebar-border:  rgba(255,255,255,0.95);
+            --tf-shadow:          0 8px 40px rgba(59,111,232,0.13), 0 2px 10px rgba(0,0,0,0.05);
+            --sb-collapsed:       64px;
+            --sb-expanded:        220px;
+            --sb-left:            14px;
+            --sb-transition:      0.3s cubic-bezier(0.4,0,0.2,1);
         }
 
-        .hr-sidebar-glass {
-            width: 280px !important;
-            min-width: 280px !important;
-            height: 100vh !important;
-            display: flex !important;
-            flex-direction: column !important;
-            overflow: hidden !important;
-            background: linear-gradient(175deg,
-                    rgba(7, 28, 48, 0.97) 0%,
-                    rgba(5, 38, 56, 0.97) 40%,
-                    rgba(4, 30, 45, 0.98) 100%) !important;
-            backdrop-filter: blur(32px) saturate(1.6) !important;
-            -webkit-backdrop-filter: blur(32px) saturate(1.6) !important;
-            border-right: 1px solid rgba(32, 178, 170, 0.18) !important;
-            box-shadow: 4px 0 40px rgba(0, 0, 0, 0.35), inset -1px 0 0 rgba(32, 178, 170, 0.08) !important;
-            position: relative !important;
+        html.tf-dark {
+            --tf-bg:              #100F1C;
+            --tf-blue:            #5B8FF9;
+            --tf-blue-lt:         rgba(91,143,249,0.11);
+            --tf-blue-pill:       rgba(91,143,249,0.18);
+            --tf-icon:            #525570;
+            --tf-sidebar-bg:      rgba(22,20,38,0.82);
+            --tf-sidebar-border:  rgba(255,255,255,0.06);
+            --tf-shadow:          0 8px 40px rgba(0,0,0,0.45);
         }
 
-        .hr-sidebar-glass .gs-nav-scroll {
-            flex: 1 1 0%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-bottom: 8px;
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: var(--tf-bg) !important;
+            min-height: 100vh;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.25s;
+            margin: 0;
         }
 
-        .hr-sidebar-glass .gs-nav-scroll::-webkit-scrollbar {
-            width: 3px;
+        /* Hide Flux's own sidebar */
+        [data-flux-sidebar],
+        [data-flux-sidebar] > div:first-child { display: none !important; }
+
+        /* ── Layout shell ─────────────────────────────────── */
+        .tf-layout { display: flex; min-height: 100vh; }
+
+        /* ── Floating pill sidebar ────────────────────────── */
+        .tf-sidebar {
+            position: fixed;
+            top: 50%;
+            left: var(--sb-left);
+            transform: translateY(-50%);
+            max-height: calc(100vh - 36px);
+            width: var(--sb-collapsed);
+            background: var(--tf-sidebar-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px solid var(--tf-sidebar-border);
+            border-radius: 22px;
+            box-shadow: var(--tf-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            z-index: 50;
+            transition: width var(--sb-transition);
         }
 
-        .hr-sidebar-glass .gs-nav-scroll::-webkit-scrollbar-track {
-            background: transparent;
+        .tf-sidebar:hover,
+        .tf-sidebar.tf-pinned {
+            width: var(--sb-expanded);
+            align-items: flex-start;
         }
 
-        .hr-sidebar-glass .gs-nav-scroll::-webkit-scrollbar-thumb {
-            background: rgba(20, 184, 166, 0.22);
-            border-radius: 4px;
-        }
-
-        .hr-sidebar-glass .gs-nav-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(20, 184, 166, 0.4);
-        }
-
-        .hr-sidebar-glass .gs-sidebar-footer {
-            flex-shrink: 0;
-            border-top: 1px solid rgba(32, 178, 170, 0.12);
-            padding: 10px 0 6px;
-        }
-
-        .hr-sidebar-glass::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(32, 210, 200, 0.5), transparent);
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .gs-glow-1 {
-            position: absolute;
-            top: -80px;
-            left: -50px;
-            width: 340px;
-            height: 340px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(20, 184, 166, 0.16) 0%, transparent 65%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .gs-glow-2 {
-            position: absolute;
-            bottom: 20px;
-            right: -70px;
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 65%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .gs-glow-3 {
-            position: absolute;
-            top: 45%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .hr-sidebar-glass>*:not(.gs-glow-1):not(.gs-glow-2):not(.gs-glow-3) {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ── Logo ────────────────────────────────────────── */
-        .gs-logo {
+        /* ── Logo ─────────────────────────────────────────── */
+        .tf-logo-wrap {
             display: flex;
             align-items: center;
-            gap: 13px;
-            padding: 24px 22px 20px;
-            border-bottom: 1px solid rgba(32, 178, 170, 0.14);
+            gap: 10px;
+            padding: 18px 0 14px;
+            width: 100%;
+            justify-content: center;
             flex-shrink: 0;
         }
 
-        .gs-logo-mark {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+        .tf-sidebar:hover .tf-logo-wrap,
+        .tf-sidebar.tf-pinned .tf-logo-wrap {
+            padding: 18px 14px 14px;
+            justify-content: flex-start;
+        }
+
+        .tf-logo-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3B6FE8 0%, #6B4FDB 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 4px 16px rgba(13, 148, 136, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 12px rgba(59,111,232,0.32);
         }
 
-        .gs-logo-mark svg {
-            width: 20px;
-            height: 20px;
-            stroke: #fff;
-            fill: none;
-            stroke-width: 2;
+        .tf-logo-mark svg {
+            width: 17px; height: 17px;
+            stroke: #fff; fill: none; stroke-width: 2.3;
         }
 
-        .gs-logo-name {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
+        .tf-logo-name {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--tf-blue);
             letter-spacing: -0.3px;
             line-height: 1.2;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.15s 0.06s;
         }
 
-        .gs-logo-sub {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 10px;
-            font-weight: 500;
-            color: rgba(94, 234, 212, 0.55);
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            margin-top: 1px;
+        .tf-sidebar:hover .tf-logo-name,
+        .tf-sidebar.tf-pinned .tf-logo-name { opacity: 1; }
+
+        /* Divider */
+        .tf-divider {
+            width: 40px;
+            height: 1px;
+            background: rgba(59,111,232,0.10);
+            flex-shrink: 0;
+            margin-bottom: 6px;
+            transition: width var(--sb-transition);
         }
 
-        /* ── Nav links ───────────────────────────────────── */
-        .hr-sidebar-glass a[href] {
-            color: rgba(255, 255, 255, 0.72) !important;
-            font-family: 'DM Sans', sans-serif !important;
-            font-size: 14px !important;
-            border-radius: 11px !important;
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
-            transition: background 0.15s, color 0.15s, transform 0.12s !important;
+        .tf-sidebar:hover .tf-divider,
+        .tf-sidebar.tf-pinned .tf-divider { width: calc(100% - 24px); margin: 0 12px 6px; }
+
+        /* ── Nav ──────────────────────────────────────────── */
+        .tf-nav {
+            flex: 1;
+            width: 100%;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
+        .tf-nav::-webkit-scrollbar { width: 0; }
 
-        .hr-sidebar-glass a[href]:hover {
-            background: rgba(20, 184, 166, 0.13) !important;
-            color: #ffffff !important;
-            transform: translateX(2px);
-            box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.18) !important;
-        }
-
-        /* ── Active page ─────────────────────────────────── */
-        .hr-sidebar-glass a[aria-current="page"],
-        .hr-sidebar-glass a[aria-current="true"],
-        .hr-sidebar-glass a.active,
-        .hr-sidebar-glass [class*="navlist-item"][aria-current="page"],
-        .hr-sidebar-glass [class*="navlist-item"].active,
-        .hr-sidebar-glass li>a[aria-current="page"],
-        .hr-sidebar-glass [data-active="true"],
-        .hr-sidebar-glass [data-flux-navlist-item][aria-current="page"] {
-            background: rgba(13, 148, 136, 0.28) !important;
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.32), 0 2px 14px rgba(13, 148, 136, 0.22) !important;
-            border-radius: 11px !important;
-        }
-
-        .hr-sidebar-glass a[aria-current="page"] *,
-        .hr-sidebar-glass a[aria-current="true"] *,
-        .hr-sidebar-glass a.active *,
-        .hr-sidebar-glass [data-flux-navlist-item][aria-current="page"] * {
-            color: #ffffff !important;
-            background: transparent !important;
-        }
-
-        .hr-sidebar-glass a[aria-current="page"] svg,
-        .hr-sidebar-glass a[aria-current="true"] svg,
-        .hr-sidebar-glass a.active svg,
-        .hr-sidebar-glass [data-flux-navlist-item][aria-current="page"] svg {
-            stroke: #2dd4bf !important;
-            opacity: 1 !important;
-        }
-
-        .hr-sidebar-glass [class*="bg-white"],
-        .hr-sidebar-glass [class*="bg-gray"],
-        .hr-sidebar-glass [class*="bg-zinc"],
-        .hr-sidebar-glass [class*="bg-slate"] {
-            background: transparent !important;
-        }
-
-        .hr-sidebar-glass a[href] svg,
-        .hr-sidebar-glass a[href] [data-flux-icon] {
-            opacity: 0.5;
-            transition: opacity 0.15s;
-        }
-
-        .hr-sidebar-glass a[href]:hover svg,
-        .hr-sidebar-glass a[href]:hover [data-flux-icon] {
-            opacity: 1 !important;
-        }
-
-        /* ── Group headings ──────────────────────────────── */
-        .hr-sidebar-glass [data-flux-navlist-group]>button,
-        .hr-sidebar-glass li>button {
-            color: rgba(255, 255, 255, 0.38) !important;
-            font-size: 10.5px !important;
-            letter-spacing: 0.12em !important;
-            text-transform: uppercase !important;
-            font-weight: 600 !important;
-            font-family: 'DM Sans', sans-serif !important;
-        }
-
-        .hr-sidebar-glass [data-flux-navlist-group]>button:hover {
-            color: rgba(255, 255, 255, 0.65) !important;
-        }
-
-        .hr-sidebar-glass [data-flux-navlist-group]>button svg {
-            color: rgba(255, 255, 255, 0.3) !important;
-            opacity: 1 !important;
-        }
-
-        /* ── Separator ───────────────────────────────────── */
-        .hr-sidebar-glass hr,
-        .hr-sidebar-glass [data-flux-separator] {
-            border-color: rgba(32, 178, 170, 0.12) !important;
-        }
-
-        /* ── Badges ──────────────────────────────────────── */
-        .hr-sidebar-glass [data-flux-badge],
-        .hr-sidebar-glass [class*="badge"] {
-            background: rgba(239, 68, 68, 0.75) !important;
-            color: #fff !important;
-        }
-
-        /* ── Profile button ──────────────────────────────── */
-        .hr-sidebar-glass [data-flux-profile],
-        .hr-sidebar-glass button[class*="profile"] {
-            background: rgba(13, 148, 136, 0.14) !important;
-            border: 1px solid rgba(32, 178, 170, 0.2) !important;
-            border-radius: 13px !important;
-        }
-
-        .hr-sidebar-glass [data-flux-profile]:hover {
-            background: rgba(13, 148, 136, 0.22) !important;
-        }
-
-        .hr-sidebar-glass [data-flux-profile] span,
-        .hr-sidebar-glass [data-flux-profile] p,
-        .hr-sidebar-glass [data-flux-profile] * {
-            color: #ffffff !important;
-        }
-
-        /* ── Dropdown menu ───────────────────────────────── */
-        [data-flux-menu],
-        [data-flux-dropdown] [role="menu"] {
-            background: rgba(5, 32, 46, 0.97) !important;
-            backdrop-filter: blur(24px) !important;
-            -webkit-backdrop-filter: blur(24px) !important;
-            border: 1px solid rgba(32, 178, 170, 0.2) !important;
-            border-radius: 14px !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45) !important;
-        }
-
-        [data-flux-menu] a,
-        [data-flux-menu] button {
-            color: rgba(255, 255, 255, 0.8) !important;
-            border-radius: 8px !important;
-        }
-
-        [data-flux-menu] a:hover,
-        [data-flux-menu] button:hover {
-            background: rgba(20, 184, 166, 0.14) !important;
-            color: #fff !important;
-        }
-
-        /* ── Toggle / close button ───────────────────────── */
-        .hr-sidebar-glass button {
-            color: rgba(255, 255, 255, 0.45) !important;
-        }
-
-        /* ── Scrollbar (global) ──────────────────────────── */
-        .hr-sidebar-glass ::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        .hr-sidebar-glass ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .hr-sidebar-glass ::-webkit-scrollbar-thumb {
-            background: rgba(20, 184, 166, 0.22);
-            border-radius: 4px;
-        }
-
-        .hr-sidebar-glass ::-webkit-scrollbar-thumb:hover {
-            background: rgba(20, 184, 166, 0.4);
-        }
-
-        /* ════════════════════════════════════════════════════
-           FIX: Flux sidebar stash overlay blocks all clicks
-           The overlay sits fixed inset-0 z-10 with
-           pointer-events:auto even when visually hidden.
-        ════════════════════════════════════════════════════ */
-
-        /* Target the Flux stash overlay directly by its exact classes */
-        .fixed.inset-0.hidden,
-        [class~="hidden"][class~="fixed"][class~="inset-0"] {
-            pointer-events: none !important;
-        }
-
-        /* Also target via Alpine — when x-show hides it, ensure no blocking */
-        [x-show][style*="display: none"] {
-            pointer-events: none !important;
-        }
-
-        /* flux:main must NOT create a stacking context that traps z-index.
-           overflow-scroll creates a stacking context — use overflow:auto
-           and isolate:auto to prevent z-index trapping inside it. */
-        [data-flux-main] {
-            isolation: auto !important;
-            overflow: auto !important;
-            /* Do not use overflow:scroll — it creates a stacking context */
-        }
-
-        /* Raise HR page roots above the overlay (z-10) */
-        .hlm-root,
-        .hc-root,
-        .hpc-root,
-        .huc-root,
-        .lad-root,
-        .hlr-root,
-        .hcom-root,
-        .la-shell {
+        .tf-nav-item {
             position: relative;
-            z-index: 15;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 13px;
+            text-decoration: none;
+            color: var(--tf-icon);
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
-        /* Glass cards above overlay */
-        .g-card {
+        .tf-nav-item:hover { background: var(--tf-blue-lt); color: var(--tf-blue); }
+        .tf-nav-item.active { background: var(--tf-blue-pill); color: var(--tf-blue); }
+
+        .tf-nav-item svg {
+            width: 19px; height: 19px;
+            stroke: currentColor; fill: none; stroke-width: 1.7;
+            flex-shrink: 0; min-width: 19px;
+        }
+
+        .tf-nav-label {
+            font-size: 13px; font-weight: 600;
+            opacity: 0; transition: opacity 0.15s 0.05s;
+        }
+
+        .tf-sidebar:hover .tf-nav-label,
+        .tf-sidebar.tf-pinned .tf-nav-label { opacity: 1; }
+
+        /* Tooltip — only shows when collapsed (not hovered/pinned) */
+        .tf-tooltip {
+            position: absolute;
+            left: calc(var(--sb-collapsed) - var(--sb-left) + 20px);
+            top: 50%; transform: translateY(-50%);
+            background: #2d2770; color: #fff;
+            font-size: 11.5px; font-weight: 600;
+            padding: 5px 10px; border-radius: 8px;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity 0.1s; z-index: 200;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .tf-tooltip::before {
+            content: ''; position: absolute;
+            left: -5px; top: 50%; transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: #2d2770; border-left: none;
+        }
+        .tf-sidebar:not(:hover):not(.tf-pinned) .tf-nav-item:hover .tf-tooltip { opacity: 1; }
+
+        /* ── Footer ───────────────────────────────────────── */
+        .tf-sidebar-foot {
+            width: 100%; padding: 6px 8px 14px;
+            display: flex; flex-direction: column; gap: 1px; flex-shrink: 0;
+        }
+
+        .tf-foot-divider {
+            width: 40px; height: 1px;
+            background: rgba(59,111,232,0.10);
+            margin: 0 auto 4px;
+            transition: width var(--sb-transition);
+        }
+        .tf-sidebar:hover .tf-foot-divider,
+        .tf-sidebar.tf-pinned .tf-foot-divider { width: calc(100% - 24px); margin: 0 12px 4px; }
+
+        .tf-foot-item {
             position: relative;
-            z-index: 15;
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 13px;
+            text-decoration: none; color: var(--tf-icon);
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap; overflow: hidden;
+            cursor: pointer; background: none; border: none;
+            width: 100%;
+        }
+        .tf-foot-item:hover { background: var(--tf-blue-lt); color: var(--tf-blue); }
+
+        .tf-foot-item svg {
+            width: 19px; height: 19px;
+            stroke: currentColor; fill: none; stroke-width: 1.7;
+            flex-shrink: 0; min-width: 19px;
         }
 
-        /* Modals above everything */
-        .hlm-modal-bg {
-            z-index: 60 !important;
+        .tf-foot-label {
+            font-size: 13px; font-weight: 600;
+            opacity: 0; transition: opacity 0.15s 0.05s;
+        }
+        .tf-sidebar:hover .tf-foot-label,
+        .tf-sidebar.tf-pinned .tf-foot-label { opacity: 1; }
+
+        .tf-foot-tooltip {
+            position: absolute;
+            left: calc(var(--sb-collapsed) - var(--sb-left) + 20px);
+            top: 50%; transform: translateY(-50%);
+            background: #2d2770; color: #fff;
+            font-size: 11.5px; font-weight: 600;
+            padding: 5px 10px; border-radius: 8px;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity 0.1s; z-index: 200;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .tf-foot-tooltip::before {
+            content: ''; position: absolute;
+            left: -5px; top: 50%; transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: #2d2770; border-left: none;
+        }
+        .tf-sidebar:not(:hover):not(.tf-pinned) .tf-foot-item:hover .tf-foot-tooltip { opacity: 1; }
+
+        /* ── Light/Dark pill ──────────────────────────────── */
+        .tf-mode-wrap {
+            display: flex; justify-content: center;
+            padding: 6px 4px 0; width: 100%;
         }
 
-        /* Alpine x-cloak */
-        [x-cloak] {
-            display: none !important;
+        .tf-mode-pill {
+            display: flex;
+            background: var(--tf-blue-lt);
+            border-radius: 100px; padding: 3px; gap: 2px;
+            width: 46px;
+            transition: width var(--sb-transition);
+            overflow: hidden;
         }
+
+        .tf-sidebar:hover .tf-mode-pill,
+        .tf-sidebar.tf-pinned .tf-mode-pill { width: calc(100% - 8px); }
+
+        .tf-mode-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 5px; padding: 5px 6px; border-radius: 100px;
+            font-size: 11px; font-weight: 600;
+            color: var(--tf-icon); cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+        }
+        .tf-mode-btn svg {
+            width: 12px; height: 12px;
+            stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0;
+        }
+        .tf-mode-btn.active { background: #fff; color: var(--tf-blue); box-shadow: 0 1px 4px rgba(59,111,232,0.15); }
+        html.tf-dark .tf-mode-btn.active { background: rgba(255,255,255,0.10); }
+
+        .tf-mode-text { opacity: 0; transition: opacity 0.15s 0.05s; }
+        .tf-sidebar:hover .tf-mode-text,
+        .tf-sidebar.tf-pinned .tf-mode-text { opacity: 1; }
+
+        /* ── Main wrapper ─────────────────────────────────── */
+        .tf-main-wrapper {
+            margin-left: calc(var(--sb-collapsed) + var(--sb-left) + 14px);
+            flex: 1; min-width: 0;
+            transition: margin-left var(--sb-transition);
+        }
+        .tf-main-wrapper.tf-pinned {
+            margin-left: calc(var(--sb-expanded) + var(--sb-left) + 14px);
+        }
+
+        [data-flux-main] { background: transparent !important; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(59,111,232,0.15); border-radius: 4px; }
     </style>
     @stack('styles')
 </head>
 
-<body class="min-h-screen scrollbar-custom">
+<body>
 
-    <flux:sidebar sticky stashable class="hr-sidebar-glass scrollbar-custom">
+<div class="tf-layout">
 
-        <div class="gs-glow-1" aria-hidden="true"></div>
-        <div class="gs-glow-2" aria-hidden="true"></div>
-        <div class="gs-glow-3" aria-hidden="true"></div>
+    {{-- ══ FLOATING PILL SIDEBAR ══ --}}
+    <div class="tf-sidebar" id="tfSidebar">
 
-        <div class="gs-logo">
-            <div class="gs-logo-mark">
+        {{-- Logo --}}
+        <div class="tf-logo-wrap">
+            <div class="tf-logo-mark">
                 <svg viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
+                    <polyline points="4 17 12 5 20 17" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="7" y1="13" x2="17" y2="13" stroke-linecap="round"/>
                 </svg>
             </div>
-            <div>
-                <div class="gs-logo-name">TalentFlow</div>
-                <div class="gs-logo-sub">Pro</div>
+            <span class="tf-logo-name">TalentFlow</span>
+        </div>
+
+        <div class="tf-divider"></div>
+
+        <nav class="tf-nav">
+
+            <a href="{{ route('home') }}" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                <span class="tf-nav-label">HR Dashboard</span>
+                <span class="tf-tooltip">HR Dashboard</span>
+            </a>
+
+            <a href="{{ route('manage') }}" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('manage') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-3-3.87L16 16.13A4 4 0 0012 12a4 4 0 00-4 4.13L7 17.13A4 4 0 004 21v2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="9" r="2"/></svg>
+                <span class="tf-nav-label">Manage Employees</span>
+                <span class="tf-tooltip">Manage Employees</span>
+            </a>
+
+            <a href="{{ route('hr.leaves-attendance') }}" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('hr.leaves-attendance') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="18" x2="12" y2="12" stroke-linecap="round"/><line x1="9" y1="15" x2="15" y2="15" stroke-linecap="round"/></svg>
+                <span class="tf-nav-label">Leaves & Attendance</span>
+                <span class="tf-tooltip">Leaves & Attendance</span>
+            </a>
+
+            <a href="/manage-payroll" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('manage-payroll') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="2" y1="10" x2="22" y2="10" stroke-linecap="round"/></svg>
+                <span class="tf-nav-label">Manage Payroll</span>
+                <span class="tf-tooltip">Manage Payroll</span>
+            </a>
+
+            <a href="{{ route('hr.notifications') }}" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('hr.notifications') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 2c-1.5 0-2.9.6-4 1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="18" r="2"/></svg>
+                <span class="tf-nav-label">Notifications</span>
+                <span class="tf-tooltip">Notifications</span>
+            </a>
+             <a href="{{ route('performance.dashboard') }}" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('performance.dashboard') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="tf-nav-label">Performance</span>
+                <span class="tf-tooltip">Performance</span>
+            </a>
+            <a href="{{ route('analytics.dashboard') }}" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('analytics.dashboard') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10" stroke-linecap="round"/><line x1="12" y1="20" x2="12" y2="4" stroke-linecap="round"/><line x1="6" y1="20" x2="6" y2="14" stroke-linecap="round"/></svg>
+                <span class="tf-nav-label">Analytics</span>
+                <span class="tf-tooltip">Analytics</span>
+            </a>
+            <a href="{{ route('analytics.report-builder') }}" wire:navigate
+               class="tf-nav-item {{ request()->routeIs('analytics.report-builder') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke-linecap="round"/><line x1="16" y1="13" x2="8" y2="13" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke-linecap="round"/></svg>
+                <span class="tf-nav-label">Report</span>
+                <span class="tf-tooltip">Report</span>
+            </a>
+            
+        </nav>
+
+        <div class="tf-sidebar-foot">
+
+            <div class="tf-foot-divider"></div>
+
+            {{-- Pin sidebar --}}
+            <div class="tf-foot-item" id="tfPinBtn">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22" stroke-linecap="round"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1V4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="tf-foot-label" id="tfPinLabel">Pin Sidebar</span>
+                <span class="tf-foot-tooltip">Pin Sidebar</span>
             </div>
+
+            {{-- Logout --}}
+            <a href="{{ route('logout') }}" wire:navigate class="tf-foot-item">
+                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16 17 21 12 16 7" stroke-linecap="round" stroke-linejoin="round"/><line x1="21" y1="12" x2="9" y2="12" stroke-linecap="round"/></svg>
+                <span class="tf-foot-label">Logout</span>
+                <span class="tf-foot-tooltip">Logout</span>
+            </a>
+
+            {{-- Light / Dark --}}
+            <div class="tf-mode-wrap">
+                <div class="tf-mode-pill">
+                    <div class="tf-mode-btn active" id="lightBtn">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round"/></svg>
+                        <span class="tf-mode-text">Light</span>
+                    </div>
+                    <div class="tf-mode-btn" id="darkBtn">
+                        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span class="tf-mode-text">Dark</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
+    </div>
 
-        <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-        <flux:separator />
+    {{-- ══ MAIN CONTENT ══ --}}
+    <div class="tf-main-wrapper" id="tfMainWrapper">
+        <flux:sidebar sticky stashable></flux:sidebar>
+        <flux:main class="!p-0 overflow-scroll">
+            {{ $slot }}
+        </flux:main>
+    </div>
 
-        <div class="gs-nav-scroll">
-            @auth
-                <flux:navlist variant="outline">
-                    <flux:navlist.item icon="home" href="{{ route('home') }}" wire:navigate>HR Dashboard</flux:navlist.item>
+</div>
 
-                   
-                        <flux:navlist.item icon="users" href="{{ route('manage') }}" wire:navigate>Manage
-                        </flux:navlist.item>
-                   
+@livewireScripts
 
-                    
-                        <!-- <flux:navlist.item icon="calendar-days" href="{{ route('leave-attendance.dashboard') }}"
-                                    wire:navigate>Leave Dashboard</flux:navlist.item>
-                                <flux:navlist.item icon="document-plus" href="{{ route('leave-attendance.requests') }}"
-                                    wire:navigate>Leave Requests</flux:navlist.item> -->
-                        <!-- <flux:navlist.item icon="check-circle" href="{{ route('leave-attendance.hr-leave-management') }}"
-                                    wire:navigate>Manage Leave</flux:navlist.item> -->
-                        <flux:navlist.item icon="users" href="{{ route('hr.leaves-attendance') }}" wire:navigate>Manage
-                            Leaves & Attendance</flux:navlist.item>
-                        <!-- <flux:navlist.item icon="chat-bubble-left-right"
-                            href="{{ route('leave-attendance.hr-communication') }}" wire:navigate>HR Communications
-                        </flux:navlist.item>
-                        <flux:navlist.item icon="calendar" href="{{ route('leave-attendance.hr-calendar') }}" wire:navigate>
-                            HR Calendar</flux:navlist.item>  -->
-                  
+@persist('toast')
+<flux:toast />
+@endpersist
 
-                        <flux:navlist.item icon="folder" href="/manage-payroll" wire:navigate>Manage Payroll
-                        </flux:navlist.item>
-                        <!-- <flux:navlist.item icon="banknotes" href="{{ route('payroll.entries') }}" wire:navigate>Payroll
-                            Entries</flux:navlist.item>
-                        <flux:navlist.item icon="calendar" href="{{ route('payroll.months') }}" wire:navigate>Payroll Months
-                        </flux:navlist.item>
-                        <flux:navlist.item icon="credit-card" href="{{ route('payroll.payments') }}" wire:navigate>Payment
-                            History</flux:navlist.item>
-                        <flux:navlist.item icon="document-text" href="{{ route('entries') }}" wire:navigate>Payslip
-                            Entries</flux:navlist.item>
-                        {{-- Commented out until components are created
-                        <flux:navlist.item icon="document-text" href="{{ route('payroll.payslip-generator') }}"
-                            wire:navigate>Payslip Generator</flux:navlist.item>
-                        <flux:navlist.item icon="calculator" href="{{ route('payroll.tax-calculator') }}" wire:navigate>Tax
-                            Calculator</flux:navlist.item>
-                        --}} -->
-                    
+<script>
+(function () {
+    var DARK_KEY = 'tf-dark';
+    var PIN_KEY  = 'tf-pinned';
 
-                    <flux:navlist.group expandable heading="Performance & Analytics">
-                        <flux:navlist.item icon="chart-bar" href="{{ route('performance.dashboard') }}" wire:navigate>
-                            Performance Dashboard</flux:navlist.item>
+    var sidebar     = document.getElementById('tfSidebar');
+    var mainWrapper = document.getElementById('tfMainWrapper');
+    var pinBtn      = document.getElementById('tfPinBtn');
+    var pinLabel    = document.getElementById('tfPinLabel');
+    var lightBtn    = document.getElementById('lightBtn');
+    var darkBtn     = document.getElementById('darkBtn');
 
-                        <flux:navlist.item icon="chart-bar" href="{{ route('performance.dashboard') }}" wire:navigate>
-                            HR Performance </flux:navlist.item>
-                        <flux:navlist.item icon="star" href="{{ route('performance.kpi-management') }}" wire:navigate>KPI
-                            Management</flux:navlist.item>
-                        <flux:navlist.item icon="chart-bar" href="{{ route('analytics.dashboard') }}" wire:navigate>
-                            Analytics Dashboard</flux:navlist.item>
-                        <flux:navlist.item icon="document-text" href="{{ route('analytics.report-builder') }}"
-                            wire:navigate>Report Builder</flux:navlist.item>
-                    </flux:navlist.group>
+    /* ── Dark mode ── */
+    function applyDark(on) {
+        document.documentElement.classList.toggle('tf-dark', on);
+        document.documentElement.classList.toggle('dark', on);
+        lightBtn.classList.toggle('active', !on);
+        darkBtn.classList.toggle('active', on);
+        try { localStorage.setItem(DARK_KEY, on ? 'true' : 'false'); } catch(e) {}
+    }
+    var isDark = false;
+    try { isDark = localStorage.getItem(DARK_KEY) === 'true'; } catch(e) {}
+    applyDark(isDark);
 
+    lightBtn.addEventListener('click', function() { applyDark(false); });
+    darkBtn.addEventListener('click',  function() { applyDark(true);  });
 
-                </flux:navlist>
-            @endauth
-        </div>
+    /* ── Pin ── */
+    var isPinned = false;
+    function applyPin(on) {
+        isPinned = on;
+        sidebar.classList.toggle('tf-pinned', on);
+        mainWrapper.classList.toggle('tf-pinned', on);
+        if (pinLabel) pinLabel.textContent = on ? 'Unpin Sidebar' : 'Pin Sidebar';
+        try { localStorage.setItem(PIN_KEY, on ? 'true' : 'false'); } catch(e) {}
+    }
+    try { isPinned = localStorage.getItem(PIN_KEY) === 'true'; } catch(e) {}
+    applyPin(isPinned);
 
-        <div class="gs-sidebar-footer">
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="cog" href="#">Settings</flux:navlist.item>
-                <flux:navlist.item icon="question-mark-circle" href="#">Help</flux:navlist.item>
-                <flux:navlist.item icon="arrow-right" href="{{ route('logout') }}" wire:navigate>Logout
-                </flux:navlist.item>
-            </flux:navlist>
+    if (pinBtn) {
+        pinBtn.addEventListener('click', function() { applyPin(!isPinned); });
+    }
 
-            <flux:dropdown position="top" align="start">
-                <flux:profile avatar="{{ asset('images/user.svg') }}"
-                    name="{{Auth::user()->first_name ?? ''}} {{Auth::user()->last_name ?? ''}}" />
-                <flux:menu>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <flux:menu.item icon="arrow-right" type="submit">Logout</flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
-        </div>
-
-    </flux:sidebar>
-
-    {{-- FIX: removed overflow-scroll which creates a stacking context trapping z-index --}}
-    <flux:main class="!p-0">
-        {{ $slot }}
-        @yield('commands')
-    </flux:main>
-
-    @livewireScripts
-    @persist('toast')
-    <flux:toast />
-    @endpersist
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.querySelector('.hr-sidebar-glass')
-                || document.querySelector('[data-flux-sidebar]');
-
-            if (sidebar) {
-                sidebar.style.setProperty('width', '280px', 'important');
-                sidebar.style.setProperty('min-width', '280px', 'important');
-                sidebar.style.setProperty('background', 'linear-gradient(175deg, rgba(7,28,48,0.97) 0%, rgba(5,38,56,0.97) 40%, rgba(4,30,45,0.98) 100%)', 'important');
-                sidebar.style.setProperty('backdrop-filter', 'blur(32px) saturate(1.6)', 'important');
-                sidebar.style.setProperty('-webkit-backdrop-filter', 'blur(32px) saturate(1.6)', 'important');
-                sidebar.style.setProperty('border-right', '1px solid rgba(32,178,170,0.18)', 'important');
-                sidebar.style.setProperty('box-shadow', '4px 0 40px rgba(0,0,0,0.35)', 'important');
-            }
-
-            /* FIX: disable pointer events on the Flux sidebar overlay when hidden */
-            function fixOverlay() {
-                // Only target sidebar overlay, not all fixed overlays
-                const sidebarOverlay = document.querySelector('[data-flux-sidebar-overlay]');
-                if (sidebarOverlay) {
-                    if (sidebarOverlay.classList.contains('hidden') ||
-                        sidebarOverlay.style.display === 'none' ||
-                        getComputedStyle(sidebarOverlay).display === 'none') {
-                        sidebarOverlay.style.setProperty('pointer-events', 'none', 'important');
-                    }
-                }
-            }
-            fixOverlay();
-
-            /* Re-run after every Livewire navigation so the overlay stays disabled */
-            document.addEventListener('livewire:navigated', fixOverlay);
-            document.addEventListener('livewire:navigate', fixOverlay);
-
-            /* Watch for the overlay being re-added or toggled */
-            new MutationObserver(fixOverlay).observe(document.body, {
-                subtree: true, attributes: true, childList: true,
-                attributeFilter: ['class', 'style', 'data-show-stashed-sidebar']
-            });
-
-            function fixActiveNavItems() {
-                const sidebarEl = document.querySelector('.hr-sidebar-glass');
-                if (!sidebarEl) return;
-                const activeEls = sidebarEl.querySelectorAll('[aria-current="page"],[aria-current="true"],[data-active="true"]');
-                activeEls.forEach(el => {
-                    el.style.setProperty('background', 'rgba(13,148,136,0.28)', 'important');
-                    el.style.setProperty('color', '#ffffff', 'important');
-                    el.style.setProperty('border-radius', '11px', 'important');
-                    el.style.setProperty('box-shadow', 'inset 0 0 0 1px rgba(20,184,166,0.32)', 'important');
-                    el.style.setProperty('font-weight', '600', 'important');
-                    el.querySelectorAll('*').forEach(child => {
-                        child.style.setProperty('color', '#ffffff', 'important');
-                        if (['svg', 'path', 'circle', 'rect', 'line'].includes(child.tagName)) {
-                            child.style.setProperty('stroke', '#2dd4bf', 'important');
-                        }
-                        const bg = window.getComputedStyle(child).backgroundColor;
-                        if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent' && !bg.includes('13, 148')) {
-                            child.style.setProperty('background-color', 'transparent', 'important');
-                            child.style.setProperty('background', 'transparent', 'important');
-                        }
-                    });
-                });
-            }
-
-            fixActiveNavItems();
-            document.addEventListener('livewire:navigated', fixActiveNavItems);
-            document.addEventListener('livewire:navigate', fixActiveNavItems);
-
-            const sidebarEl = document.querySelector('.hr-sidebar-glass');
-            if (sidebarEl) {
-                new MutationObserver(fixActiveNavItems).observe(sidebarEl, {
-                    subtree: true, attributes: true,
-                    attributeFilter: ['aria-current', 'class', 'data-active']
-                });
-            }
+    /* ── Active nav on Livewire navigate ── */
+    function highlightActive() {
+        var path = window.location.pathname;
+        document.querySelectorAll('.tf-nav-item').forEach(function(a) {
+            a.classList.toggle('active', a.getAttribute('href') === path);
         });
-    </script>
+    }
+    document.addEventListener('livewire:navigated', function() {
+        var dark = false;
+        try { dark = localStorage.getItem(DARK_KEY) === 'true'; } catch(e) {}
+        applyDark(dark);
+        highlightActive();
+    });
+    highlightActive();
+})();
+</script>
 
-    @stack('scripts')
+@stack('scripts')
 </body>
-
 </html>

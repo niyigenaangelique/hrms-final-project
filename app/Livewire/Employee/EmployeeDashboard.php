@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\Message;
 use App\Models\Holiday;
 use App\Models\ActivityLog;
+use App\Models\Task;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Auth;
@@ -50,26 +51,69 @@ class EmployeeDashboard extends Component
         // Get the employee record for current user
         $this->employee = Employee::where('user_id', $user->id)->first();
         
+        // If not found by user_id, try to find by email (in case linking failed)
+        if (!$this->employee) {
+            \Log::info('Employee not found by user_id, checking by email: ' . $user->email);
+            $employeeByEmail = Employee::where('email', $user->email)->first();
+            if ($employeeByEmail) {
+                \Log::info('Found employee by email: ' . $employeeByEmail->full_name . ', user_id: ' . ($employeeByEmail->user_id ?? 'null'));
+                if (!$employeeByEmail->user_id) {
+                    // Link this employee to the current user
+                    $employeeByEmail->update(['user_id' => $user->id]);
+                    $this->employee = $employeeByEmail;
+                    \Log::info('Linked employee to user: ' . $user->id);
+                }
+            } else {
+                \Log::info('No employee found with email: ' . $user->email);
+            }
+        } else {
+            \Log::info('Found employee by user_id: ' . $this->employee->full_name);
+        }
+        
         if (!$this->employee) {
             // Create a sample employee for logged-in user with a unique code
-            $nextNumber = 1;
-            
-            // Find the next available employee code
-            do {
-                $newCode = 'EMP-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-                $exists = Employee::where('code', $newCode)->exists();
-                $nextNumber++;
-            } while ($exists);
-            
-            $this->employee = Employee::create([
-                'code' => $newCode,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'phone_number' => $user->phone_number,
-                'user_id' => $user->id,
-                'approval_status' => \App\Enum\ApprovalStatus::Approved,
-            ]);
+            // Use database transaction to prevent race conditions
+            \DB::beginTransaction();
+            try {
+                $lastEmployee = Employee::orderBy('code', 'desc')->lockForUpdate()->first();
+                if ($lastEmployee) {
+                    // Extract the number from the last code and increment
+                    $lastNumber = intval(substr($lastEmployee->code, -4));
+                    $newCode = 'EMP-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+                } else {
+                    $newCode = 'EMP-0001';
+                }
+                
+                $this->employee = Employee::create([
+                    'code' => $newCode,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number,
+                    'user_id' => $user->id,
+                    'approval_status' => \App\Enum\ApprovalStatus::Approved,
+                ]);
+                
+                \DB::commit();
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                // If there's a duplicate key error, try again with a different approach
+                if (str_contains($e->getMessage(), 'Duplicate entry')) {
+                    // Use a timestamp-based code as fallback
+                    $newCode = 'EMP-' . date('YmdHis');
+                    $this->employee = Employee::create([
+                        'code' => $newCode,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'phone_number' => $user->phone_number,
+                        'user_id' => $user->id,
+                        'approval_status' => \App\Enum\ApprovalStatus::Approved,
+                    ]);
+                } else {
+                    throw $e;
+                }
+            }
         }
 
         // Load existing data
@@ -126,36 +170,27 @@ class EmployeeDashboard extends Component
         // Load today's tasks for the employee
         $today = Carbon::today();
         
-        // Since we don't have a Task model, create sample data
-        $this->dailyTasks = collect([
-            [
-                'id' => 1,
-                'title' => 'Complete project proposal',
-                'description' => 'Finish the Q4 project proposal document',
-                'priority' => 'high',
-                'due_time' => '14:00',
-                'completed' => false,
-                'category' => 'work'
-            ],
-            [
-                'id' => 2,
-                'title' => 'Team meeting',
-                'description' => 'Weekly sync with development team',
-                'priority' => 'medium',
-                'due_time' => '16:00',
-                'completed' => false,
-                'category' => 'meeting'
-            ],
-            [
-                'id' => 3,
-                'title' => 'Review code changes',
-                'description' => 'Review pull requests from team members',
-                'priority' => 'medium',
-                'due_time' => '17:30',
-                'completed' => true,
-                'category' => 'development'
-            ],
-        ]);
+        // Convert today's date to weekday number (Monday=1, Tuesday=2, ..., Friday=5)
+        // Carbon::dayOfWeek returns Sunday=0, Monday=1, ..., Saturday=6
+        // We need to convert to Monday=1, Tuesday=2, ..., Friday=5, Saturday/Sunday=0 (no tasks)
+        $dayOfWeek = $today->dayOfWeek;
+        if ($dayOfWeek == 0) { // Sunday
+            $dayOfWeek = 0;
+        } elseif ($dayOfWeek == 6) { // Saturday  
+            $dayOfWeek = 0;
+        } else {
+            // Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5
+            // Carbon already gives us this format for Monday-Friday
+        }
+        
+        // Load actual tasks from database
+        if ($this->employee) {
+            $this->dailyTasks = \App\Models\Task::where('employee_id', $this->employee->id)
+                ->where('day', $dayOfWeek)
+                ->get();
+        } else {
+            $this->dailyTasks = collect([]);
+        }
     }
 
     public function loadRecentMessages()
@@ -207,20 +242,32 @@ class EmployeeDashboard extends Component
             ->orWhere('is_recurring', true)
             ->get();
         
+        // Load work schedules for this month
+        $workSchedules = \App\Models\WorkSchedule::where('employee_id', $this->employee->id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->get();
+        
         $current = $startDate->copy();
         while ($current <= $endDate) {
             $isCurrentMonth = $current->month === $month;
             $isToday = $current->isToday();
+            $currentDateStr = $current->format('Y-m-d');
             
             // Check if this date has holidays
-            $hasEvents = $holidays->contains('date', $current->format('Y-m-d'));
+            $hasHolidays = $holidays->contains('date', $currentDateStr);
+            
+            // Check if this date has work schedules
+            $hasWorkSchedules = $workSchedules->contains('date', $currentDateStr);
             
             $this->calendarDays[] = [
                 'date' => $current->day,
                 'is_current_month' => $isCurrentMonth,
                 'is_today' => $isToday,
-                'has_events' => $hasEvents,
-                'full_date' => $current->format('Y-m-d')
+                'has_events' => $hasHolidays || $hasWorkSchedules,
+                'has_holidays' => $hasHolidays,
+                'has_work_schedules' => $hasWorkSchedules,
+                'full_date' => $currentDateStr
             ];
             
             $current->addDay();

@@ -595,7 +595,9 @@ table.kpit-table { width:100%; border-collapse:collapse; }
 @endif
 
 {{-- ══ VIEW MODAL ══════════════════════════════════════════ --}}
-@if($showView && $viewRecord)
+@if($showView && $viewingId)
+@php $viewRecord = \App\Models\KpiTarget::with(['employee', 'kpi'])->find($viewingId); @endphp
+@if($viewRecord)
 <div class="kpit-modal-bg" wire:click.self="closeView">
     <div class="kpit-modal kpit-modal-lg">
         <div class="kpit-modal-hd">
@@ -672,12 +674,12 @@ table.kpit-table { width:100%; border-collapse:collapse; }
         </div>
         <div class="kpit-modal-footer">
             <button class="kpit-btn kpit-btn-outline" wire:click="closeView">Close</button>
-            <button class="kpit-btn kpit-btn-ghost" wire:click="openEdit('{{ $viewRecord->id }}'); closeView()">
+            <button class="kpit-btn kpit-btn-ghost" wire:click="openEdit('{{ $viewRecord->id }}')">
                 <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 Edit
             </button>
             @if($vAp !== 'approved')
-                <button class="kpit-btn kpit-btn-green" wire:click="approve('{{ $viewRecord->id }}'); closeView()" wire:confirm="Approve this target?">
+                <button class="kpit-btn kpit-btn-green" wire:click="approve('{{ $viewRecord->id }}')" wire:confirm="Approve this target?">
                     <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     Approve
                 </button>
@@ -685,6 +687,8 @@ table.kpit-table { width:100%; border-collapse:collapse; }
         </div>
     </div>
 </div>
+@endif
+
 @endif
 
 {{-- ══ DELETE CONFIRM ══════════════════════════════════════ --}}

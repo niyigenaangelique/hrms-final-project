@@ -79,6 +79,11 @@ class Department extends Model
         return $this->hasMany(Employee::class);
     }
 
+    public function performanceReviews(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(PerformanceReview::class, Employee::class);
+    }
+
     // Note: positions relationship removed as department_id column doesn't exist in positions table
 
     /**

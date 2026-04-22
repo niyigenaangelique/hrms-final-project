@@ -1,40 +1,122 @@
 <div class="pm-root">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@700;800&display=swap');
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@700;800&display=swap');
 
-/* ══ TOKENS ══════════════════════════════════════════════ */
-.pm-root {
-    --blue:     #3B6FE8; --blue-2:   #2755CC; --blue-3:   #1A3FA8;
-    --blue-lt:  rgba(59,111,232,0.09); --blue-mid: rgba(59,111,232,0.18);
-    --blue-brd: rgba(59,111,232,0.22);
-    --green:    #12B76A; --green-lt: rgba(18,183,106,0.10);
-    --amber:    #F59E0B; --amber-lt: rgba(245,158,11,0.10);
-    --red:      #EF4444; --red-lt:   rgba(239,68,68,0.09);
-    --purple:   #7C3AED; --purple-lt:rgba(124,58,237,0.09);
-    --bg:       #F0F4FA; --white:    #FFFFFF;
-    --ink:      #0F1629; --ink2:     #2D3356; --ink3:     #6B7094; --ink4:     #A8ADCA;
-    --border:   rgba(15,22,41,0.08);
-    --sh-sm:    0 2px 10px rgba(59,111,232,0.07);
-    --sh-md:    0 8px 28px rgba(59,111,232,0.12);
-    --sh-lg:    0 18px 52px rgba(59,111,232,0.16);
-    --r: 12px; --r-lg: 18px;
-    font-family: 'DM Sans', -apple-system, sans-serif;
-    background: var(--bg); min-height: 100vh; color: var(--ink);
-    padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 20px;
-}
+        /* ══ TOKENS ══════════════════════════════════════════════ */
+        .pm-root {
+            --blue: #3B6FE8;
+            --blue-2: #2755CC;
+            --blue-3: #1A3FA8;
+            --blue-lt: rgba(59, 111, 232, 0.09);
+            --blue-mid: rgba(59, 111, 232, 0.18);
+            --blue-brd: rgba(59, 111, 232, 0.22);
+            --green: #12B76A;
+            --green-lt: rgba(18, 183, 106, 0.10);
+            --amber: #F59E0B;
+            --amber-lt: rgba(245, 158, 11, 0.10);
+            --red: #EF4444;
+            --red-lt: rgba(239, 68, 68, 0.09);
+            --purple: #7C3AED;
+            --purple-lt: rgba(124, 58, 237, 0.09);
+            --bg: #F0F4FA;
+            --white: #FFFFFF;
+            --ink: #0F1629;
+            --ink2: #2D3356;
+            --ink3: #6B7094;
+            --ink4: #A8ADCA;
+            --border: rgba(15, 22, 41, 0.08);
+            --sh-sm: 0 2px 10px rgba(59, 111, 232, 0.07);
+            --sh-md: 0 8px 28px rgba(59, 111, 232, 0.12);
+            --sh-lg: 0 18px 52px rgba(59, 111, 232, 0.16);
+            --r: 12px;
+            --r-lg: 18px;
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--ink);
+            padding: 24px 28px 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-/* ══ FLASH ═══════════════════════════════════════════════ */
-.pm-flash { padding: 12px 18px; border-radius: var(--r); font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
-.pm-flash-ok  { background: var(--green-lt); border: 1px solid rgba(18,183,106,0.22); color: #087A42; }
-.pm-flash-err { background: var(--red-lt);   border: 1px solid rgba(239,68,68,0.22);  color: #991B1B; }
-.pm-flash svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+        /* ══ FLASH ═══════════════════════════════════════════════ */
+        .pm-flash {
+            padding: 12px 18px;
+            border-radius: var(--r);
+            font-size: 13.5px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
 
-/* ══ HERO ════════════════════════════════════════════════ */
-.pm-hero { background: var(--white); border-radius: var(--r-lg); border: 1px solid var(--border); box-shadow: var(--sh-sm); overflow: hidden; }
-.pm-hero-cover { height: 72px; background: linear-gradient(118deg,#1A3FA8 0%,#2755CC 38%,#3B6FE8 68%,#5A8BF5 100%); position: relative; overflow: hidden; }
-.pm-hero-cover::before { content:''; position:absolute; top:-40px; right:80px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,0.06); }
-.pm-hero-cover::after  { content:''; position:absolute; bottom:-30px; left:40px; width:130px; height:130px; border-radius:50%; background:rgba(255,255,255,0.04); }
-.pm-hero-body { padding: 0 24px 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: -26px; }
+        .pm-flash-ok {
+            background: var(--green-lt);
+            border: 1px solid rgba(18, 183, 106, 0.22);
+            color: #087A42;
+        }
+
+        .pm-flash-err {
+            background: var(--red-lt);
+            border: 1px solid rgba(239, 68, 68, 0.22);
+            color: #991B1B;
+        }
+
+        .pm-flash svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        /* ══ HERO ════════════════════════════════════════════════ */
+        .pm-hero {
+            background: var(--white);
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--sh-sm);
+            overflow: hidden;
+        }
+
+        .pm-hero-cover {
+            height: 72px;
+            background: linear-gradient(118deg, #1A3FA8 0%, #2755CC 38%, #3B6FE8 68%, #5A8BF5 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pm-hero-cover::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: 80px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .pm-hero-cover::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 40px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .pm-hero-body {
+            padding: 0 24px 20px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 2px; }
 .pm-hero-icon { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg,var(--blue),#5A8BF5); border: 3px solid var(--white); box-shadow: 0 4px 14px rgba(59,111,232,0.30); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .pm-hero-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.75; }
 .pm-hero-title { font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -0.3px; }
@@ -202,7 +284,7 @@ table.pm-table { width: 100%; border-collapse: collapse; }
             <div class="pm-stat"><div class="pm-stat-val">{{ $totalCount }}</div><div class="pm-stat-lbl">Total</div></div>
             <div class="pm-stat"><div class="pm-stat-val" style="color:var(--green)">{{ $approvedCount }}</div><div class="pm-stat-lbl">Approved</div></div>
             <div class="pm-stat"><div class="pm-stat-val" style="color:var(--amber)">{{ $pendingCount }}</div><div class="pm-stat-lbl">Pending</div></div>
-            <div class="pm-stat"><div class="pm-stat-val" style="color:var(--ink3)">{{ $draftCount }}</div><div class="pm-stat-lbl">Draft</div></div>
+            <div class="pm-stat"><div class="pm-stat-val" style="color:var(--ink3)">{{ $initiatedCount }}</div><div class="pm-stat-lbl">Initiated</div></div>
         </div>
     </div>
 </div>
@@ -256,12 +338,12 @@ table.pm-table { width: 100%; border-collapse: collapse; }
                     @php
                         $st = $row->approval_status instanceof \BackedEnum
                             ? $row->approval_status->value : ($row->approval_status ?? 'draft');
-                        $stClass = match($st) {
-                            'approved'  => 'pb-green',
-                            'pending'   => 'pb-amber',
-                            'rejected'  => 'pb-red',
+                        $stClass = match ($st) {
+                            'approved' => 'pb-green',
+                            'pending' => 'pb-amber',
+                            'rejected' => 'pb-red',
                             'cancelled' => 'pb-red',
-                            default     => 'pb-gray',
+                            default => 'pb-gray',
                         };
                     @endphp
                     <tr>
@@ -289,19 +371,19 @@ table.pm-table { width: 100%; border-collapse: collapse; }
                         <td><span class="pm-badge {{ $stClass }}">{{ ucfirst($st) }}</span></td>
                         <td>
                             <div class="pm-actions">
-                                <button class="pm-btn pm-btn-ghost pm-btn-sm" wire:click="openView({{ $row->id }})" title="View">
+                                <button class="pm-btn pm-btn-ghost pm-btn-sm" wire:click="openView('{{ $row->id }}')" title="View">
                                     <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
-                                <button class="pm-btn pm-btn-outline pm-btn-sm" wire:click="openEdit({{ $row->id }})" title="Edit">
+                                <button class="pm-btn pm-btn-outline pm-btn-sm" wire:click="openEdit('{{ $row->id }}')" title="Edit">
                                     <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </button>
                                 @if($st !== 'approved')
-                                <button class="pm-btn pm-btn-green pm-btn-sm" wire:click="approve({{ $row->id }})" title="Approve"
-                                        wire:confirm="Approve this payroll month?">
-                                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                </button>
+                                    <button class="pm-btn pm-btn-green pm-btn-sm" wire:click="approve('{{ $row->id }}')" title="Approve"
+                                            wire:confirm="Approve this payroll month?">
+                                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </button>
                                 @endif
-                                <button class="pm-btn pm-btn-danger pm-btn-sm" wire:click="confirmDelete({{ $row->id }})" title="Delete">
+                                <button class="pm-btn pm-btn-danger pm-btn-sm" wire:click="confirmDelete('{{ $row->id }}')" title="Delete">
                                     <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                                 </button>
                             </div>
@@ -340,198 +422,210 @@ table.pm-table { width: 100%; border-collapse: collapse; }
 
 {{-- ══ CREATE / EDIT MODAL ════════════════════════════════ --}}
 @if($showModal)
-<div class="pm-modal-bg" wire:click.self="closeModal">
-    <div class="pm-modal">
+    <div class="pm-modal-bg" wire:click.self="closeModal">
+        <div class="pm-modal">
 
-        <div class="pm-modal-hd">
-            <div class="pm-modal-hd-left">
-                <div class="pm-modal-hd-icon">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div class="pm-modal-hd">
+                <div class="pm-modal-hd-left">
+                    <div class="pm-modal-hd-icon">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div>
+                        <div class="pm-modal-title">{{ $editingId ? 'Edit Payroll Month' : 'New Payroll Month' }}</div>
+                        <div class="pm-modal-sub">{{ $editingId ? 'Update period details and status' : 'Define a new payroll period' }}</div>
+                    </div>
                 </div>
-                <div>
-                    <div class="pm-modal-title">{{ $editingId ? 'Edit Payroll Month' : 'New Payroll Month' }}</div>
-                    <div class="pm-modal-sub">{{ $editingId ? 'Update period details and status' : 'Define a new payroll period' }}</div>
-                </div>
+                <button class="pm-modal-close" wire:click="closeModal">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
-            <button class="pm-modal-close" wire:click="closeModal">
-                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
 
-        <div class="pm-modal-body">
-            {{-- Code + Name --}}
-            <div class="pm-grid2">
+            <div class="pm-modal-body">
+                {{-- Code + Name --}}
+                <div class="pm-grid2">
+                    <div class="pm-field">
+                        <label>Code <span class="req">*</span></label>
+                        <input type="text" wire:model="code" placeholder="PM-0001" style="text-transform:uppercase;">
+                        @error('code')<div class="pm-field-err">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="pm-field">
+                        <label>Name <span class="req">*</span></label>
+                        <input type="text" wire:model="name" placeholder="e.g. April 2025 Payroll">
+                        @error('name')<div class="pm-field-err">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                {{-- Description --}}
                 <div class="pm-field">
-                    <label>Code <span class="req">*</span></label>
-                    <input type="text" wire:model="code" placeholder="PM-0001" style="text-transform:uppercase;">
-                    @error('code')<div class="pm-field-err">{{ $message }}</div>@enderror
+                    <label>Description</label>
+                    <textarea wire:model="description" placeholder="Optional notes about this payroll period…"></textarea>
+                    @error('description')<div class="pm-field-err">{{ $message }}</div>@enderror
                 </div>
+
+                {{-- Project --}}
                 <div class="pm-field">
-                    <label>Name <span class="req">*</span></label>
-                    <input type="text" wire:model="name" placeholder="e.g. April 2025 Payroll">
-                    @error('name')<div class="pm-field-err">{{ $message }}</div>@enderror
+                    <label>Project <span class="req">*</span></label>
+                    <select wire:model="projectId">
+                        <option value="">Select project...</option>
+                        @foreach($this->projects as $project)
+                            <option value="{{ $project['id'] }}">{{ $project['name'] }}</option>
+                        @endforeach
+                    </select>
+                    @error('projectId')<div class="pm-field-err">{{ $message }}</div>@enderror
                 </div>
-            </div>
 
-            {{-- Description --}}
-            <div class="pm-field">
-                <label>Description</label>
-                <textarea wire:model="description" placeholder="Optional notes about this payroll period…"></textarea>
-                @error('description')<div class="pm-field-err">{{ $message }}</div>@enderror
-            </div>
+                {{-- Dates --}}
+                <div class="pm-section-label">Period Dates</div>
+                <div class="pm-grid2">
+                    <div class="pm-field">
+                        <label>Start Date <span class="req">*</span></label>
+                        <input type="date" wire:model="startDate">
+                        @error('startDate')<div class="pm-field-err">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="pm-field">
+                        <label>End Date <span class="req">*</span></label>
+                        <input type="date" wire:model="endDate">
+                        @error('endDate')<div class="pm-field-err">{{ $message }}</div>@enderror
+                    </div>
+                </div>
 
-            {{-- Dates --}}
-            <div class="pm-section-label">Period Dates</div>
-            <div class="pm-grid2">
+                {{-- Approval status --}}
                 <div class="pm-field">
-                    <label>Start Date <span class="req">*</span></label>
-                    <input type="date" wire:model="startDate">
-                    @error('startDate')<div class="pm-field-err">{{ $message }}</div>@enderror
-                </div>
-                <div class="pm-field">
-                    <label>End Date <span class="req">*</span></label>
-                    <input type="date" wire:model="endDate">
-                    @error('endDate')<div class="pm-field-err">{{ $message }}</div>@enderror
+                    <label>Approval Status <span class="req">*</span></label>
+                    <select wire:model="approvalStatus">
+                        @foreach($approvalStatuses as $val => $label)
+                            <option value="{{ $val }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('approvalStatus')<div class="pm-field-err">{{ $message }}</div>@enderror
                 </div>
             </div>
 
-            {{-- Approval status --}}
-            <div class="pm-field">
-                <label>Approval Status <span class="req">*</span></label>
-                <select wire:model="approvalStatus">
-                    @foreach($approvalStatuses as $val => $label)
-                        <option value="{{ $val }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-                @error('approvalStatus')<div class="pm-field-err">{{ $message }}</div>@enderror
+            <div class="pm-modal-footer">
+                <button class="pm-btn pm-btn-outline" wire:click="closeModal">Cancel</button>
+                <button class="pm-btn pm-btn-primary" wire:click="save" wire:loading.attr="disabled">
+                    <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                    <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Create' }} Payroll Month</span>
+                    <span wire:loading wire:target="save">Saving…</span>
+                </button>
             </div>
-        </div>
-
-        <div class="pm-modal-footer">
-            <button class="pm-btn pm-btn-outline" wire:click="closeModal">Cancel</button>
-            <button class="pm-btn pm-btn-primary" wire:click="save" wire:loading.attr="disabled">
-                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-                <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Create' }} Payroll Month</span>
-                <span wire:loading wire:target="save">Saving…</span>
-            </button>
         </div>
     </div>
-</div>
 @endif
 
 {{-- ══ VIEW MODAL ══════════════════════════════════════════ --}}
 @if($showView && $viewRecord)
-<div class="pm-modal-bg" wire:click.self="closeView">
-    <div class="pm-modal pm-modal-lg">
+    <div class="pm-modal-bg" wire:click.self="closeView">
+        <div class="pm-modal pm-modal-lg">
 
-        <div class="pm-modal-hd">
-            <div class="pm-modal-hd-left">
-                <div class="pm-modal-hd-icon">
-                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <div class="pm-modal-hd">
+                <div class="pm-modal-hd-left">
+                    <div class="pm-modal-hd-icon">
+                        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                    <div>
+                        <div class="pm-modal-title">{{ $viewRecord->name }}</div>
+                        <div class="pm-modal-sub">{{ $viewRecord->code }}</div>
+                    </div>
                 </div>
-                <div>
-                    <div class="pm-modal-title">{{ $viewRecord->name }}</div>
-                    <div class="pm-modal-sub">{{ $viewRecord->code }}</div>
-                </div>
-            </div>
-            <button class="pm-modal-close" wire:click="closeView">
-                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
-
-        <div class="pm-modal-body">
-            @php
-                $vSt = $viewRecord->approval_status instanceof \BackedEnum
-                    ? $viewRecord->approval_status->value : ($viewRecord->approval_status ?? 'draft');
-                $vStClass = match($vSt) {
-                    'approved'  => 'pb-green',
-                    'pending'   => 'pb-amber',
-                    'rejected'  => 'pb-red',
-                    'cancelled' => 'pb-red',
-                    default     => 'pb-gray',
-                };
-            @endphp
-            <div class="pm-view-grid">
-                <div class="pm-view-row">
-                    <div class="pm-view-lbl">Code</div>
-                    <div class="pm-view-val"><span class="pm-code">{{ $viewRecord->code }}</span></div>
-                </div>
-                <div class="pm-view-row">
-                    <div class="pm-view-lbl">Approval Status</div>
-                    <div class="pm-view-val"><span class="pm-badge {{ $vStClass }}">{{ ucfirst($vSt) }}</span></div>
-                </div>
-                <div class="pm-view-row full">
-                    <div class="pm-view-lbl">Name</div>
-                    <div class="pm-view-val">{{ $viewRecord->name }}</div>
-                </div>
-                @if($viewRecord->description)
-                <div class="pm-view-row full">
-                    <div class="pm-view-lbl">Description</div>
-                    <div class="pm-view-val" style="font-size:13px;color:var(--ink3);">{{ $viewRecord->description }}</div>
-                </div>
-                @endif
-                <div class="pm-view-row">
-                    <div class="pm-view-lbl">Start Date</div>
-                    <div class="pm-view-val">{{ \Carbon\Carbon::parse($viewRecord->start_date)->format('l, M d, Y') }}</div>
-                </div>
-                <div class="pm-view-row">
-                    <div class="pm-view-lbl">End Date</div>
-                    <div class="pm-view-val">{{ \Carbon\Carbon::parse($viewRecord->end_date)->format('l, M d, Y') }}</div>
-                </div>
-                <div class="pm-view-row">
-                    <div class="pm-view-lbl">Duration</div>
-                    <div class="pm-view-val">{{ \Carbon\Carbon::parse($viewRecord->start_date)->diffInDays(\Carbon\Carbon::parse($viewRecord->end_date)) + 1 }} days</div>
-                </div>
-                <div class="pm-view-row">
-                    <div class="pm-view-lbl">Payroll Entries</div>
-                    <div class="pm-view-val"><span class="pm-badge pb-blue">{{ $viewRecord->payrollEntries?->count() ?? 0 }} entries</span></div>
-                </div>
-                <div class="pm-view-row">
-                    <div class="pm-view-lbl">Created</div>
-                    <div class="pm-view-val" style="font-size:12.5px;">{{ \Carbon\Carbon::parse($viewRecord->created_at)->format('M d, Y · H:i') }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="pm-modal-footer">
-            <button class="pm-btn pm-btn-outline" wire:click="closeView">Close</button>
-            <button class="pm-btn pm-btn-ghost" wire:click="openEdit({{ $viewRecord->id }}); closeView()">
-                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit
-            </button>
-            @if($vSt !== 'approved')
-                <button class="pm-btn pm-btn-green" wire:click="approve({{ $viewRecord->id }}); closeView()"
-                        wire:confirm="Approve this payroll month?">
-                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                    Approve
+                <button class="pm-modal-close" wire:click="closeView">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
-            @endif
+            </div>
+
+            <div class="pm-modal-body">
+                @php
+                    $vSt = $viewRecord->approval_status instanceof \BackedEnum
+                        ? $viewRecord->approval_status->value : ($viewRecord->approval_status ?? 'draft');
+                    $vStClass = match ($vSt) {
+                        'approved' => 'pb-green',
+                        'pending' => 'pb-amber',
+                        'rejected' => 'pb-red',
+                        'cancelled' => 'pb-red',
+                        default => 'pb-gray',
+                    };
+                @endphp
+                <div class="pm-view-grid">
+                    <div class="pm-view-row">
+                        <div class="pm-view-lbl">Code</div>
+                        <div class="pm-view-val"><span class="pm-code">{{ $viewRecord->code }}</span></div>
+                    </div>
+                    <div class="pm-view-row">
+                        <div class="pm-view-lbl">Approval Status</div>
+                        <div class="pm-view-val"><span class="pm-badge {{ $vStClass }}">{{ ucfirst($vSt) }}</span></div>
+                    </div>
+                    <div class="pm-view-row full">
+                        <div class="pm-view-lbl">Name</div>
+                        <div class="pm-view-val">{{ $viewRecord->name }}</div>
+                    </div>
+                    @if($viewRecord->description)
+                        <div class="pm-view-row full">
+                            <div class="pm-view-lbl">Description</div>
+                            <div class="pm-view-val" style="font-size:13px;color:var(--ink3);">{{ $viewRecord->description }}</div>
+                        </div>
+                    @endif
+                    <div class="pm-view-row">
+                        <div class="pm-view-lbl">Start Date</div>
+                        <div class="pm-view-val">{{ \Carbon\Carbon::parse($viewRecord->start_date)->format('l, M d, Y') }}</div>
+                    </div>
+                    <div class="pm-view-row">
+                        <div class="pm-view-lbl">End Date</div>
+                        <div class="pm-view-val">{{ \Carbon\Carbon::parse($viewRecord->end_date)->format('l, M d, Y') }}</div>
+                    </div>
+                    <div class="pm-view-row">
+                        <div class="pm-view-lbl">Duration</div>
+                        <div class="pm-view-val">{{ \Carbon\Carbon::parse($viewRecord->start_date)->diffInDays(\Carbon\Carbon::parse($viewRecord->end_date)) + 1 }} days</div>
+                    </div>
+                    <div class="pm-view-row">
+                        <div class="pm-view-lbl">Payroll Entries</div>
+                        <div class="pm-view-val"><span class="pm-badge pb-blue">{{ $viewRecord->payrollEntries?->count() ?? 0 }} entries</span></div>
+                    </div>
+                    <div class="pm-view-row">
+                        <div class="pm-view-lbl">Created</div>
+                        <div class="pm-view-val" style="font-size:12.5px;">{{ \Carbon\Carbon::parse($viewRecord->created_at)->format('M d, Y · H:i') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pm-modal-footer">
+                <button class="pm-btn pm-btn-outline" wire:click="closeView">Close</button>
+                <button class="pm-btn pm-btn-ghost" wire:click="openEdit('{{ $viewRecord->id }}'); closeView()">
+                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                </button>
+                @if($vSt !== 'approved')
+                    <button class="pm-btn pm-btn-green" wire:click="approve('{{ $viewRecord->id }}'); closeView()"
+                            wire:confirm="Approve this payroll month?">
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        Approve
+                    </button>
+                @endif
+            </div>
         </div>
     </div>
-</div>
 @endif
 
 {{-- ══ DELETE CONFIRM ══════════════════════════════════════ --}}
 @if($showDelete)
-<div class="pm-modal-bg" wire:click.self="cancelDelete">
-    <div class="pm-modal pm-del-modal">
-        <div class="pm-del-body">
-            <div class="pm-del-icon">
-                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    <div class="pm-modal-bg" wire:click.self="cancelDelete">
+        <div class="pm-modal pm-del-modal">
+            <div class="pm-del-body">
+                <div class="pm-del-icon">
+                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                </div>
+                <div class="pm-del-ttl">Delete Payroll Month?</div>
+                <div class="pm-del-sub">This will permanently remove the payroll month and cannot be undone. Months with linked entries cannot be deleted.</div>
             </div>
-            <div class="pm-del-ttl">Delete Payroll Month?</div>
-            <div class="pm-del-sub">This will permanently remove the payroll month and cannot be undone. Months with linked entries cannot be deleted.</div>
-        </div>
-        <div class="pm-modal-footer" style="justify-content:center;gap:12px;">
-            <button class="pm-btn pm-btn-outline" wire:click="cancelDelete">Cancel</button>
-            <button class="pm-btn pm-btn-danger" wire:click="deleteRecord" wire:loading.attr="disabled">
-                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
-                <span wire:loading.remove wire:target="deleteRecord">Yes, Delete</span>
-                <span wire:loading wire:target="deleteRecord">Deleting…</span>
-            </button>
+            <div class="pm-modal-footer" style="justify-content:center;gap:12px;">
+                <button class="pm-btn pm-btn-outline" wire:click="cancelDelete">Cancel</button>
+                <button class="pm-btn pm-btn-danger" wire:click="deleteRecord" wire:loading.attr="disabled">
+                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                    <span wire:loading.remove wire:target="deleteRecord">Yes, Delete</span>
+                    <span wire:loading wire:target="deleteRecord">Deleting…</span>
+                </button>
+            </div>
         </div>
     </div>
-</div>
 @endif
 
 </div>{{-- /pm-root --}}

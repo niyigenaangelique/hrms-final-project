@@ -93,7 +93,7 @@ class HomePage extends Component
                     'username' => $user->username,
                     'email' => $user->email,
                     'phone_number' => $user->phone_number,
-                    'role' => $user->role->value,
+                    'role' => $user->role,
                     'created_at' => $user->created_at,
                 ];
             })

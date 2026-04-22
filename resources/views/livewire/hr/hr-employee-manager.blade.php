@@ -279,6 +279,14 @@ table.em-table { width: 100%; border-collapse: collapse; }
 .em-view-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink4); }
 .em-view-value { font-size: 13.5px; font-weight: 600; color: var(--ink2); }
 
+/* Emergency contacts */
+.em-emergency-contact { transition: all 0.2s ease; }
+.em-emergency-contact:hover { 
+    border-color: var(--blue-brd); 
+    box-shadow: 0 2px 8px rgba(59,111,232,0.08); 
+    transform: translateY(-1px);
+}
+
 /* View hero */
 .em-view-hero { text-align: center; padding: 24px 22px 16px; border-bottom: 1px solid var(--border); }
 .em-view-av {
@@ -933,6 +941,57 @@ document.head.appendChild(style);
                 <div class="em-view-row"><div class="em-view-label">Country</div><div class="em-view-value">{{ $viewEmployee->country ?? '—' }}</div></div>
                 <div class="em-view-row em-col-span-2"><div class="em-view-label">Address</div><div class="em-view-value">{{ $viewEmployee->address ?? '—' }}</div></div>
             </div>
+
+            <div class="em-section-lbl" style="margin-top:14px;">Emergency Contacts</div>
+            @if($viewEmployee->emergencyContacts && $viewEmployee->emergencyContacts->count() > 0)
+                @foreach($viewEmployee->emergencyContacts as $contact)
+                    <div class="em-emergency-contact" style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 12px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <div style="font-weight: 700; color: var(--ink2); font-size: 14px;">{{ $contact->name }}</div>
+                                    @if($contact->is_primary)
+                                        <span style="background: var(--green-lt); color: var(--green); padding: 2px 8px; border-radius: 100px; font-size: 10px; font-weight: 600;">PRIMARY</span>
+                                    @endif
+                                </div>
+                                <div style="font-size: 12px; color: var(--ink3); margin-bottom: 4px;">{{ $contact->relationship }}</div>
+                                <div style="display: flex; flex-direction: column; gap: 3px;">
+                                    @if($contact->phone)
+                                        <div style="font-size: 12px; color: var(--ink2);">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 4px;">
+                                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                            </svg>
+                                            {{ $contact->phone }}
+                                        </div>
+                                    @endif
+                                    @if($contact->email)
+                                        <div style="font-size: 12px; color: var(--ink2);">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 4px;">
+                                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                                <polyline points="22,6 12,13 2,6"></polyline>
+                                            </svg>
+                                            {{ $contact->email }}
+                                        </div>
+                                    @endif
+                                    @if($contact->address)
+                                        <div style="font-size: 12px; color: var(--ink2);">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; margin-right: 4px;">
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                                <circle cx="12" cy="10" r="3"></circle>
+                                            </svg>
+                                            {{ $contact->address }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @else
+                <div style="text-align: center; padding: 20px; color: var(--ink4); font-size: 13px; font-style: italic; background: var(--bg); border-radius: var(--r); border: 1px solid var(--border);">
+                    No emergency contacts on record
+                </div>
+            @endif
 
             <div class="em-section-lbl" style="margin-top:14px;">Salary</div>
             <div class="em-view-info-grid">

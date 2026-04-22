@@ -34,6 +34,7 @@ use App\Livewire\HR\HRPerformanceManager;
 use App\Livewire\HomePage;
 use App\Livewire\LoginPage;
 use App\Livewire\PasswordResetPage;
+use App\Livewire\ResetPasswordForm;
 use App\Livewire\LeaveAttendance\LeaveAttendanceDashboard;
 use App\Livewire\LeaveAttendance\LeaveRequestForm;
 use App\Livewire\LeaveAttendance\LeaveAttendanceCalendar;
@@ -43,7 +44,7 @@ use App\Livewire\PayrollMonth\PayrollMonthPage;
 use App\Livewire\Payroll\PayslipGenerator;
 use App\Livewire\Performance\PerformanceDashboard;
 use App\Livewire\Analytics\AnalyticsDashboard;
-use App\Livewire\Notifications\NotificationCenter;
+use App\Livewire\HR\HrNotificationCenter;
 use App\Livewire\Analytics\ReportBuilder;
 use App\Livewire\AccessControl\AccessControlDashboard;
 use App\Livewire\Performance\KPIManagement;
@@ -51,6 +52,21 @@ use App\Livewire\Payroll\TaxCalculator;
 use App\Livewire\Position\PositionPage;
 use App\Livewire\User\UserPage;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Admin\EnhancedDashboard;
+use App\Livewire\Admin\PermissionsManager;
+use App\Livewire\Admin\ActivityLogsManager;
+use App\Livewire\Admin\EmployeeAccountManager;
+use App\Livewire\Admin\SecuritySettingsManager;
+use App\Livewire\Admin\ActiveSessionsManager;
+use App\Livewire\Admin\PasswordResetsManager;
+use App\Livewire\Admin\SystemConfigManager;
+use App\Livewire\Admin\DatabaseManager;
+use App\Livewire\Admin\SystemAnalyticsManager;
+use App\Livewire\Admin\NotificationsManager;
+use App\Livewire\Admin\AccessControlManager;
+use App\Livewire\Admin\ImportsManager;
+use App\Livewire\Admin\BanksManager;
+ 
 
 Route::middleware(['web'])->group(function () {
 
@@ -61,6 +77,7 @@ Route::middleware(['web'])->group(function () {
         return redirect()->route('login');
     })->name('logout');
     Route::get('/password/reset', PasswordResetPage::class)->name('password.request');
+    Route::get('/reset-password/{token}', ResetPasswordForm::class)->name('password.reset');
 
     Route::middleware(['check.user.role:*'])->group(function () {
         Route::get('/', HomePage::class)->name('home');
@@ -113,29 +130,28 @@ Route::middleware(['web'])->group(function () {
         Route::get('/employee/attendance', EmployeeAttendance::class)->name('employee.attendance');
         Route::get('/employee/communication', EmployeeCommunication::class)->name('employee.communication');
         Route::get('/employee/payroll', EmployeePayroll::class)->name('employee.payroll');
+        Route::get('/employee/payroll/download/{entryId}', [\App\Http\Controllers\PayslipDownloadController::class, 'download'])->name('employee.payroll.download');
         Route::get('/employee/performance', EmployeePerformance::class)->name('employee.performance');
         
         // Admin Routes (for SuperAdmin only)
-        Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
-        Route::get('/admin/enhanced-dashboard', EnhancedAdminDashboard::class)->name('admin.enhanced-dashboard');
+        Route::get('/admin/dashboard', \App\Livewire\Admin\EnhancedAdminDashboard::class)->name('admin.dashboard');
         
-        // Admin Management Routes
-        Route::get('/admin/users', \App\Livewire\Admin\UserManagement::class)->name('admin.users');
-        Route::get('/admin/employees', \App\Livewire\Admin\EmployeeManagement::class)->name('admin.employees');
-        Route::get('/admin/permissions', \App\Livewire\Admin\PermissionManagement::class)->name('admin.permissions');
-        Route::get('/admin/activity-logs', \App\Livewire\Admin\ActivityLogManagement::class)->name('admin.activity-logs');
-        Route::get('/admin/security-settings', \App\Livewire\Admin\SecuritySettingsManagement::class)->name('admin.security-settings');
-        Route::get('/admin/active-sessions', \App\Livewire\Admin\ActiveSessionManagement::class)->name('admin.active-sessions');
-        Route::get('/admin/password-resets', \App\Livewire\Admin\PasswordResetManagement::class)->name('admin.password-resets');
-        Route::get('/admin/system-configuration', \App\Livewire\Admin\SystemConfigurationManagement::class)->name('admin.system-configuration');
-        Route::get('/admin/database-management', \App\Livewire\Admin\DatabaseManagement::class)->name('admin.database-management');
-        Route::get('/admin/system-analytics', \App\Livewire\Admin\SystemAnalytics::class)->name('admin.system-analytics');
-        
-        // Additional Admin Routes
-        Route::get('/admin/notifications', \App\Livewire\Admin\NotificationsManagement::class)->name('admin.notifications');
+        // Admin Management Routes - Use proper components
+        Route::get('/admin/users', \App\Livewire\Admin\UserManager::class)->name('admin.users');
         Route::get('/admin/access-control', \App\Livewire\Admin\AccessControlManagement::class)->name('admin.access-control');
-        Route::get('/admin/imports', \App\Livewire\Admin\ImportsManagement::class)->name('admin.imports');
+        Route::get('/admin/active-sessions', \App\Livewire\Admin\ActiveSessionManagement::class)->name('admin.active-sessions');
+        Route::get('/admin/activity-logs', \App\Livewire\Admin\ActivityLogManagement::class)->name('admin.activity-logs');
         Route::get('/admin/banks', \App\Livewire\Admin\BanksManagement::class)->name('admin.banks');
+        Route::get('/admin/database', \App\Livewire\Admin\DatabaseManagement::class)->name('admin.database');
+        Route::get('/admin/imports', \App\Livewire\Admin\ImportsManagement::class)->name('admin.imports');
+        Route::get('/admin/password-reset', \App\Livewire\Admin\PasswordResetManagement::class)->name('admin.password-reset');
+        Route::get('/admin/permissions', \App\Livewire\Admin\PermissionManagement::class)->name('admin.permissions');
+        Route::get('/admin/security-settings', \App\Livewire\Admin\SecuritySettingsManagement::class)->name('admin.security-settings');
+        Route::get('/admin/system-analytics', \App\Livewire\Admin\SystemAnalytics::class)->name('admin.system-analytics');
+        Route::get('/admin/system-config', \App\Livewire\Admin\SystemConfigurationManagement::class)->name('admin.system-config');
+        
+        // Additional Admin Routes - Redirect to main admin dashboard or remove if unused
+        Route::get('/admin/notifications', \App\Livewire\HR\HrNotificationCenter::class)->name('admin.notifications');
         
         // Test route for user creation
         Route::get('/test-user-creation', function () {
@@ -411,10 +427,10 @@ Route::middleware(['web'])->group(function () {
         Route::get('/leave-attendance/hr-communication', \App\Livewire\LeaveAttendance\HrCommunication::class)->name('leave-attendance.hr-communication');
         Route::get('/leave-attendance/hr-leave-management', \App\Livewire\LeaveAttendance\HrLeaveManagement::class)->name('leave-attendance.hr-leave-management');
         Route::get('/leave-attendance/hr-calendar', \App\Livewire\LeaveAttendance\HrUnifiedCalendar::class)->name('leave-attendance.hr-calendar');
-        Route::post('/hr/communication/send', function(Request $request) {
+        Route::post('/hr/communication/send', function(\Illuminate\Http\Request $request) {
             try {
                 $request->validate([
-                    'receiver_id' => 'required|exists:employees,id',
+                    'receiver_id' => 'required|exists:users,id',
                     'message' => 'required|string|max:1000'
                 ]);
                 
@@ -449,19 +465,18 @@ Route::middleware(['web'])->group(function () {
         })->name('hr.leaves.reject');
 
 //        performance
-        Route::get('/performance/dashboard', PerformanceDashboard::class)->name('performance.dashboard');
-        Route::get('/performance/kpi-management', KPIManagement::class)->name('performance.kpi-management');
-        Route::get('/performance/kpis',    KpiManager::class)->name('performance.kpis');
-        Route::get('/performance/targets', KpiTargetManager::class)->name('performance.kpi-targets');
+        Route::get('/performance/dashboard', \App\Livewire\Performance\PerformanceDashboard::class)->name('performance.dashboard');
+        Route::get('/performance/kpis',    \App\Livewire\Performance\KpiManager::class)->name('performance.kpis');
+        Route::get('/performance/targets', \App\Livewire\Performance\KpiTargetManager::class)->name('performance.kpi-targets');
 
         Route::middleware(['auth'])->group(function () {
 
     // HR page — accessible from app.blade nav
-        Route::get('/hr/performance', HRPerformanceManager::class)->name('hr.performance');
+        Route::get('/hr/performance', \App\Livewire\Performance\PerformanceDashboard::class)->name('hr.performance');
          
 
     // Employee self-service page
-        Route::get('/my/performance', EmployeePerformance::class)->name('employee.performance');
+        Route::get('/my/performance', \App\Livewire\Employee\EmployeePerformance::class)->name('employee.performance');
         
         });
 
@@ -470,7 +485,8 @@ Route::middleware(['web'])->group(function () {
         Route::get('/analytics/report-builder', ReportBuilder::class)->name('analytics.report-builder');
 
 //        notifications
-        Route::get('/notifications/center', NotificationCenter::class)->name('notifications.center');
+        
+        Route::get('/hr/notifications', HrNotificationCenter::class)->name('hr.notifications');
 
 //        access control
         Route::get('/access-control/dashboard', AccessControlDashboard::class)->name('access-control.dashboard');
@@ -479,5 +495,5 @@ Route::middleware(['web'])->group(function () {
         Route::get('/imports', DataImportExport::class)->name('imports');
     });
 
-
 });
+

@@ -98,14 +98,12 @@ class LoginForm extends Form
             // Redirect based on user role
             $user = Auth::user();
             return match($user->role) {
-                \App\Enum\UserRole::Employee => redirect()->route('employee.dashboard'),
-                \App\Enum\UserRole::HRManager,
-                \App\Enum\UserRole::HRAdmin,
-                \App\Enum\UserRole::HROfficer,
-                \App\Enum\UserRole::PayrollOfficer,
-                \App\Enum\UserRole::HRClark => redirect()->route('home'), // HR users now go to landing page
-                \App\Enum\UserRole::CompanyAdmin => redirect()->route('home'),
-                \App\Enum\UserRole::SuperAdmin => redirect()->route('admin.enhanced-dashboard'),
+                'employee', 'site_employee' => redirect()->route('employee.dashboard'),
+                'hr_manager', 'hr_admin', 'hr_officer', 'payroll_officer', 'hr_clark', 
+                'company_admin', 'data_master', 'company_data_master', 'operations_manager',
+                'finance_admin', 'finance_manager', 'finance_officer', 'site_supervisor',
+                'site_admin', 'site_manager', 'project_manager', 'leadership_team_member' => redirect()->route('home'),
+                'super_admin', 'admin' => redirect()->route('admin.dashboard'),
                 default => redirect()->route('home'),
             };
         }else{

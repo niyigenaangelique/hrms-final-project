@@ -237,19 +237,27 @@
             </div>
             <div class="hcom-form-body">
                 {{-- Flash messages --}}
-                @if(session()->has('success') || session()->has('error'))
+                @if(session()->has('success') || session()->has('error') || session()->has('info'))
                     <div class="hcom-flash" style="padding-top:16px;">
                         @if(session()->has('success')) <div class="flash-ok">{{ session('success') }}</div> @endif
                         @if(session()->has('error'))   <div class="flash-err">{{ session('error') }}</div> @endif
+                        @if(session()->has('info'))    <div style="background:#e3f2fd;color:#1565c0;padding:8px 12px;border-radius:6px;font-size:13px;">{{ session('info') }}</div> @endif
                     </div>
                 @endif
 
-                <form wire:submit="sendMessage">
+                {{-- Test simple button first --}}
+                <div style="margin-bottom:20px;">
+                    <button wire:click="sendMessage" class="btn-send">
+                        Test Click Method
+                    </button>
+                </div>
+
+                <form wire:submit.prevent="sendMessage">
                     <div class="hcom-fields">
                         {{-- Employee selection --}}
                         <div class="hcom-field">
                             <label>Send To</label>
-                            <select wire:model="selectedEmployee">
+                            <select wire:model.live="selectedEmployee">
                                 <option value="">Select Employee</option>
                                 @foreach($employees as $employee)
                                     <option value="{{ $employee->id }}">{{ $employee->first_name }} {{ $employee->last_name }} ({{ $employee->code }})</option>
@@ -261,20 +269,31 @@
                         {{-- Subject --}}
                         <div class="hcom-field">
                             <label>Subject</label>
-                            <input wire:model="subject" type="text" placeholder="Enter message subject"/>
+                            <input wire:model.live="subject" type="text" placeholder="Enter message subject"/>
                             @error('subject') <span class="hcom-field-error">{{ $message }}</span> @enderror
                         </div>
 
                         {{-- Message --}}
                         <div class="hcom-field">
                             <label>Message</label>
-                            <textarea wire:model="messageContent" placeholder="Type your message here..."></textarea>
+                            <textarea wire:model.live="messageContent" placeholder="Type your message here..."></textarea>
                             @error('messageContent') <span class="hcom-field-error">{{ $message }}</span> @enderror
                         </div>
 
-                        <button type="submit" class="btn-send">Send Message</button>
+                        <button type="submit" class="btn-send">
+                            Send Message
+                        </button>
                     </div>
                 </form>
+
+                {{-- Debug info --}}
+                <div style="margin-top:20px;padding:10px;background:#f5f5f5;border-radius:6px;font-size:12px;">
+                    <strong>Debug Info:</strong><br>
+                    selectedEmployee: {{ $selectedEmployee ?? 'null' }}<br>
+                    subject: {{ $subject ?? 'null' }}<br>
+                    messageContent: {{ $messageContent ?? 'null' }}<br>
+                    employees count: {{ $employees->count() }}
+                </div>
             </div>
         </div>
 

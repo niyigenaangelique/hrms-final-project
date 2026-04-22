@@ -518,7 +518,7 @@
             <div class="cm-fg">
                 <div class="cm-field cm-c2">
                     <label>Employee <span class="req">*</span></label>
-                    <select wire:model="employeeId">
+                    <select wire:model.live="employeeId">
                         <option value="">Select employee…</option>
                         @foreach($employees as $emp)
                             <option value="{{ $emp->id }}">{{ $emp->first_name . ' ' . $emp->last_name }}</option>

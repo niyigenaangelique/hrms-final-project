@@ -148,9 +148,14 @@ class EmployeeProfile extends Component
 
         $filePath = $this->documentFile->store('documents', 'public');
         
+        // Generate unique document code
+        $lastCode = Document::withTrashed()->max('code');
+        $lastNumber = $lastCode ? (int)str_replace('DOC-', '', $lastCode) : 0;
+        $newCode = 'DOC-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+        
         Document::create([
             'employee_id' => $this->employee->id,
-            'code' => 'DOC-' . str_pad(Document::query()->count() + 1, 3, '0', STR_PAD_LEFT),
+            'code' => $newCode,
             'name' => $this->documentName,
             'type' => $this->documentFile->getClientOriginalExtension(),
             'category' => 'General',

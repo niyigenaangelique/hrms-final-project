@@ -1037,7 +1037,27 @@
                     </div>
                     <div class="ep-stat-cell">
                         <div class="ep-stat-cell-label">Years of Service</div>
-                        <div class="ep-stat-cell-val">{{ $employee->join_date ? $employee->join_date->diffInYears(now()) : '0' }} yrs</div>
+                        <div class="ep-stat-cell-val">
+                            @if($employee->join_date)
+                                @php
+                                    $now = \Carbon\Carbon::now();
+                                    $years = intval($employee->join_date->diffInYears($now));
+                                    $totalMonths = intval($employee->join_date->diffInMonths($now));
+                                    $months = $totalMonths - ($years * 12);
+                                @endphp
+                               @if($years > 0)
+    {{ $years }} yr{{ $years != 1 ? 's' : '' }}
+@endif
+@if($years > 0 && $months > 0)
+    {{ $months }} month{{ $months != 1 ? 's' : '' }}
+@endif
+@if($years == 0 && $months > 0)
+    {{ $months }} month{{ $months != 1 ? 's' : '' }}
+@endif
+                            @else
+                                0 yrs
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1119,8 +1139,9 @@
                             <label>Contract Type</label>
                             <p>
                                 @php
-                                    $category = $contracts->first()->employee_category;
-                                    $categoryValue = $category instanceof \App\Enum\EmployeeCategory ? $category->value : $category;
+                                    $firstContract = $contracts->first();
+                                    $category = $firstContract ? $firstContract->employee_category : null;
+                                    $categoryValue = $category instanceof \App\Enum\EmployeeCategory ? $category->value : ($category ?? 'Not specified');
                                 @endphp
                                 @if($categoryValue === 'full_time')Full Time
                                 @elseif($categoryValue === 'part_time')Part Time

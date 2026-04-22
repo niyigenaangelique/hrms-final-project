@@ -494,7 +494,7 @@
             wire:click="$set('activeSection','reviews')">
         <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span>Reviews</span>
-        @if($performanceReviews && $performanceReviews->count())
+        @if(isset($performanceReviews) && $performanceReviews && $performanceReviews->count())
             <span class="pf-sidenav-badge">{{ $performanceReviews->count() }}</span>
         @endif
     </button>
@@ -505,7 +505,7 @@
             wire:click="$set('activeSection','goals')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
         <span>My Goals</span>
-        @if($goals && $goals->count())
+        @if(isset($goals) && $goals && $goals->count())
             <span class="pf-sidenav-badge">{{ $goals->count() }}</span>
         @endif
     </button>
@@ -548,8 +548,9 @@
                     <div class="pf-page-hero-title">My Performance</div>
                     <div class="pf-page-hero-sub">
                         {{ $employee->full_name ?? 'Employee' }} &nbsp;·&nbsp;
-                        {{ $employee->position->name ?? 'No Position' }} &nbsp;·&nbsp;
-                        {{ $employee->department->name ?? 'No Department' }}
+                        <strong>{{ \App\Models\Position::find($employee->position_id)?->name ?? 'No Position' }}</strong>
+                                    &nbsp;·&nbsp;
+                                    {{ \App\Models\Department::find($employee->department_id)?->name ?? 'No Department' }}
                     </div>
                 </div>
             </div>
@@ -567,24 +568,24 @@
         <div class="pf-stat-strip">
             <div class="pf-stat-cell">
                 <div class="pf-stat-cell-label">Reviews</div>
-                <div class="pf-stat-cell-val">{{ $performanceReviews ? $performanceReviews->count() : '0' }}</div>
+                <div class="pf-stat-cell-val">{{ isset($performanceReviews) && $performanceReviews ? $performanceReviews->count() : '0' }}</div>
                 <div class="pf-stat-cell-sub">Total completed</div>
             </div>
             <div class="pf-stat-cell">
                 <div class="pf-stat-cell-label">Active Goals</div>
-                <div class="pf-stat-cell-val">{{ $goals ? $goals->where('status','active')->count() : '0' }}</div>
+                <div class="pf-stat-cell-val">{{ isset($goals) && $goals ? $goals->where('status','active')->count() : '0' }}</div>
                 <div class="pf-stat-cell-sub">In progress</div>
             </div>
             <div class="pf-stat-cell">
                 <div class="pf-stat-cell-label">Avg Score</div>
                 <div class="pf-stat-cell-val">
-                    {{ $performanceReviews && $performanceReviews->count() ? number_format($performanceReviews->avg('overall_score'), 1) : '—' }}
+                    {{ isset($performanceReviews) && $performanceReviews && $performanceReviews->count() ? number_format($performanceReviews->avg('overall_score'), 1) : '—' }}
                 </div>
                 <div class="pf-stat-cell-sub">Out of 5.0</div>
             </div>
             <div class="pf-stat-cell">
                 <div class="pf-stat-cell-label">Achievements</div>
-                <div class="pf-stat-cell-val">{{ $achievements ? $achievements->count() : '0' }}</div>
+                <div class="pf-stat-cell-val">{{ isset($achievements) && $achievements ? $achievements->count() : '0' }}</div>
                 <div class="pf-stat-cell-sub">Earned badges</div>
             </div>
         </div>
@@ -596,8 +597,8 @@
     @if(($activeSection ?? 'overview') === 'overview')
 
     @php
-        $latestReview = $performanceReviews ? $performanceReviews->first() : null;
-        $avgScore = $performanceReviews && $performanceReviews->count() ? $performanceReviews->avg('overall_score') : 0;
+        $latestReview = isset($performanceReviews) && $performanceReviews ? $performanceReviews->first() : null;
+        $avgScore = isset($performanceReviews) && $performanceReviews && $performanceReviews->count() ? $performanceReviews->avg('overall_score') : 0;
         $pct = round(($avgScore / 5) * 100);
 
         $metrics = [];
@@ -660,7 +661,7 @@
                         <svg style="width:13px;height:13px;stroke:var(--blue);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                         Latest Review
                     </div>
-                    <button class="pf-btn pf-btn-ghost pf-btn-sm" wire:click="viewReview({{ $latestReview->id }})">View Details</button>
+                    <button class="pf-btn pf-btn-ghost pf-btn-sm" wire:click="viewReview('{{ $latestReview->id }}')">View Details</button>
                 </div>
                 <div style="padding:18px 20px;">
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
@@ -698,8 +699,8 @@
                         Add Goal
                     </button>
                 </div>
-                @if($goals && $goals->where('status','active')->count())
-                    @foreach($goals->where('status','active')->take(3) as $goal)
+                @if(isset($goals) && $goals && $goals->where('status','active')->count())
+                    @foreach(isset($goals) && $goals ? $goals->where('status','active')->take(3) : collect() as $goal)
                     <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
                         <div style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0;"></div>
                         <div style="flex:1;min-width:0;">
@@ -767,19 +768,19 @@
                 </div>
                 <div class="pf-quick-stat-row">
                     <span class="pf-quick-stat-row-label">Completed Goals</span>
-                    <span class="pf-quick-stat-row-val">{{ $goals ? $goals->where('status','completed')->count() : '0' }}</span>
+                    <span class="pf-quick-stat-row-val">{{ isset($goals) && $goals ? $goals->where('status','completed')->count() : '0' }}</span>
                 </div>
                 <div class="pf-quick-stat-row">
                     <span class="pf-quick-stat-row-label">On Hold</span>
-                    <span class="pf-quick-stat-row-val">{{ $goals ? $goals->where('status','on_hold')->count() : '0' }}</span>
+                    <span class="pf-quick-stat-row-val">{{ isset($goals) && $goals ? $goals->where('status','on_hold')->count() : '0' }}</span>
                 </div>
                 <div class="pf-quick-stat-row">
                     <span class="pf-quick-stat-row-label">Self Reviews</span>
-                    <span class="pf-quick-stat-row-val">{{ $performanceReviews ? $performanceReviews->where('type','Self Evaluation')->count() : '0' }}</span>
+                    <span class="pf-quick-stat-row-val">{{ isset($performanceReviews) && $performanceReviews ? $performanceReviews->where('type','Self Evaluation')->count() : '0' }}</span>
                 </div>
                 <div class="pf-quick-stat-row">
                     <span class="pf-quick-stat-row-label">Manager Reviews</span>
-                    <span class="pf-quick-stat-row-val">{{ $performanceReviews ? $performanceReviews->where('type','!=','Self Evaluation')->count() : '0' }}</span>
+                    <span class="pf-quick-stat-row-val">{{ isset($performanceReviews) && $performanceReviews ? $performanceReviews->where('type','!=','Self Evaluation')->count() : '0' }}</span>
                 </div>
             </div>
 
@@ -814,7 +815,7 @@
     <div class="pf-toolbar">
         <div>
             <div class="pf-toolbar-title">Performance Reviews</div>
-            <div class="pf-toolbar-sub">{{ $performanceReviews ? $performanceReviews->count() : '0' }} review(s) on record</div>
+            <div class="pf-toolbar-sub">{{ isset($performanceReviews) && $performanceReviews ? $performanceReviews->count() : '0' }} review(s) on record</div>
         </div>
         <div class="pf-toolbar-actions">
             <button class="pf-btn pf-btn-primary" wire:click="openSelfEvaluationForm">
@@ -824,7 +825,7 @@
         </div>
     </div>
 
-    @if($performanceReviews && $performanceReviews->count())
+    @if(isset($performanceReviews) && $performanceReviews && $performanceReviews->count())
         @foreach($performanceReviews as $review)
             @php
                 $score = $review->overall_score ?? 0;
@@ -930,7 +931,7 @@
     <div class="pf-toolbar">
         <div>
             <div class="pf-toolbar-title">My Goals</div>
-            <div class="pf-toolbar-sub">{{ $goals ? $goals->count() : '0' }} goal(s) — {{ $goals ? $goals->where('status','active')->count() : '0' }} active</div>
+            <div class="pf-toolbar-sub">{{ isset($goals) && $goals ? $goals->count() : '0' }} goal(s) — {{ isset($goals) && $goals ? $goals->where('status','active')->count() : '0' }} active</div>
         </div>
         <div class="pf-toolbar-actions">
             <button class="pf-btn pf-btn-primary" wire:click="openGoalForm">
@@ -940,8 +941,8 @@
         </div>
     </div>
 
-    @if($goals && $goals->count())
-        @foreach($goals as $goal)
+    @if(isset($goals) && $goals && $goals->count())
+        @foreach(isset($goals) && $goals ? $goals : collect() as $goal)
             @php
                 $gs = $goal->status ?? 'active';
                 $pct = $goal->progress_percentage ?? 0;
@@ -1010,20 +1011,20 @@
                     <div style="display:flex;gap:8px;">
                         @if($gs !== 'completed')
                         <button class="pf-btn pf-btn-green pf-btn-sm"
-                                wire:click="updateGoalStatus({{ $goal->id }}, 'completed')">
+                                wire:click="updateGoalStatus('{{ $goal->id }}', 'completed')">
                             <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                             Mark Done
                         </button>
                         @endif
                         @if($gs === 'active')
                         <button class="pf-btn pf-btn-outline pf-btn-sm"
-                                wire:click="updateGoalStatus({{ $goal->id }}, 'on_hold')">
+                                wire:click="updateGoalStatus('{{ $goal->id }}', 'on_hold')">
                             Pause
                         </button>
                         @endif
                         @if($gs === 'on_hold')
                         <button class="pf-btn pf-btn-ghost pf-btn-sm"
-                                wire:click="updateGoalStatus({{ $goal->id }}, 'active')">
+                                wire:click="updateGoalStatus('{{ $goal->id }}', 'active')">
                             Resume
                         </button>
                         @endif
@@ -1087,7 +1088,7 @@
 </div>{{-- /pf-shell --}}
 
 {{-- ══ REVIEW DETAIL MODAL ══════════════════════════════════ --}}
-@if($selectedReview)
+@if(isset($selectedReview) && $selectedReview)
 <div class="pf-modal-bg" wire:click.self="closeModals">
     <div class="pf-modal pf-modal-wide">
         <div class="pf-modal-hd">
@@ -1180,7 +1181,7 @@
 @endif
 
 {{-- ══ GOAL DETAIL MODAL ════════════════════════════════════ --}}
-@if($selectedGoal)
+@if(isset($selectedGoal) && $selectedGoal)
 <div class="pf-modal-bg" wire:click.self="closeModals">
     <div class="pf-modal">
         <div class="pf-modal-hd">
@@ -1190,33 +1191,33 @@
             </button>
         </div>
         <div class="pf-modal-body">
-            <div style="font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">{{ $selectedGoal->title }}</div>
-            <p style="font-size:13.5px;color:var(--ink3);font-weight:500;line-height:1.6;margin-bottom:18px;">{{ $selectedGoal->description }}</p>
+            <div style="font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px;">{{ isset($selectedGoal) && $selectedGoal ? $selectedGoal->title : '' }}</div>
+            <p style="font-size:13.5px;color:var(--ink3);font-weight:500;line-height:1.6;margin-bottom:18px;">{{ isset($selectedGoal) && $selectedGoal ? $selectedGoal->description : '' }}</p>
             <div class="pf-modal-info-grid">
                 <div class="pf-modal-info-item">
                     <label>Status</label>
-                    <p>{{ ucfirst(str_replace('_',' ',$selectedGoal->status ?? '—')) }}</p>
+                    <p>{{ isset($selectedGoal) && $selectedGoal ? ($selectedGoal->status ?? '—') : '' }}</p>
                 </div>
                 <div class="pf-modal-info-item">
                     <label>Priority</label>
-                    <p>{{ ucfirst($selectedGoal->priority ?? '—') }}</p>
+                    <p>{{ isset($selectedGoal) && $selectedGoal ? ($selectedGoal->priority ?? '—') : '' }}</p>
                 </div>
                 <div class="pf-modal-info-item">
                     <label>Start Date</label>
-                    <p>{{ $selectedGoal->start_date ? \Carbon\Carbon::parse($selectedGoal->start_date)->format('M d, Y') : '—' }}</p>
+                    <p>{{ isset($selectedGoal) && $selectedGoal && $selectedGoal->start_date ? \Carbon\Carbon::parse($selectedGoal->start_date)->format('M d, Y') : '—' }}</p>
                 </div>
                 <div class="pf-modal-info-item">
                     <label>Target Date</label>
-                    <p>{{ $selectedGoal->end_date ? \Carbon\Carbon::parse($selectedGoal->end_date)->format('M d, Y') : '—' }}</p>
+                    <p>{{ isset($selectedGoal) && $selectedGoal && $selectedGoal->end_date ? \Carbon\Carbon::parse($selectedGoal->end_date)->format('M d, Y') : '—' }}</p>
                 </div>
             </div>
             <div class="pf-goal-progress-wrap" style="margin-top:8px;">
                 <div class="pf-goal-progress-top">
                     <span>Progress</span>
-                    <span>{{ $selectedGoal->progress_percentage ?? 0 }}%</span>
+                    <span>{{ isset($selectedGoal) && $selectedGoal ? ($selectedGoal->progress_percentage ?? 0) : 0 }}%</span>
                 </div>
                 <div class="pf-goal-bar">
-                    <div class="pf-goal-bar-fill" style="width:{{ $selectedGoal->progress_percentage ?? 0 }}%"></div>
+                    <div class="pf-goal-bar-fill" style="width:{{ isset($selectedGoal) && $selectedGoal ? ($selectedGoal->progress_percentage ?? 0) : 0 }}%"></div>
                 </div>
             </div>
         </div>
@@ -1228,7 +1229,7 @@
 @endif
 
 {{-- ══ CREATE GOAL MODAL ════════════════════════════════════ --}}
-@if($showGoalForm)
+@if(isset($showGoalForm) && $showGoalForm)
 <div class="pf-modal-bg" wire:click.self="closeModals">
     <div class="pf-modal">
         <div class="pf-modal-hd">

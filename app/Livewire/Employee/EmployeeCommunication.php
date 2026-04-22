@@ -14,8 +14,8 @@ class EmployeeCommunication extends Component
 {
     public $employee;
     public $messageList;
-    public $hrUsers;
-    public $selectedHrUser = null;
+    public $availableUsers;
+    public $selectedUser = null;
     public $subject = '';
     public $messageContent = '';
     public $unreadCount = 0;
@@ -52,7 +52,7 @@ class EmployeeCommunication extends Component
             ]);
         }
 
-        $this->loadHrUsers();
+        $this->loadAvailableUsers();
         $this->loadMessages();
         
         // Auto-select first conversation if available
@@ -64,9 +64,17 @@ class EmployeeCommunication extends Component
         }
     }
 
-    public function loadHrUsers()
+    public function loadAvailableUsers()
     {
-        $this->hrUsers = User::whereIn('role', ['HRManager', 'SuperAdmin', 'CompanyAdmin'])
+        // Load all users that employees can message: HR staff, admins, and other employees
+        $this->availableUsers = User::where(function($query) {
+                $query->whereIn('role', ['admin', 'hr_manager', 'super_admin'])
+                      ->orWhere('role', 'employee');
+            })
+            ->where('id', '!=', Auth::id()) // Don't include current user
+            ->orderByRaw("CASE WHEN role IN ('admin', 'hr_manager', 'super_admin') THEN 0 ELSE 1 END")
+            ->orderBy('first_name')
+            ->orderBy('last_name')
             ->get();
     }
 
@@ -89,9 +97,9 @@ class EmployeeCommunication extends Component
     {
         $this->validate();
 
-        // Check if a conversation is selected
+        // Debug: Check if conversation is selected
         if (!$this->selectedConversation) {
-            session()->flash('error', 'Please select a person to message first.');
+            session()->flash('error', 'Please select a person to message first. SelectedConversation: ' . ($this->selectedConversation ?? 'null'));
             return;
         }
 
@@ -134,8 +142,14 @@ class EmployeeCommunication extends Component
 
     public function selectConversation($personId)
     {
+        // Debug: Log the selection
+        \Log::info('selectConversation called with personId: ' . $personId);
         $this->selectedConversation = $personId;
+        \Log::info('selectedConversation set to: ' . $this->selectedConversation);
         $this->loadConversationMessages($personId);
+        
+        // Close the users drawer after selection
+        $this->dispatch('closeUsersDrawer');
     }
 
     public function loadConversationMessages($personId)

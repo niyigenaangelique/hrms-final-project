@@ -107,6 +107,16 @@ class PayslipEntry extends Model
             'cbhi' => 'decimal:2',
             'employer_contribution' => 'decimal:2',
             'net_pay' => 'decimal:2',
+            
+            // Additional deductions and benefits
+            'loan_deduction' => 'decimal:2',
+            'advance_deduction' => 'decimal:2',
+            'other_deductions' => 'decimal:2',
+            'housing_allowance' => 'decimal:2',
+            'transport_allowance' => 'decimal:2',
+            'meal_allowance' => 'decimal:2',
+            'other_benefits' => 'decimal:2',
+            
             'effective_tax_rate' => 'decimal:2', // Added calculation metadata
 
             'is_locked' => 'boolean',

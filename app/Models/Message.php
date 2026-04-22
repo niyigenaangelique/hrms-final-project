@@ -45,6 +45,7 @@ class Message extends Model
         'message',
         'status',
         'is_read',
+        'approval_status',
         'created_by',
         'updated_by',
         'deleted_by',

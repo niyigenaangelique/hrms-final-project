@@ -45,9 +45,10 @@ class PayrollEntryManager extends Component
     public string $approvalStatus = 'pending';
 
     // ── Constants ────────────────────────────────────────────
+    // Use enum values for consistency
     const STATUSES = [
         'Entered' => 'Entered',
-        'Approved' => 'Approved',
+        'Approved' => 'Approved', 
         'Posted' => 'Posted',
         'Cancelled' => 'Cancelled',
         'Rejected' => 'Rejected',
@@ -56,6 +57,7 @@ class PayrollEntryManager extends Component
     const APPROVAL_STATUSES = [
         'initiated' => 'Initiated',
         'pending' => 'Pending',
+        'under_review' => 'Under Review',
         'approved' => 'Approved',
         'rejected' => 'Rejected',
         'cancelled' => 'Cancelled',
@@ -123,17 +125,40 @@ class PayrollEntryManager extends Component
     // ── Pre-fill rates when employee is selected ─────────────────
     public function updatedEmployeeId($value): void
     {
-        if ($value) {
-            $emp = \App\Models\Employee::find($value);
-            if ($emp) {
-                $this->dailyRate = (string) ($emp->daily_rate ?: 0);
-                $this->overtimeHourRate = (string) ($emp->hourly_rate ?: 0);
+        try {
+            if ($value) {
+                $emp = \App\Models\Employee::find($value);
+                if ($emp) {
+                    // Use daily_rate if set, otherwise calculate from basic_salary
+                    $dailyRate = $emp->daily_rate ?: $emp->calculateDailyRate();
+                    $hourlyRate = $emp->hourly_rate ?: $emp->calculateHourlyRate();
+                    
+                    $this->dailyRate = (string) $dailyRate;
+                    $this->overtimeHourRate = (string) $hourlyRate;
+                    
+                    \Log::info('Employee rates loaded', [
+                        'employeeId' => $value,
+                        'employeeName' => $emp->first_name . ' ' . $emp->last_name,
+                        'dailyRate' => $this->dailyRate,
+                        'hourlyRate' => $this->overtimeHourRate,
+                        'basicSalary' => $emp->basic_salary,
+                        'storedDailyRate' => $emp->daily_rate,
+                        'storedHourlyRate' => $emp->hourly_rate,
+                    ]);
+                } else {
+                    \Log::warning('Employee not found', ['employeeId' => $value]);
+                }
+            } else {
+                $this->dailyRate = '';
+                $this->overtimeHourRate = '';
             }
-        } else {
-            $this->dailyRate = '';
-            $this->overtimeHourRate = '';
+            $this->recalculate();
+        } catch (\Exception $e) {
+            \Log::error('PayrollEntry updatedEmployeeId failed', [
+                'exception' => $e->getMessage(),
+                'employeeId' => $value,
+            ]);
         }
-        $this->recalculate();
     }
 
     // ── Auto-calculate fields ─────────────────────────────
@@ -156,18 +181,30 @@ class PayrollEntryManager extends Component
 
     private function recalculate(): void
     {
-        $daily = (float) ($this->dailyRate ?: 0);
-        $days = (float) ($this->workDays ?: 0);
-        $otRate = (float) ($this->overtimeHourRate ?: 0);
-        $otHours = (float) ($this->overtimeHoursWorked ?: 0);
+        try {
+            $daily = (float) ($this->dailyRate ?: 0);
+            $days = (float) ($this->workDays ?: 0);
+            $otRate = (float) ($this->overtimeHourRate ?: 0);
+            $otHours = (float) ($this->overtimeHoursWorked ?: 0);
 
-        $workPay = round($daily * $days, 2);
-        $otTotal = round($otRate * $otHours, 2);
-        $total = round($workPay + $otTotal, 2);
+            $workPay = round($daily * $days, 2);
+            $otTotal = round($otRate * $otHours, 2);
+            $total = round($workPay + $otTotal, 2);
 
-        $this->workDaysPay = (string) $workPay;
-        $this->overtimeTotalAmount = (string) $otTotal;
-        $this->totalAmount = (string) $total;
+            $this->workDaysPay = (string) $workPay;
+            $this->overtimeTotalAmount = (string) $otTotal;
+            $this->totalAmount = (string) $total;
+        } catch (\Exception $e) {
+            \Log::error('PayrollEntry recalculate failed', [
+                'exception' => $e->getMessage(),
+                'data' => [
+                    'dailyRate' => $this->dailyRate,
+                    'workDays' => $this->workDays,
+                    'overtimeHourRate' => $this->overtimeHourRate,
+                    'overtimeHoursWorked' => $this->overtimeHoursWorked,
+                ]
+            ]);
+        }
     }
 
     // ── Code generator ───────────────────────────────────────
@@ -200,12 +237,12 @@ class PayrollEntryManager extends Component
         $this->overtimeHoursWorked = (string) ($r->overtime_hours_worked ?? '');
         $this->overtimeTotalAmount = (string) ($r->overtime_total_amount ?? '');
         $this->totalAmount = (string) ($r->total_amount ?? '');
-        $this->status = $this->enumVal($r->status) ?: 'draft';
+        $this->status = $this->enumVal($r->status) ?: 'Entered';
         $this->approvalStatus = $this->enumVal($r->approval_status) ?: 'pending';
         $this->showModal = true;
     }
 
-    public function openView(int $id): void
+    public function openView(string $id): void
     {
         $this->viewRecord = PayrollEntry::with(['employee', 'payrollMonth', 'payslipEntry', 'paymentHistories'])
             ->findOrFail($id);
@@ -224,7 +261,7 @@ class PayrollEntryManager extends Component
         $this->resetForm();
     }
 
-    public function confirmDelete(int $id): void
+    public function confirmDelete(string $id): void
     {
         $this->deletingId = $id;
         $this->showDelete = true;
@@ -242,8 +279,8 @@ class PayrollEntryManager extends Component
             $r = PayrollEntry::findOrFail($this->deletingId);
 
             // Guard: cannot delete if payslip or payments exist
-            $hasPayslip = $r->payslipEntry()->exists() ?? false;
-            $hasPayments = $r->paymentHistories()->exists() ?? false;
+            $hasPayslip = $r->payslipEntry()->exists();
+            $hasPayments = $r->paymentHistories()->exists();
 
             if ($hasPayslip || $hasPayments) {
                 session()->flash('error', 'Cannot delete: this entry has linked payslip or payment records.');
@@ -284,6 +321,18 @@ class PayrollEntryManager extends Component
     // ── Save ─────────────────────────────────────────────────
     public function save(): void
     {
+        \Log::info('PayrollEntry save attempt', [
+            'editingId' => $this->editingId,
+            'code' => $this->code,
+            'payrollMonthId' => $this->payrollMonthId,
+            'employeeId' => $this->employeeId,
+            'dailyRate' => $this->dailyRate,
+            'workDays' => $this->workDays,
+            'totalAmount' => $this->totalAmount,
+            'status' => $this->status,
+            'approvalStatus' => $this->approvalStatus,
+        ]);
+        
         try {
             $this->recalculate();
             $this->validate();
@@ -301,7 +350,28 @@ class PayrollEntryManager extends Component
                     'approvalStatus' => $this->approvalStatus,
                 ]
             ]);
-            session()->flash('error', 'Validation failed. Please check all required fields.');
+            
+            // Get first validation error for user feedback
+            $errors = $e->errors();
+            $firstError = 'Validation failed. Please check all required fields.';
+            if (!empty($errors)) {
+                $firstField = array_key_first($errors);
+                $firstError = $errors[$firstField][0] ?? $firstError;
+            }
+            
+            session()->flash('error', $firstError);
+            return;
+        } catch (\Exception $e) {
+            \Log::error('PayrollEntry save exception', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => [
+                    'code' => $this->code,
+                    'payrollMonthId' => $this->payrollMonthId,
+                    'employeeId' => $this->employeeId,
+                ]
+            ]);
+            session()->flash('error', 'An error occurred: ' . $e->getMessage());
             return;
         }
 
@@ -335,12 +405,21 @@ class PayrollEntryManager extends Component
             session()->flash('success', $msg);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('PayrollEntry save failed', [
+            \Log::error('PayrollEntry database save failed', [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'data' => $data ?? []
             ]);
-            session()->flash('error', 'Save failed: ' . $e->getMessage());
+            
+            // Provide more specific error messages
+            $errorMessage = 'Save failed: ' . $e->getMessage();
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                $errorMessage = 'This entry code already exists. Please use a different code.';
+            } elseif (strpos($e->getMessage(), 'foreign key constraint') !== false) {
+                $errorMessage = 'Invalid reference: Please check if the selected employee and payroll month exist.';
+            }
+            
+            session()->flash('error', $errorMessage);
         }
     }
 
@@ -378,7 +457,7 @@ class PayrollEntryManager extends Component
     public function render()
     {
         $records = PayrollEntry::query()
-            ->with(['employee', 'payrollMonth'])
+            ->with(['employee', 'payrollMonth', 'payslipEntry', 'paymentHistories'])
             ->when($this->search, fn($q) => $q->where(function ($q2) {
                 $q2->where('code', 'like', "%{$this->search}%")
                     ->orWhereHas(

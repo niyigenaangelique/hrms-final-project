@@ -21,7 +21,9 @@ class EmployeeContracts extends Component
     public function mount()
     {
         $user = Auth::user();
-        $this->employee = Employee::where('user_id', $user->id)->first();
+        $this->employee = Employee::where('user_id', $user->id)
+            ->with(['position', 'department'])
+            ->first();
         
         if ($this->employee) {
             $this->loadContracts();
@@ -51,29 +53,6 @@ class EmployeeContracts extends Component
     {
         $this->selectedContract = Contract::with(['position'])
             ->find($contractId);
-    }
-
-    public function downloadContract($contractId)
-    {
-        try {
-            $contract = Contract::where('employee_id', $this->employee->id)
-                ->find($contractId);
-            
-            if (!$contract) {
-                session()->flash('error', 'Contract not found.');
-                return;
-            }
-
-            // Store the contract ID in session for the download route
-            session(['download_contract_id' => $contractId]);
-            
-            // Return JavaScript to trigger the download
-            $this->dispatch('downloadContract', contractId: $contractId);
-            
-        } catch (\Exception $e) {
-            \Log::error('Contract download failed: ' . $e->getMessage());
-            session()->flash('error', 'Failed to download contract. Please try again.');
-        }
     }
 
     public function render()

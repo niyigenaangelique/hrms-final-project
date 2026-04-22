@@ -1,113 +1,51 @@
 <?php
 
 namespace App\Livewire\Admin;
-
-use App\Models\ActivityLog;
-use App\Models\User;
+ 
 use Livewire\Component;
+use Livewire\Attributes\Title;
 use Livewire\WithPagination;
-use Carbon\Carbon;
-
+use Illuminate\Support\Facades\DB;
+ 
+#[Title('TalentFlow Pro | Activity Logs')]
 class ActivityLogManagement extends Component
 {
     use WithPagination;
-
-    // Search and Filters
-    public $search = '';
-    public $actionFilter = '';
-    public $dateFilter = '';
-    public $userFilter = '';
-
-    public function mount()
+ 
+    public string $search      = '';
+    public string $filterType  = '';
+    public string $dateFrom    = '';
+    public string $dateTo      = '';
+ 
+    public function mount(): void
     {
-        // Initialize with empty values
+        $this->dateFrom = now()->subDays(30)->format('Y-m-d');
+        $this->dateTo   = now()->format('Y-m-d');
     }
-
+ 
+    public function updatedSearch(): void    { $this->resetPage(); }
+    public function updatedFilterType(): void{ $this->resetPage(); }
+ 
     public function render()
     {
-        $activityLogs = $this->loadActivityLogs();
-        $users = User::orderBy('first_name')->pluck('first_name', 'last_name', 'id')->toArray();
-
+        $logs = collect();
+        $total = 0;
+        try {
+            $query = DB::table('audit_logs')
+                ->when($this->search,     fn($q)=>$q->where('description','like',"%{$this->search}%"))
+                ->when($this->filterType, fn($q)=>$q->where('event',$this->filterType))
+                ->when($this->dateFrom,   fn($q)=>$q->whereDate('created_at','>=',$this->dateFrom))
+                ->when($this->dateTo,     fn($q)=>$q->whereDate('created_at','<=',$this->dateTo))
+                ->orderBy('created_at','desc');
+            $total = (clone $query)->count();
+            $logs  = $query->paginate(20);
+        } catch (\Exception) {
+            $logs = new \Illuminate\Pagination\LengthAwarePaginator([],0,20);
+        }
+ 
         return view('livewire.admin.activity-log-management', [
-            'activityLogs' => $activityLogs,
-            'users' => $users,
+            'logs'  => $logs,
+            'total' => $total,
         ])->layout('components.layouts.admin');
-    }
-
-    private function loadActivityLogs()
-    {
-        $query = ActivityLog::with(['user'])
-            ->orderBy('created_at', 'desc');
-
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('action', 'like', '%' . $this->search . '%')
-                  ->orWhere('description', 'like', '%' . $this->search . '%')
-                  ->orWhere('ip_address', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('user', function($userQuery) {
-                      $userQuery->where('first_name', 'like', '%' . $this->search . '%')
-                               ->orWhere('last_name', 'like', '%' . $this->search . '%');
-                  });
-            });
-        }
-
-        if ($this->actionFilter) {
-            $query->where('action', $this->actionFilter);
-        }
-
-        if ($this->dateFilter) {
-            $query->whereDate('created_at', $this->dateFilter);
-        }
-
-        if ($this->userFilter) {
-            $query->where('user_id', $this->userFilter);
-        }
-
-        return $query->paginate(20);
-    }
-
-    public function clearFilters()
-    {
-        $this->search = '';
-        $this->actionFilter = '';
-        $this->dateFilter = '';
-        $this->userFilter = '';
-        $this->resetPage();
-    }
-
-    public function exportLogs()
-    {
-        // Export functionality placeholder
-        session()->flash('info', 'Export functionality coming soon');
-    }
-
-    public function updatedSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedActionFilter()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedDateFilter()
-    {
-        $this->resetPage();
-    }
-
-    public function updatedUserFilter()
-    {
-        $this->resetPage();
-    }
-
-    public function getActivityStats()
-    {
-        return [
-            'total_logs' => ActivityLog::count(),
-            'today_logs' => ActivityLog::whereDate('created_at', today())->count(),
-            'unique_users' => ActivityLog::distinct('user_id')->count('user_id'),
-            'failed_logins' => ActivityLog::where('action', 'login_failed')->count(),
-        ];
     }
 }

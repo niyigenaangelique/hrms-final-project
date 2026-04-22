@@ -57,18 +57,21 @@ class PaymentHistoryManager extends Component
     ];
 
     const STATUSES = [
-        'pending'   => 'Pending',
-        'completed' => 'Completed',
-        'failed'    => 'Failed',
-        'reversed'  => 'Reversed',
+        'pending'    => 'Pending',
+        'processing' => 'Processing',
+        'completed'  => 'Completed',
+        'failed'     => 'Failed',
+        'cancelled'  => 'Cancelled',
+        'refunded'   => 'Refunded',
     ];
 
     const APPROVAL_STATUSES = [
-        'initiated'  => 'Initiated',
-        'pending'    => 'Pending',
-        'approved'   => 'Approved',
-        'rejected'   => 'Rejected',
-        'cancelled'  => 'Cancelled',
+        'initiated'   => 'Initiated',
+        'pending'     => 'Pending',
+        'under_review' => 'Under Review',
+        'approved'    => 'Approved',
+        'rejected'    => 'Rejected',
+        'cancelled'   => 'Cancelled',
     ];
 
     const CURRENCIES = ['RWF', 'USD', 'EUR', 'GBP', 'KES', 'UGX', 'TZS'];
@@ -80,8 +83,8 @@ class PaymentHistoryManager extends Component
             'code'                 => ['required', 'string', 'max:50',
                                        Rule::unique('payment_histories', 'code')->ignore($this->editingId)],
             'employeeId'           => ['required', 'string', 'exists:employees,id'],
-            'payrollEntryId'       => ['nullable', 'string'],
-            'payslipEntryId'       => ['nullable', 'string'],
+            'payrollEntryId'       => ['nullable', 'exists:payroll_entries,id'],
+            'payslipEntryId'       => ['nullable', 'exists:payslip_entries,id'],
             'paymentMethod'        => ['required', Rule::in(array_keys(self::PAYMENT_METHODS))],
             'transactionReference' => ['nullable', 'string', 'max:150'],
             'amountPaid'           => ['required', 'numeric', 'min:0'],
@@ -222,7 +225,24 @@ class PaymentHistoryManager extends Component
     // ── Save ─────────────────────────────────────────────────
     public function save(): void
     {
-        $this->validate();
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('PaymentHistory validation failed', [
+                'errors' => $e->errors(),
+                'data' => [
+                    'code' => $this->code,
+                    'employeeId' => $this->employeeId,
+                    'paymentMethod' => $this->paymentMethod,
+                    'amountPaid' => $this->amountPaid,
+                    'paymentDate' => $this->paymentDate,
+                    'status' => $this->status,
+                    'approvalStatus' => $this->approvalStatus,
+                ]
+            ]);
+            session()->flash('error', 'Validation failed. Please check all required fields.');
+            return;
+        }
 
         DB::beginTransaction();
         try {
@@ -298,7 +318,7 @@ class PaymentHistoryManager extends Component
     public function render()
     {
         $records = PaymentHistory::query()
-            ->with(['employee', 'payrollEntry'])
+            ->with(['employee', 'payrollEntry', 'payslipEntry'])
             ->when($this->search, fn($q) => $q->where(function ($q2) {
                 $q2->where('code', 'like', "%{$this->search}%")
                    ->orWhere('transaction_reference', 'like', "%{$this->search}%")

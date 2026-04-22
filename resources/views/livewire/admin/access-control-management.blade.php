@@ -19,7 +19,7 @@
     gap: 20px;
     height: 100vh;
     overflow-y: auto;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: transparent;
 }
 
 @keyframes fadeSlideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }

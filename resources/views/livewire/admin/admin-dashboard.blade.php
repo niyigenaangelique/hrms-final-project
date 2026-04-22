@@ -1,366 +1,1059 @@
-<div class="p-6">
-    <!-- Header -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p class="text-gray-600 mt-2">Manage users, roles, and system access</p>
+<div class="ep-root">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@700;800&display=swap');
+
+/* ══ Tokens Sync ══════════════════════════════════════════ */
+.ep-root {
+    --blue:     #3B6FE8;
+    --blue-2:   #2755CC;
+    --blue-3:   #1A3FA8;
+    --blue-lt:  rgba(59,111,232,0.08);
+    --blue-mid: rgba(59,111,232,0.16);
+    --blue-brd: rgba(59,111,232,0.22);
+    --bg:       #F0F4FA;
+    --white:    #FFFFFF;
+    --ink:      #0F1629;
+    --ink2:     #2D3356;
+    --ink3:     #6B7094;
+    --ink4:     #A8ADCA;
+    --border:   rgba(15,22,41,0.08);
+    --shadow:   0 2px 12px rgba(59,111,232,0.07);
+    --shadow-md:0 6px 28px rgba(59,111,232,0.12);
+    --r:        12px;
+    --r-lg:     18px;
+    font-family:'DM Sans',-apple-system,sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--ink);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+/* Reusing some specific dashboard styles but with new token values */
+/* ══ Dashboard Specific Utilities ══════════════════════════ */
+.dash-card { background: var(--white); border-radius: var(--r-lg); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; }
+.dash-card-hd { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.dash-card-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 800; color: var(--ink); }
+.dash-tab-nav { display: flex; gap: 4px; background: var(--blue-lt); padding: 5px; border-radius: 14px; margin-bottom: 24px; overflow-x: auto; }
+.dash-tab-btn { padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--ink3); cursor: pointer; border: none; background: transparent; transition: all 0.2s; white-space: nowrap; }
+.dash-tab-btn.active { background: var(--blue); color: #fff; box-shadow: 0 4px 12px rgba(59,111,232,0.2); }
+
+.adm-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 700; border: none; cursor: pointer; transition: all .15s; font-family: 'DM Sans', sans-serif; }
+.adm-btn-outline { background: #fff; border: 1px solid var(--border); color: var(--ink2); }
+.adm-btn-primary { background: var(--blue); color: #fff; }
+.adm-btn-ghost { background: var(--blue-lt); color: var(--blue); }
+
+.adm-table { width: 100%; border-collapse: collapse; }
+.adm-table th { padding: 12px 16px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--ink4); text-align: left; border-bottom: 1px solid var(--border); }
+.adm-table td { padding: 14px 16px; font-size: 13.5px; color: var(--ink2); border-bottom: 1px solid var(--border); }
+
+.adm-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+.ab-indigo { background: var(--blue-lt); color: var(--blue); }
+.ab-green { background: rgba(18,183,106,0.1); color: #12B76A; }
+
+.adm-search { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+.adm-search input { border: none; background: transparent; outline: none; font-size: 13.5px; color: var(--ink); width: 100%; }
+
+.perm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.perm-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
+.perm-card-hd { padding: 14px 18px; background: #f8fafc; border-bottom: 1px solid var(--border); font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 800; color: var(--ink); }
+.perm-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-bottom: 1px solid #f1f5f9; }
+.perm-toggle { width: 38px; height: 20px; border-radius: 100px; background: #e2e8f0; position: relative; border: none; cursor: pointer; transition: background 0.3s; }
+.perm-toggle.on { background: #12B76A; }
+.perm-toggle::after { content: ''; position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; left: 3px; top: 3px; transition: transform 0.3s; }
+.perm-toggle.on::after { transform: translateX(18px); }
+
+.log-row { padding: 12px 18px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 12px; align-items: flex-start; }
+.log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.log-desc { font-size: 13px; color: var(--ink2); line-height: 1.5; }
+.log-time { font-size: 11px; color: var(--ink4); font-family: monospace; }
+</style>
+hrink: 0;
+}
+
+.adm-admin-name { font-size: 12.5px; font-weight: 700; color: var(--ct); }
+.adm-admin-role { font-size: 10.5px; color: var(--ct3); }
+
+/* ══ MAIN CONTENT ═════════════════════════════════════════ */
+.adm-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 100vh;
+}
+
+.adm-topbar {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--cb);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--c1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+}
+
+.adm-topbar-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ct);
+    letter-spacing: -.02em;
+}
+
+.adm-topbar-sub {
+    font-size: 12px;
+    color: var(--ct3);
+    margin-top: 1px;
+}
+
+.adm-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.adm-content { padding: 28px; display: flex; flex-direction: column; gap: 22px; }
+
+/* ══ FLASH ════════════════════════════════════════════════ */
+.dash-tile { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow); }
+.dash-tile-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--blue-lt); color: var(--blue); }
+.dash-tile-val { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800; color: var(--ink); }
+.dash-table { width: 100%; border-collapse: collapse; }
+.dash-table th { text-align: left; padding: 10px 16px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--ink4); border-bottom: 1px solid var(--border); }
+.dash-table td { padding: 12px 16px; font-size: 13.5px; color: var(--ink2); border-bottom: 1px solid var(--border); }
+
+
+/* ══ NOTICE BOX ═══════════════════════════════════════════ */
+.adm-notice { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: var(--r); font-size: 12.5px; font-weight: 600; }
+.adm-notice svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; margin-top: 1px; }
+.adm-notice-warn { background: var(--amber-lt); border: 1px solid rgba(245,158,11,0.25); color: #FCD34D; }
+.adm-notice-info { background: var(--blue-lt);  border: 1px solid var(--blue-brd); color: #93C5FD; }
+
+/* ══ RESPONSIVE ═══════════════════════════════════════════ */
+@media (max-width: 1024px) { .adm-tiles { grid-template-columns: 1fr 1fr; } .perm-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px)  { .adm-sidebar { display: none; } .adm-grid2,.adm-grid3 { grid-template-columns: 1fr; } .adm-view-grid { grid-template-columns: 1fr; } }
+</style>
+
+{{-- ══ SIDEBAR ════════════════════════════════════════════ --}}
+{{-- Unified Tab Navigation for Console --}}
+<div class="dash-tab-nav">
+    @foreach($tabs as $key => $tab)
+        <button class="dash-tab-btn {{ $activeTab === $key ? 'active' : '' }}" wire:click="setTab('{{ $key }}')">
+            {{ $tab['label'] }}
+        </button>
+    @endforeach
+</div>
+
+<div class="dash-content-area">
+
+    {{-- Topbar --}}
+    <div class="ep-hero" style="margin-bottom:20px;">
+        <div class="ep-hero-cover" style="height:60px;"></div>
+        <div class="ep-hero-body" style="padding:0 20px 15px; margin-top:-15px;">
+            <div class="ep-hero-title-wrap">
+                <div class="ep-hero-icon" style="width:48px;height:48px;border-radius:12px;">
+                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                    <div class="ep-hero-title" style="font-size:18px;">Admin Console</div>
+                    <div class="ep-hero-sub">System Management & Security Operations</div>
+                </div>
             </div>
-            <div class="flex space-x-3">
-                <button wire:click="$toggle('showCreateModal')" class="admin-btn-primary">
-                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                    </svg>
-                    Add New User
+            @if($activeTab === 'users')
+                <button class="ep-btn btn-primary" href="{{ route('admin.users') }}" wire:navigate>
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    Go to User Manager
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="admin-dashboard-card stats-card-gradient-1 p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 stat-icon">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-white opacity-90">Total Users</p>
-                    <p class="text-2xl font-semibold text-white">{{ $users->total() }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="admin-dashboard-card stats-card-gradient-2 p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 stat-icon">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-white opacity-90">Active Users</p>
-                    <p class="text-2xl font-semibold text-white">{{ $users->count() }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="admin-dashboard-card stats-card-gradient-3 p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 stat-icon">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-white opacity-90">Admin/HR</p>
-                    <p class="text-2xl font-semibold text-white">{{ $users->whereIn('role', ['SuperAdmin', 'HRManager', 'Manager'])->count() }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="admin-dashboard-card stats-card-gradient-4 p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 stat-icon">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-white opacity-90">Employees</p>
-                    <p class="text-2xl font-semibold text-white">{{ $users->where('role', 'Employee')->count() }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Department Statistics -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Department Overview</h3>
-        
-        @if(empty($departmentStats['department_distribution']))
-            <div class="text-center py-8">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">No Department Data</h3>
-                <p class="mt-1 text-sm text-gray-500">Department charts will appear here once employees are assigned to departments.</p>
-            </div>
-        @else
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Department Distribution Chart -->
-                <div class="analytics-card">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3">Department Distribution</h4>
-                    <div class="space-y-3">
-                        @foreach($departmentStats['department_distribution'] as $dept)
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ $dept['name'] }}</span>
-                                <div class="flex items-center">
-                                    <div class="progress-bar">
-                                        <div class="progress-bar-fill progress-purple" style="width: {{ $dept['percentage'] }}%"></div>
-                                    </div>
-                                    <span class="ml-2 text-sm font-medium text-gray-900 dark:text-white">{{ $dept['employee_count'] }}</span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Department Summary -->
-                <div class="analytics-card">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3">Summary</h4>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="text-center p-4 bg-blue-50 rounded-lg">
-                            <div class="text-2xl font-bold text-blue-600">{{ $departmentStats['total_departments'] }}</div>
-                            <div class="text-sm text-blue-600">Total Departments</div>
-                        </div>
-                        <div class="text-center p-4 bg-green-50 rounded-lg">
-                            <div class="text-2xl font-bold text-green-600">{{ $departmentStats['active_departments'] }}</div>
-                            <div class="text-sm text-green-600">Active Departments</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
-    </div>
-
-    <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
-                <input type="text" wire:model.live="search" placeholder="Search by name or email..." class="filter-input">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Role</label>
-                <select wire:model.live="roleFilter" class="filter-select">
-                    <option value="">All Roles</option>
-                    <option value="SuperAdmin">Super Admin</option>
-                    <option value="HRManager">HR Manager</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Employee">Employee</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Users Table -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">User Management</h3>
-            
-            @if($users->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="admin-table min-w-full">
-                        <thead>
-                            <tr>
-                                <th class="px-6 py-3 text-left">User</th>
-                                <th class="px-6 py-3 text-left">Contact</th>
-                                <th class="px-6 py-3 text-left">Role</th>
-                                <th class="px-6 py-3 text-left">Created</th>
-                                <th class="px-6 py-3 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($users as $user)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10">
-                                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                                                    <span class="text-sm font-medium text-white">{{ strtoupper(substr($user->first_name, 0, 1) . substr($user->last_name, 0, 1)) }}</span>
-                                                </div>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900">{{ $user->full_name }}</div>
-                                                <div class="text-sm text-gray-500">@{{ str_replace(' ', '', strtolower($user->first_name . $user->last_name)) }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ $user->email }}</div>
-                                        <div class="text-sm text-gray-500">{{ $user->phone_number }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full text-white {{ $user->role === 'SuperAdmin' ? 'role-badge-superadmin' : ($user->role === 'HRManager' ? 'role-badge-hrmanager' : ($user->role === 'Manager' ? 'role-badge-manager' : 'role-badge-employee')) }}">
-                                            {{ $user->role }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $user->created_at->format('M d, Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex space-x-2">
-                                            <button wire:click="editUser({{ $user->id }})" class="text-blue-600 hover:text-blue-900">Edit</button>
-                                            @if($user->email !== 'angelbrenna20@gmail.com')
-                                                <button wire:click="deleteUser({{ $user->id }})" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination -->
-                <div class="mt-4">
-                    {{ $users->links() }}
-                </div>
-            @else
-                <div class="text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No users found</h3>
-                    <p class="mt-1 text-sm text-gray-500">Get started by creating a new user.</p>
-                </div>
             @endif
         </div>
     </div>
 
-    <!-- Create User Modal -->
-    @if($showCreateModal)
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Create New User</h3>
-                    
-                    <form wire:submit="createUser">
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">First Name</label>
-                                    <input type="text" wire:model="first_name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    @error('first_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    <div class="adm-content">
+
+        {{-- Flash --}}
+        @if(session()->has('success'))
+            <div class="adm-flash adm-flash-ok">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session()->has('error'))
+            <div class="adm-flash adm-flash-err">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- ▸ TAB: USERS ─────────────────────────────────── --}}
+        @if($activeTab === 'users')
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div class="dash-tile">
+                <div class="dash-tile-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                <div><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--ink4);letter-spacing:.05em;">Total Users</div><div class="dash-tile-val">{{ $totalUsers }}</div></div>
+            </div>
+            <div class="dash-tile">
+                <div class="dash-tile-icon" style="background:rgba(124,58,237,0.1);color:#7C3AED;"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--ink4);letter-spacing:.05em;">Admins</div><div class="dash-tile-val">{{ $adminCount }}</div></div>
+            </div>
+            <div class="dash-tile">
+                <div class="dash-tile-icon" style="background:rgba(14,165,233,0.1);color:#0EA5E9;"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>
+                <div><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--ink4);letter-spacing:.05em;">HR Managers</div><div class="dash-tile-val">{{ $hrCount }}</div></div>
+            </div>
+            <div class="dash-tile">
+                <div class="dash-tile-icon" style="background:rgba(16,185,129,0.1);color:#10B981;"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                <div><div style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--ink4);letter-spacing:.05em;">Employees</div><div class="dash-tile-val">{{ $empCount }}</div></div>
+            </div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-card-hd">
+                <div>
+                    <div class="dash-card-title">User Registry</div>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <div class="ep-search" style="min-width:220px; background:#f8fafc;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <input wire:model.live.debounce.300ms="search" placeholder="Search accounts...">
+                    </div>
+                </div>
+            </div>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead><tr>
+                        <th>User</th><th>Email</th><th>Username</th><th>Phone</th><th>Role</th><th>Actions</th>
+                    </tr></thead>
+                    <tbody>
+                    @forelse($users as $u)
+                        @php
+                            $init = strtoupper(substr($u->first_name??'',0,1).substr($u->last_name??'',0,1));
+                            $full = trim(($u->first_name??'').' '.($u->last_name??''));
+                            $r    = $u->role ?? 'employee';
+                            $rCls = match($r) { 'admin'=>'ab-indigo','hr_manager'=>'ab-cyan', default=>'ab-green' };
+                        @endphp
+                        <tr>
+                            <td>
+                                <div class="adm-user-cell">
+                                    <div class="adm-av">{{ $init }}</div>
+                                    <div>
+                                        <div class="adm-user-name">{{ $full }}</div>
+                                        <div class="adm-user-meta"><span class="adm-code">{{ $u->code }}</span></div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Last Name</label>
-                                    <input type="text" wire:model="last_name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    @error('last_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Email</label>
-                                <input type="email" wire:model="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                @error('email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                                <input type="tel" wire:model="phone_number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                @error('phone_number') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Role</label>
-                                <select wire:model="role" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    <option value="">Select Role</option>
-                                    <option value="SuperAdmin">Super Admin</option>
-                                    <option value="HRManager">HR Manager</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Employee">Employee</option>
+                            </td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ct2);">{{ $u->email }}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);">@{{ $u->username }}</td>
+                            <td style="font-size:12.5px;color:var(--ct3);">{{ $u->phone_number ?: '—' }}</td>
+                            <td>
+                                <select class="adm-role-sel" wire:change="assignRole('{{ $u->id }}', $event.target.value)">
+                                    @foreach($roles as $val => $label)
+                                        <option value="{{ $val }}" @selected($u->role === $val)>{{ $label }}</option>
+                                    @endforeach
                                 </select>
-                                @error('role') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Password</label>
-                                <div class="flex space-x-2">
-                                    <input type="text" wire:model="password" class="admin-form-input" required>
-                                    <button type="button" wire:click="generatePassword" class="admin-btn-secondary">Generate</button>
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:4px;">
+                                    <button class="adm-btn adm-btn-ghost adm-btn-sm" wire:click="openView('{{ $u->id }}')" title="View">
+                                        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                    <button class="adm-btn adm-btn-outline adm-btn-sm" wire:click="openEdit('{{ $u->id }}')" title="Edit">
+                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                    <button class="adm-btn adm-btn-amber adm-btn-sm" wire:click="viewCredentials('{{ $u->id }}')" title="Credentials">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                                    </button>
+                                    <button class="adm-btn adm-btn-purple adm-btn-sm" wire:click="openResetModal('{{ $u->id }}')" title="Reset Password">
+                                        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                                    </button>
+                                    <button class="adm-btn adm-btn-danger adm-btn-sm" wire:click="confirmDelete('{{ $u->id }}')" title="Delete">
+                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                                    </button>
                                 </div>
-                                @error('password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6">
+                            <div class="adm-empty">
+                                <div class="adm-empty-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                                <div class="adm-empty-ttl">No users found</div>
+                                <div class="adm-empty-sub">{{ $search || $filterRole ? 'Adjust your filters.' : 'Create the first account.' }}</div>
                             </div>
+                        </td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($users->hasPages())
+                <div class="adm-pager">
+                    <div class="adm-pager-info">{{ $users->firstItem() }}–{{ $users->lastItem() }} of {{ $users->total() }}</div>
+                    {{ $users->links() }}
+                </div>
+            @endif
+        </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                                <input type="text" wire:model="password_confirmation" class="admin-form-input" required>
-                                @error('password_confirmation') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+        {{-- ▸ TAB: ROLES ──────────────────────────────────── --}}
+        @elseif($activeTab === 'roles')
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+            @foreach($roles as $rVal => $rLabel)
+            @php
+                $rIcon = match($rVal) { 'admin' => 'shield', 'hr_manager' => 'briefcase', default => 'user' };
+                $rColor = match($rVal) { 'admin' => 'var(--indigo)', 'hr_manager' => 'var(--cyan)', default => 'var(--green)' };
+                $rCount = \App\Models\User::where('role', $rVal)->count();
+            @endphp
+            <div class="adm-card">
+                <div class="adm-card-hd" style="border-left:3px solid {{ $rColor }};">
+                    <div>
+                        <div class="adm-card-title" style="color:{{ $rColor }};">{{ $rLabel }}</div>
+                        <div class="adm-card-sub">{{ $rCount }} user{{ $rCount !== 1 ? 's' : '' }} assigned</div>
+                    </div>
+                    <span class="adm-badge {{ match($rVal) { 'admin'=>'ab-indigo','hr_manager'=>'ab-cyan',default=>'ab-green' } }}">
+                        {{ strtoupper($rVal) }}
+                    </span>
+                </div>
+                <div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.10em;color:var(--ct3);margin-bottom:4px;">Capabilities</div>
+                    @foreach(self::DEFAULT_PERMISSIONS[$rVal] ?? [] as $perm => $allowed)
+                        @if($allowed)
+                        <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ct2);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ $rColor }}" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            {{ collect(self::ALL_PERMISSIONS)->flatten()->get($perm, $perm) }}
+                        </div>
+                        @endif
+                    @endforeach
+                </div>
+                <div style="padding:12px 16px;border-top:1px solid var(--cb);">
+                    <button class="adm-btn adm-btn-outline adm-btn-sm" wire:click="setTab('permissions')" style="width:100%;justify-content:center;">
+                        Edit Permissions →
+                    </button>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <div class="adm-card">
+            <div class="adm-card-hd">
+                <div><div class="adm-card-title">Users by Role</div><div class="adm-card-sub">Quick overview of all assignments</div></div>
+            </div>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead><tr><th>User</th><th>Email</th><th>Current Role</th><th>Assign Role</th></tr></thead>
+                    <tbody>
+                    @foreach(\App\Models\User::orderBy('role')->orderBy('first_name')->get() as $u)
+                        @php $r = $u->role ?? 'employee'; $rCls = match($r) { 'admin'=>'ab-indigo','hr_manager'=>'ab-cyan', default=>'ab-green' }; @endphp
+                        <tr>
+                            <td>
+                                <div class="adm-user-cell">
+                                    <div class="adm-av">{{ strtoupper(substr($u->first_name??'',0,1).substr($u->last_name??'',0,1)) }}</div>
+                                    <div class="adm-user-name">{{ trim(($u->first_name??'').' '.($u->last_name??'')) }}</div>
+                                </div>
+                            </td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ $u->email }}</td>
+                            <td><span class="adm-badge {{ $rCls }}">{{ $roles[$r] ?? $r }}</span></td>
+                            <td>
+                                <select class="adm-role-sel" wire:change="assignRole('{{ $u->id }}', $event.target.value)">
+                                    @foreach($roles as $val => $label)
+                                        <option value="{{ $val }}" @selected($u->role === $val)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- ▸ TAB: PERMISSIONS ────────────────────────────── --}}
+        @elseif($activeTab === 'permissions')
+
+        <div class="adm-notice adm-notice-info">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Toggle permissions per role then click Save. Changes take effect on the user's next request.
+        </div>
+
+        <div class="perm-grid">
+            @foreach($roles as $rVal => $rLabel)
+            @php $rColor = match($rVal) { 'admin' => 'var(--indigo)', 'hr_manager' => 'var(--cyan)', default => 'var(--green)' }; @endphp
+            <div class="perm-card">
+                <div class="perm-card-hd">
+                    <div class="perm-card-title" style="color:{{ $rColor }};">{{ $rLabel }}</div>
+                    <button class="adm-btn adm-btn-outline adm-btn-sm" wire:click="resetPermissions('{{ $rVal }}')">Reset</button>
+                </div>
+                @foreach($allPermissions as $category => $perms)
+                <div class="perm-category">
+                    <div class="perm-category-name">{{ ucfirst($category) }}</div>
+                    @foreach($perms as $permKey => $permLabel)
+                    <div class="perm-row">
+                        <div class="perm-label">{{ $permLabel }}</div>
+                        <button
+                            class="perm-toggle {{ ($permissions[$rVal][$permKey] ?? false) ? 'on' : '' }}"
+                            wire:click="togglePermission('{{ $rVal }}', '{{ $permKey }}')"
+                            title="{{ ($permissions[$rVal][$permKey] ?? false) ? 'Enabled — click to disable' : 'Disabled — click to enable' }}"
+                        ></button>
+                    </div>
+                    @endforeach
+                </div>
+                @endforeach
+            </div>
+            @endforeach
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button class="adm-btn adm-btn-outline" wire:click="resetPermissions('admin'); resetPermissions('hr_manager'); resetPermissions('employee')">Reset All</button>
+            <button class="adm-btn adm-btn-primary" wire:click="savePermissions">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                Save Permissions
+            </button>
+        </div>
+
+        {{-- ▸ TAB: ACTIVITY LOG ───────────────────────────── --}}
+        @elseif($activeTab === 'activity')
+
+        <div class="adm-card">
+            <div class="adm-card-hd">
+                <div><div class="adm-card-title">Activity Log</div><div class="adm-card-sub">Real-time system events</div></div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <div class="adm-search">
+                        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <input wire:model.live.debounce.300ms="auditSearch" placeholder="Search events…">
+                    </div>
+                    <input type="date" wire:model.live="auditDateFrom" style="background:var(--c4);border:1px solid var(--cb);border-radius:var(--r);padding:7px 11px;color:var(--ct);font-family:'Outfit',sans-serif;font-size:13px;outline:none;">
+                    <input type="date" wire:model.live="auditDateTo" style="background:var(--c4);border:1px solid var(--cb);border-radius:var(--r);padding:7px 11px;color:var(--ct);font-family:'Outfit',sans-serif;font-size:13px;outline:none;">
+                </div>
+            </div>
+            @if($activityLogs->isEmpty())
+                <div class="adm-empty">
+                    <div class="adm-empty-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                    <div class="adm-empty-ttl">No activity logs found</div>
+                    <div class="adm-empty-sub">Events will appear here as users interact with the system.</div>
+                </div>
+            @else
+                @foreach($activityLogs as $log)
+                @php
+                    $ev    = $log->event ?? 'system';
+                    $color = match(true) {
+                        str_contains($ev,'create') => 'green',
+                        str_contains($ev,'update') => 'blue',
+                        str_contains($ev,'delete') => 'red',
+                        str_contains($ev,'login')  => 'purple',
+                        str_contains($ev,'logout') => 'amber',
+                        default                    => 'gray',
+                    };
+                @endphp
+                <div class="log-row">
+                    <div class="log-dot log-dot-{{ $color }}"></div>
+                    <div style="flex:1;">
+                        <span class="log-event-badge adm-badge ab-{{ $color === 'gray' ? 'gray' : $color }}">{{ $ev }}</span>
+                        <div class="log-desc">{{ $log->description ?? 'System event' }}</div>
+                    </div>
+                    <div class="log-time">{{ \Carbon\Carbon::parse($log->created_at)->format('M d, H:i') }}</div>
+                </div>
+                @endforeach
+                @if(method_exists($activityLogs,'hasPages') && $activityLogs->hasPages())
+                    <div class="adm-pager">
+                        <div class="adm-pager-info">{{ $activityLogs->firstItem() }}–{{ $activityLogs->lastItem() }} of {{ $activityLogs->total() }}</div>
+                        {{ $activityLogs->links() }}
+                    </div>
+                @endif
+            @endif
+        </div>
+
+        {{-- ▸ TAB: AUDIT TRAIL ────────────────────────────── --}}
+        @elseif($activeTab === 'audit')
+
+        <div class="adm-notice adm-notice-info">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            The audit trail records all sensitive actions including role changes, deletions, and permission updates.
+        </div>
+
+        <div class="adm-card">
+            <div class="adm-card-hd">
+                <div><div class="adm-card-title">Audit Trail</div><div class="adm-card-sub">Immutable record of all administrative actions</div></div>
+                <div style="display:flex;gap:10px;">
+                    <div class="adm-search">
+                        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <input wire:model.live.debounce.300ms="auditSearch" placeholder="Search audit records…">
+                    </div>
+                    <select class="adm-sel" wire:model.live="auditFilterType">
+                        <option value="">All Events</option>
+                        <option value="create">Create</option>
+                        <option value="update">Update</option>
+                        <option value="delete">Delete</option>
+                        <option value="login">Login</option>
+                        <option value="logout">Logout</option>
+                    </select>
+                </div>
+            </div>
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead><tr><th>Event</th><th>Description</th><th>User</th><th>IP Address</th><th>Timestamp</th></tr></thead>
+                    <tbody>
+                    @if($activityLogs->isEmpty())
+                        <tr><td colspan="5">
+                            <div class="adm-empty">
+                                <div class="adm-empty-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+                                <div class="adm-empty-ttl">No audit records</div>
+                                <div class="adm-empty-sub">Add the spatie/laravel-activitylog package to populate this trail.</div>
                             </div>
-                        </div>
+                        </td></tr>
+                    @else
+                        @foreach($activityLogs as $log)
+                        @php
+                            $ev = $log->event ?? 'system';
+                            $eCls = match(true) { str_contains($ev,'create')=>'ab-green',str_contains($ev,'delete')=>'ab-red',str_contains($ev,'update')=>'ab-blue',str_contains($ev,'login')=>'ab-purple', default=>'ab-gray' };
+                        @endphp
+                        <tr>
+                            <td><span class="adm-badge {{ $eCls }}">{{ strtoupper($ev) }}</span></td>
+                            <td style="max-width:280px;white-space:normal;line-height:1.5;">{{ $log->description ?? '—' }}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;">{{ $log->causer_id ?? '—' }}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);">{{ $log->properties['ip'] ?? '—' }}</td>
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ct3);">{{ \Carbon\Carbon::parse($log->created_at)->format('Y-m-d H:i:s') }}</td>
+                        </tr>
+                        @endforeach
+                    @endif
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                        <div class="mt-6 flex justify-end space-x-3">
-                            <button type="button" wire:click="$toggle('showCreateModal')" class="admin-btn-secondary">Cancel</button>
-                            <button type="submit" class="admin-btn-primary">Create User</button>
+        {{-- ▸ TAB: SESSIONS ───────────────────────────────── --}}
+        @elseif($activeTab === 'sessions')
+
+        <div class="adm-tiles" style="grid-template-columns:1fr 1fr 1fr;">
+            <div class="adm-tile at-blue">
+                <div class="adm-tile-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+                <div><div class="adm-tile-lbl">Active Sessions</div><div class="adm-tile-val">{{ $sessions->count() }}</div><div class="adm-tile-sub">right now</div></div>
+            </div>
+            <div class="adm-tile at-green">
+                <div class="adm-tile-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div><div class="adm-tile-lbl">Current Session</div><div class="adm-tile-val">You</div><div class="adm-tile-sub">protected</div></div>
+            </div>
+            <div class="adm-tile at-indigo">
+                <div class="adm-tile-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                <div><div class="adm-tile-lbl">Timeout</div><div class="adm-tile-val">{{ $sessionTimeoutMinutes }}m</div><div class="adm-tile-sub">auto-expire</div></div>
+            </div>
+        </div>
+
+        <div class="adm-card">
+            <div class="adm-card-hd">
+                <div><div class="adm-card-title">Active Sessions</div><div class="adm-card-sub">All currently authenticated sessions</div></div>
+                <button class="adm-btn adm-btn-danger" wire:click="terminateAllSessions" wire:confirm="Terminate all other sessions?">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Kill All Others
+                </button>
+            </div>
+            @if($sessions->isEmpty())
+                <div class="adm-empty">
+                    <div class="adm-empty-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div>
+                    <div class="adm-empty-ttl">No sessions found</div>
+                    <div class="adm-empty-sub">Sessions appear here when users are logged in via database driver.</div>
+                </div>
+            @else
+                @foreach($sessions as $sess)
+                <div class="sess-row">
+                    <div class="sess-icon">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <div class="sess-ip">{{ $sess->ip_address ?? '—' }}</div>
+                        <div class="sess-time">Last active: {{ $sess->last_activity_human ?? '—' }}</div>
+                    </div>
+                    @if($sess->is_current ?? false)
+                        <span class="sess-current">Current</span>
+                    @else
+                        <button class="adm-btn adm-btn-danger adm-btn-sm" wire:click="terminateSession('{{ $sess->id }}')"
+                                wire:confirm="Terminate this session?">
+                            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            Terminate
+                        </button>
+                    @endif
+                </div>
+                @endforeach
+            @endif
+        </div>
+
+        {{-- ▸ TAB: PASSWORD RESET ─────────────────────────── --}}
+        @elseif($activeTab === 'password')
+
+        <div class="adm-grid2" style="align-items:start;">
+
+            <div class="adm-card">
+                <div class="adm-card-hd">
+                    <div><div class="adm-card-title">Select User</div><div class="adm-card-sub">Search and pick an account to reset</div></div>
+                </div>
+                <div style="padding:14px 16px;border-bottom:1px solid var(--cb);">
+                    <div class="adm-search">
+                        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                        <input wire:model.live.debounce.300ms="resetSearch" placeholder="Search by name or email…">
+                    </div>
+                </div>
+                <div class="adm-table-wrap">
+                    <table class="adm-table">
+                        <thead><tr><th>User</th><th>Role</th><th>Action</th></tr></thead>
+                        <tbody>
+                        @forelse($resetUsers as $u)
+                            @php $r = $u->role ?? 'employee'; $rCls = match($r) { 'admin'=>'ab-indigo','hr_manager'=>'ab-cyan', default=>'ab-green' }; @endphp
+                            <tr>
+                                <td>
+                                    <div class="adm-user-cell">
+                                        <div class="adm-av">{{ strtoupper(substr($u->first_name??'',0,1).substr($u->last_name??'',0,1)) }}</div>
+                                        <div>
+                                            <div class="adm-user-name">{{ trim(($u->first_name??'').' '.($u->last_name??'')) }}</div>
+                                            <div style="font-size:11px;color:var(--ct3);font-family:'JetBrains Mono',monospace;">{{ $u->email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="adm-badge {{ $rCls }}">{{ $roles[$r] ?? $r }}</span></td>
+                                <td>
+                                    <button class="adm-btn adm-btn-purple adm-btn-sm" wire:click="openResetModal('{{ $u->id }}')">
+                                        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                                        Reset
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="3"><div class="adm-empty" style="padding:24px;">
+                                <div class="adm-empty-sub">No users match your search.</div>
+                            </div></td></tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @if($resetUsers->hasPages())
+                    <div class="adm-pager">{{ $resetUsers->links() }}</div>
+                @endif
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="adm-card">
+                    <div class="adm-card-hd">
+                        <div><div class="adm-card-title">How It Works</div></div>
+                    </div>
+                    <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+                        @foreach(['Select a user from the list','Click Reset and enter a new password or generate one','The new password is hashed and saved immediately','Share the plain password securely with the employee'] as $i => $step)
+                        <div style="display:flex;align-items:flex-start;gap:10px;">
+                            <div style="width:22px;height:22px;border-radius:50%;background:var(--indigo-lt);border:1px solid rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#A5B4FC;flex-shrink:0;">{{ $i+1 }}</div>
+                            <div style="font-size:13px;color:var(--ct2);padding-top:2px;">{{ $step }}</div>
                         </div>
-                    </form>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="adm-notice adm-notice-warn">
+                    <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Passwords are one-way hashed. The plain text is shown only once immediately after reset. Store it securely.
+                </div>
+            </div>
+
+        </div>
+
+        {{-- ▸ TAB: SECURITY SETTINGS ─────────────────────── --}}
+        @elseif($activeTab === 'security')
+
+        <div class="adm-grid2" style="align-items:start;">
+
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="adm-card">
+                    <div class="adm-card-hd"><div><div class="adm-card-title">Authentication</div><div class="adm-card-sub">Login and session controls</div></div></div>
+
+                    <div class="sec-toggle-row">
+                        <div>
+                            <div class="sec-toggle-label">Two-Factor Authentication</div>
+                            <div class="sec-toggle-desc">Require 2FA for all admin accounts</div>
+                        </div>
+                        <button class="sec-toggle {{ $twoFactorEnabled ? 'on' : '' }}" wire:click="$toggle('twoFactorEnabled')"></button>
+                    </div>
+                    <div class="sec-toggle-row">
+                        <div>
+                            <div class="sec-toggle-label">Session Timeout</div>
+                            <div class="sec-toggle-desc">Auto-logout after inactivity</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input type="number" class="sec-number-input" wire:model.defer="sessionTimeoutMinutes" min="5" max="1440">
+                            <span style="font-size:12px;color:var(--ct3);">min</span>
+                            <button class="sec-toggle {{ $sessionTimeoutEnabled ? 'on' : '' }}" wire:click="$toggle('sessionTimeoutEnabled')"></button>
+                        </div>
+                    </div>
+                    <div class="sec-toggle-row">
+                        <div>
+                            <div class="sec-toggle-label">Login Audit</div>
+                            <div class="sec-toggle-desc">Log all login attempts to audit trail</div>
+                        </div>
+                        <button class="sec-toggle {{ $loginAuditEnabled ? 'on' : '' }}" wire:click="$toggle('loginAuditEnabled')"></button>
+                    </div>
+                    <div class="sec-toggle-row">
+                        <div>
+                            <div class="sec-toggle-label">Max Login Attempts</div>
+                            <div class="sec-toggle-desc">Lock account after failed attempts</div>
+                        </div>
+                        <input type="number" class="sec-number-input" wire:model.defer="maxLoginAttempts" min="3" max="20">
+                    </div>
+                </div>
+
+                <div class="adm-card">
+                    <div class="adm-card-hd"><div><div class="adm-card-title">IP Whitelist</div><div class="adm-card-sub">Restrict admin access by IP</div></div>
+                        <button class="sec-toggle {{ $ipWhitelistEnabled ? 'on' : '' }}" wire:click="$toggle('ipWhitelistEnabled')"></button>
+                    </div>
+                    <div style="padding:16px;">
+                        <div class="adm-field">
+                            <label>Allowed IP Addresses</label>
+                            <textarea wire:model.defer="ipWhitelist" placeholder="One IP per line&#10;192.168.1.1&#10;10.0.0.0/24" style="min-height:100px;{{ !$ipWhitelistEnabled ? 'opacity:.4;pointer-events:none;' : '' }}"></textarea>
+                            <div class="adm-field-hint">CIDR notation supported. Leave empty to allow all IPs.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="adm-card">
+                    <div class="adm-card-hd"><div><div class="adm-card-title">Password Policy</div><div class="adm-card-sub">Enforce strong passwords</div></div></div>
+
+                    <div class="sec-toggle-row">
+                        <div>
+                            <div class="sec-toggle-label">Password Expiry</div>
+                            <div class="sec-toggle-desc">Force password change periodically</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input type="number" class="sec-number-input" wire:model.defer="passwordExpiryDays" min="30" max="365">
+                            <span style="font-size:12px;color:var(--ct3);">days</span>
+                            <button class="sec-toggle {{ $passwordExpiry ? 'on' : '' }}" wire:click="$toggle('passwordExpiry')"></button>
+                        </div>
+                    </div>
+                    @foreach(['Minimum 8 characters','Uppercase + lowercase required','At least one number','At least one special character'] as $policy)
+                    <div class="sec-toggle-row">
+                        <div class="sec-toggle-label">{{ $policy }}</div>
+                        <button class="sec-toggle on"></button>
+                    </div>
+                    @endforeach
+                </div>
+
+                <div class="adm-card">
+                    <div class="adm-card-hd"><div><div class="adm-card-title">Security Overview</div></div></div>
+                    <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+                        @foreach([
+                            ['2FA', $twoFactorEnabled, 'Two-factor authentication'],
+                            ['Session', $sessionTimeoutEnabled, 'Session timeout active'],
+                            ['Audit', $loginAuditEnabled, 'Login auditing enabled'],
+                            ['IP', $ipWhitelistEnabled, 'IP whitelist enforced'],
+                            ['PwExp', $passwordExpiry, 'Password expiry policy'],
+                        ] as [$tag, $on, $label])
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div style="font-size:13px;color:var(--ct2);">{{ $label }}</div>
+                            <span class="adm-badge {{ $on ? 'ab-green' : 'ab-red' }}">{{ $on ? 'ON' : 'OFF' }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <button class="adm-btn adm-btn-primary" wire:click="saveSecuritySettings" style="align-self:flex-end;">
+                    <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                    Save Security Settings
+                </button>
+            </div>
+
+        </div>
+        @endif
+
+    </div>{{-- /adm-content --}}
+</main>
+
+{{-- ══════════════════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════════════════ --}}
+
+{{-- CREATE / EDIT USER --}}
+@if($showModal)
+<div class="adm-modal-bg" wire:click.self="closeModal">
+    <div class="adm-modal adm-modal-lg">
+        <div class="adm-modal-hd">
+            <div class="adm-modal-hd-left">
+                <div class="adm-modal-hd-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                <div>
+                    <div class="adm-modal-title">{{ $editingId ? 'Edit Account' : 'New Employee Account' }}</div>
+                    <div class="adm-modal-sub">{{ $editingId ? 'Update account details' : 'Create system login credentials' }}</div>
+                </div>
+            </div>
+            <button class="adm-modal-close" wire:click="closeModal"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="adm-modal-body">
+            <div class="adm-grid2">
+                <div class="adm-field">
+                    <label>Account Code <span class="req">*</span></label>
+                    <input type="text" wire:model="code" placeholder="USR-00001" style="text-transform:uppercase;">
+                </div>
+                <div class="adm-field">
+                    <label>Role <span class="req">*</span></label>
+                    <select wire:model="role">
+                        @foreach($roles as $val => $label)
+                            <option value="{{ $val }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="adm-section-lbl">Personal Information</div>
+            <div class="adm-grid3">
+                <div class="adm-field">
+                    <label>First Name <span class="req">*</span></label>
+                    <input type="text" wire:model.live="firstName" placeholder="Jean">
+                </div>
+                <div class="adm-field">
+                    <label>Middle Name</label>
+                    <input type="text" wire:model="middleName" placeholder="Optional">
+                </div>
+                <div class="adm-field">
+                    <label>Last Name <span class="req">*</span></label>
+                    <input type="text" wire:model.live="lastName" placeholder="Uwimana">
+                </div>
+            </div>
+            <div class="adm-section-lbl">Login Credentials</div>
+            <div class="adm-grid2">
+                <div class="adm-field">
+                    <label>Username <span class="req">*</span></label>
+                    <input type="text" wire:model="username" placeholder="jean.uwimana">
+                    <div class="adm-field-hint">Auto-suggested from name</div>
+                </div>
+                <div class="adm-field">
+                    <label>Email <span class="req">*</span></label>
+                    <input type="email" wire:model="email" placeholder="jean@company.rw">
+                </div>
+            </div>
+            <div class="adm-grid2">
+                <div class="adm-field">
+                    <label>Password {{ $editingId ? '' : '*' }}</label>
+                    <div class="adm-pw-wrap">
+                        <input type="password" id="admPwInput" wire:model="password" placeholder="{{ $editingId ? 'Leave blank to keep current' : 'Min. 6 characters' }}">
+                        <button type="button" class="adm-pw-eye" onclick="admTogglePw('admPwInput','admEyeIco')">
+                            <svg viewBox="0 0 24 24" id="admEyeIco"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="adm-field">
+                    <label>Phone Number</label>
+                    <input type="text" wire:model="phoneNumber" placeholder="+250 7XX XXX XXX">
                 </div>
             </div>
         </div>
-    @endif
-
-    <!-- Edit User Modal -->
-    @if($showEditModal && $selectedUser)
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Edit User</h3>
-                    
-                    <form wire:submit="updateUser">
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">First Name</label>
-                                    <input type="text" wire:model="first_name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    @error('first_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Last Name</label>
-                                    <input type="text" wire:model="last_name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    @error('last_name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Email</label>
-                                <input type="email" wire:model="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                @error('email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                                <input type="tel" wire:model="phone_number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                @error('phone_number') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Role</label>
-                                <select wire:model="role" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    <option value="">Select Role</option>
-                                    <option value="SuperAdmin">Super Admin</option>
-                                    <option value="HRManager">HR Manager</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Employee">Employee</option>
-                                </select>
-                                @error('role') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-
-                        <div class="mt-6 flex justify-end space-x-3">
-                            <button type="button" wire:click="$toggle('showEditModal')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update User</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="adm-modal-footer">
+            <button class="adm-btn adm-btn-outline" wire:click="closeModal">Cancel</button>
+            <button class="adm-btn adm-btn-primary" wire:click="saveUser" wire:loading.attr="disabled">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                <span wire:loading.remove wire:target="saveUser">{{ $editingId ? 'Update Account' : 'Create Account' }}</span>
+                <span wire:loading wire:target="saveUser">Saving…</span>
+            </button>
         </div>
-    @endif
-
-    <!-- Success Message -->
-    @if(session()->has('success'))
-        <div class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <!-- Error Message -->
-    @if(session()->has('error'))
-        <div class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
-            {{ session('error') }}
-        </div>
-    @endif
+    </div>
 </div>
+@endif
+
+{{-- VIEW USER --}}
+@if($showView && $viewRecord)
+<div class="adm-modal-bg" wire:click.self="closeView">
+    <div class="adm-modal">
+        <div class="adm-modal-hd">
+            <div class="adm-modal-hd-left">
+                <div class="adm-modal-hd-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+                <div>
+                    <div class="adm-modal-title">{{ trim(($viewRecord->first_name??'').' '.($viewRecord->last_name??'')) }}</div>
+                    <div class="adm-modal-sub">{{ $viewRecord->code }}</div>
+                </div>
+            </div>
+            <button class="adm-modal-close" wire:click="closeView"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="adm-modal-body">
+            @php
+                $vInit  = strtoupper(substr($viewRecord->first_name??'',0,1).substr($viewRecord->last_name??'',0,1));
+                $vR     = $viewRecord->role ?? 'employee';
+                $vRCls  = match($vR) { 'admin'=>'ab-indigo','hr_manager'=>'ab-cyan', default=>'ab-green' };
+            @endphp
+            <div class="adm-av adm-av-lg">{{ $vInit }}</div>
+            <div class="adm-view-grid">
+                <div class="adm-view-row"><div class="adm-view-lbl">Code</div><div class="adm-view-val"><span class="adm-code">{{ $viewRecord->code }}</span></div></div>
+                <div class="adm-view-row"><div class="adm-view-lbl">Role</div><div class="adm-view-val"><span class="adm-badge {{ $vRCls }}">{{ $roles[$vR] ?? $vR }}</span></div></div>
+                <div class="adm-view-row full"><div class="adm-view-lbl">Full Name</div><div class="adm-view-val">{{ trim(($viewRecord->first_name??'').' '.($viewRecord->middle_name ? $viewRecord->middle_name.' ' : '').($viewRecord->last_name??'')) }}</div></div>
+                <div class="adm-view-row"><div class="adm-view-lbl">Username</div><div class="adm-view-val" style="font-family:'JetBrains Mono',monospace;">@{{ $viewRecord->username }}</div></div>
+                <div class="adm-view-row"><div class="adm-view-lbl">Email</div><div class="adm-view-val">{{ $viewRecord->email }}</div></div>
+                <div class="adm-view-row"><div class="adm-view-lbl">Phone</div><div class="adm-view-val">{{ $viewRecord->phone_number ?: '—' }}</div></div>
+                <div class="adm-view-row"><div class="adm-view-lbl">Created</div><div class="adm-view-val" style="font-size:12px;font-family:'JetBrains Mono',monospace;">{{ \Carbon\Carbon::parse($viewRecord->created_at)->format('M d, Y · H:i') }}</div></div>
+                <div class="adm-view-row"><div class="adm-view-lbl">Updated</div><div class="adm-view-val" style="font-size:12px;font-family:'JetBrains Mono',monospace;">{{ \Carbon\Carbon::parse($viewRecord->updated_at)->format('M d, Y · H:i') }}</div></div>
+            </div>
+        </div>
+        <div class="adm-modal-footer">
+            <button class="adm-btn adm-btn-outline" wire:click="closeView">Close</button>
+            <button class="adm-btn adm-btn-amber" wire:click="viewCredentials('{{ $viewRecord->id }}')">
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Credentials
+            </button>
+            <button class="adm-btn adm-btn-ghost" wire:click="openEditFromView('{{ $viewRecord->id }}')">
+                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- CREDENTIALS --}}
+@if($showCredentials && $credRecord)
+<div class="adm-modal-bg" wire:click.self="closeCredentials">
+    <div class="adm-modal adm-modal-sm">
+        <div class="adm-modal-hd">
+            <div class="adm-modal-hd-left">
+                <div class="adm-modal-hd-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+                <div>
+                    <div class="adm-modal-title">Account Credentials</div>
+                    <div class="adm-modal-sub">{{ trim(($credRecord->first_name??'').' '.($credRecord->last_name??'')) }}</div>
+                </div>
+            </div>
+            <button class="adm-modal-close" wire:click="closeCredentials"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="adm-modal-body">
+            <div class="adm-notice adm-notice-warn">
+                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Passwords are hashed and cannot be retrieved. Use "Reset Password" to generate a new one.
+            </div>
+            <div class="adm-cred-card">
+                <div class="adm-cred-row">
+                    <div class="adm-cred-lbl">Username</div>
+                    <div class="adm-cred-actions">
+                        <div class="adm-cred-val" id="crdUsr">{{ $credRecord->username }}</div>
+                        <button class="pw-copy-btn" onclick="admCopy('crdUsr',this)">Copy</button>
+                    </div>
+                </div>
+                <hr class="adm-cred-divider">
+                <div class="adm-cred-row">
+                    <div class="adm-cred-lbl">Email</div>
+                    <div class="adm-cred-actions">
+                        <div class="adm-cred-val" id="crdEml">{{ $credRecord->email }}</div>
+                        <button class="pw-copy-btn" onclick="admCopy('crdEml',this)">Copy</button>
+                    </div>
+                </div>
+                @if($plainPassword)
+                <hr class="adm-cred-divider">
+                <div class="adm-cred-row">
+                    <div class="adm-cred-lbl">Generated Password</div>
+                    <div class="adm-cred-actions">
+                        <div class="adm-cred-val" id="crdPw" style="color:var(--cyan);font-size:18px;letter-spacing:.12em;">{{ $plainPassword }}</div>
+                        <button class="pw-copy-btn" onclick="admCopy('crdPw',this)">Copy</button>
+                    </div>
+                </div>
+                @else
+                <hr class="adm-cred-divider">
+                <div class="adm-cred-row">
+                    <div class="adm-cred-lbl">Password</div>
+                    <div class="adm-cred-val" style="letter-spacing:.25em;opacity:.35;">••••••••••••</div>
+                </div>
+                @endif
+            </div>
+        </div>
+        <div class="adm-modal-footer">
+            <button class="adm-btn adm-btn-outline" wire:click="closeCredentials">Close</button>
+            <button class="adm-btn adm-btn-purple" wire:click="openResetModal('{{ $credRecord->id }}')" wire:click="closeCredentials">
+                <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                Reset Password
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- PASSWORD RESET MODAL --}}
+@if($showResetModal && $resetUser)
+<div class="adm-modal-bg" wire:click.self="closeResetModal">
+    <div class="adm-modal adm-modal-sm">
+        <div class="adm-modal-hd">
+            <div class="adm-modal-hd-left">
+                <div class="adm-modal-hd-icon"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></div>
+                <div>
+                    <div class="adm-modal-title">Reset Password</div>
+                    <div class="adm-modal-sub">{{ trim(($resetUser->first_name??'').' '.($resetUser->last_name??'')) }}</div>
+                </div>
+            </div>
+            <button class="adm-modal-close" wire:click="closeResetModal"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="adm-modal-body">
+            <div class="adm-field">
+                <label>New Password <span class="req">*</span></label>
+                <div class="adm-pw-wrap">
+                    <input type="password" id="rstPwInput" wire:model="newPassword" placeholder="Enter or generate below…">
+                    <button type="button" class="adm-pw-eye" onclick="admTogglePw('rstPwInput','rstEyeIco')">
+                        <svg viewBox="0 0 24 24" id="rstEyeIco"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+            </div>
+            <button class="adm-btn adm-btn-cyan" wire:click="generatePassword" style="width:100%;justify-content:center;">
+                <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                Auto-Generate Strong Password
+            </button>
+            @if($resetGenerated)
+            <div class="pw-card">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.10em;color:var(--cyan);margin-bottom:4px;">Generated Password</div>
+                <div class="pw-generated" id="genPw">{{ $resetGenerated }}</div>
+                <div style="display:flex;justify-content:center;">
+                    <button class="pw-copy-btn" onclick="admCopy('genPw',this)">Copy to Clipboard</button>
+                </div>
+                <div style="font-size:11.5px;color:var(--ct3);text-align:center;margin-top:10px;">Share this password securely with the employee. It will not be shown again.</div>
+            </div>
+            @endif
+        </div>
+        <div class="adm-modal-footer">
+            <button class="adm-btn adm-btn-outline" wire:click="closeResetModal">Cancel</button>
+            <button class="adm-btn adm-btn-primary" wire:click="doResetPassword" wire:loading.attr="disabled">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span wire:loading.remove wire:target="doResetPassword">Apply Reset</span>
+                <span wire:loading wire:target="doResetPassword">Resetting…</span>
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- DELETE CONFIRM --}}
+@if($showDelete)
+<div class="adm-modal-bg" wire:click.self="cancelDelete">
+    <div class="adm-modal adm-modal-sm">
+        <div class="adm-del-body">
+            <div class="adm-del-icon"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></div>
+            <div class="adm-del-ttl">Delete Account?</div>
+            <div class="adm-del-sub">This permanently removes the user's account and all access. This cannot be undone.</div>
+        </div>
+        <div class="adm-modal-footer" style="justify-content:center;gap:12px;">
+            <button class="adm-btn adm-btn-outline" wire:click="cancelDelete">Cancel</button>
+            <button class="adm-btn adm-btn-danger" wire:click="deleteRecord" wire:loading.attr="disabled">
+                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                <span wire:loading.remove wire:target="deleteRecord">Yes, Delete</span>
+                <span wire:loading wire:target="deleteRecord">Deleting…</span>
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+
+<script>
+function admTogglePw(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const ico = document.getElementById(iconId);
+    if (!inp) return;
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+        inp.type = 'password';
+        ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+}
+function admCopy(elId, btn) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied';
+        setTimeout(() => btn.textContent = orig, 1800);
+    });
+}
+</script>
+
+</div>{{-- /adm-root --}}

@@ -512,7 +512,7 @@
                     <div class="ctr-banner-chips">
                         <span class="ctr-banner-chip">
                             <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                            {{ \App\Models\Position::find($employee->position_id)?->name ?? 'No Position' }}
+                            {{ $employee->position->name ?? 'No Position' }}
                         </span>
                         <span class="ctr-banner-chip">
                             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -535,10 +535,10 @@
                             <svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
                             PDF
                         </button>
-                        <button class="ctr-btn ctr-btn-solid" wire:click="downloadContract('{{ $contract->id }}')">
+                        <a class="ctr-btn ctr-btn-solid" href="{{ route('employee.contracts.download.get', ['contractId' => $contract->id]) }}" target="_blank">
                             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Download
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -575,7 +575,7 @@
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">Department</span>
-                            <span class="ctr-field-val">{{ \App\Models\Department::find($employee->department_id)?->name ?? '—' }}</span>
+                            <span class="ctr-field-val">{{ $employee->department->name ?? '—' }}</span>
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">National ID</span>
@@ -597,7 +597,7 @@
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">Position</span>
-                            <span class="ctr-field-val">{{ \App\Models\Position::find($employee->position_id)?->name ?? '—' }}</span>
+                            <span class="ctr-field-val">{{ $employee->position->name ?? '—' }}</span>
                         </div>
                         <div class="ctr-field">
                             <span class="ctr-field-label">Employee Category</span>
@@ -863,8 +863,8 @@
                             <div class="ctr-pdf-grid">
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">Full Name</div><div class="ctr-pdf-value">{{ $employee?->full_name ?? '—' }}</div></div>
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">Employee ID</div><div class="ctr-pdf-value">{{ $employee?->code ?? '—' }}</div></div>
-                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Department</div><div class="ctr-pdf-value">{{ \App\Models\Department::find($employee->department_id)?->name ?? '—' }}</div></div>
-                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Position</div><div class="ctr-pdf-value">{{ \App\Models\Position::find($employee->position_id)?->name ?? '—' }}</div></div>
+                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Department</div><div class="ctr-pdf-value">{{ $employee->department->name ?? '—' }}</div></div>
+                                <div class="ctr-pdf-field"><div class="ctr-pdf-label">Position</div><div class="ctr-pdf-value">{{ $employee->position->name ?? '—' }}</div></div>
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">National ID</div><div class="ctr-pdf-value">{{ $employee?->national_id ?? '—' }}</div></div>
                                 <div class="ctr-pdf-field"><div class="ctr-pdf-label">Category</div><div class="ctr-pdf-value">{{ ucfirst($selectedContract->employee_category->value ?? '—') }}</div></div>
                             </div>
@@ -965,10 +965,10 @@
                     <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     Print / Save PDF
                 </button>
-                <button class="ctr-btn ctr-btn-blue" wire:click="downloadContract('{{ $selectedContract->id }}')">
+                <a class="ctr-btn ctr-btn-blue" href="{{ route('employee.contracts.download.get', ['contractId' => $selectedContract->id]) }}" target="_blank">
                     <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download
-                </button>
+                    Download PDF
+                </a>
             </div>
         </div>
     </div>

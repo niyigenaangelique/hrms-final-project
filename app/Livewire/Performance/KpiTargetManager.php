@@ -29,7 +29,7 @@ class KpiTargetManager extends Component
     public bool    $showDelete = false;
     public ?string $editingId  = null;
     public ?string $deletingId = null;
-    public ?KpiTarget $viewRecord = null;
+    public ?string $viewingId = null;
 
     // ══ FORM FIELDS ══════════════════════════════════════════
     public string $code                  = '';
@@ -150,7 +150,8 @@ class KpiTargetManager extends Component
 
     public function openEdit(string $id): void
     {
-        $r = KpiTarget::findOrFail($id);
+        $this->showView   = false;
+                $r = KpiTarget::findOrFail($id);
         $this->editingId             = $id;
         $this->code                  = $r->code            ?? '';
         $this->kpiId                 = (string)($r->kpi_id      ?? '');
@@ -170,14 +171,14 @@ class KpiTargetManager extends Component
 
     public function openView(string $id): void
     {
-        $this->viewRecord = KpiTarget::with(['employee', 'kpi'])->findOrFail($id);
-        $this->showView   = true;
+        $this->viewingId = $id;
+        $this->showView  = true;
     }
 
     public function closeView(): void
     {
-        $this->showView   = false;
-        $this->viewRecord = null;
+        $this->showView  = false;
+        $this->viewingId = null;
     }
 
     public function closeModal(): void
@@ -213,7 +214,8 @@ class KpiTargetManager extends Component
     // ── Approve / Reject ─────────────────────────────────────
     public function approve(string $id): void
     {
-        try {
+        $this->showView   = false;
+                try {
             KpiTarget::findOrFail($id)->update(['approval_status' => 'approved']);
             session()->flash('success', 'KPI target approved.');
         } catch (\Exception $e) {
@@ -223,7 +225,8 @@ class KpiTargetManager extends Component
 
     public function reject(string $id): void
     {
-        try {
+        $this->showView   = false;
+                try {
             KpiTarget::findOrFail($id)->update(['approval_status' => 'rejected']);
             session()->flash('success', 'KPI target rejected.');
         } catch (\Exception $e) {

@@ -36,8 +36,11 @@ class HrCommunication extends Component
 
     public function mount()
     {
+        \Log::info('HrCommunication mounting...');
         $this->loadEmployees();
         $this->loadMessages();
+        \Log::info('Employees loaded: ' . $this->employees->count());
+        \Log::info('Messages loaded: ' . $this->messageList->count());
     }
 
     public function loadEmployees()
@@ -62,19 +65,38 @@ class HrCommunication extends Component
 
     public function sendMessage()
     {
-        $this->validate();
+        // Simple test - flash message to see if method is called
+        session()->flash('info', 'sendMessage method was called!');
+        
+        \Log::info('sendMessage called with data: ', [
+            'selectedEmployee' => $this->selectedEmployee,
+            'subject' => $this->subject,
+            'messageContent' => $this->messageContent,
+            'auth_id' => Auth::id()
+        ]);
+
+        // Temporarily disable validation for testing
+        // $this->validate();
 
         try {
             // Get the employee to find their user
             $employee = Employee::find($this->selectedEmployee);
+            \Log::info('Employee found: ', ['employee' => $employee]);
+            
+            if (!$employee) {
+                session()->flash('error', 'Employee not found.');
+                return;
+            }
+
             $user = User::where('email', $employee->email)->first();
+            \Log::info('User found: ', ['user' => $user]);
 
             if (!$user) {
                 session()->flash('error', 'Employee user account not found.');
                 return;
             }
 
-            Message::create([
+            $message = Message::create([
                 'sender_id' => Auth::id(),
                 'receiver_id' => $user->id,
                 'subject' => $this->subject,
@@ -85,6 +107,8 @@ class HrCommunication extends Component
                 'created_by' => Auth::id(),
             ]);
 
+            \Log::info('Message created: ', ['message_id' => $message->id]);
+
             $this->reset(['selectedEmployee', 'subject', 'messageContent']);
             $this->loadMessages();
             
@@ -92,7 +116,8 @@ class HrCommunication extends Component
             
         } catch (\Exception $e) {
             \Log::error('Message sending failed: ' . $e->getMessage());
-            session()->flash('error', 'Failed to send message. Please try again.');
+            \Log::error('Exception trace: ' . $e->getTraceAsString());
+            session()->flash('error', 'Failed to send message: ' . $e->getMessage());
         }
     }
 

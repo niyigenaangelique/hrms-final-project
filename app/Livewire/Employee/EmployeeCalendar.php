@@ -6,6 +6,7 @@ use App\Models\LeaveRequest;
 use App\Models\Holiday;
 use App\Models\Employee;
 use App\Models\Attendance;
+use App\Models\Task as TaskModel;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Auth;
@@ -43,34 +44,47 @@ class EmployeeCalendar extends Component
     public function mount()
     {
         $user = Auth::user();
-        $this->employee = Employee::where('user_id', $user->id)->first();
+        $this->employee = Employee::where('user_id', $user->id)
+            ->with(['position', 'department'])
+            ->first();
 
         if (!$this->employee) {
-            $lastEmployee = Employee::orderBy('id', 'desc')->first();
-            $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -4)) : 0;
-            $newCode = 'EMP-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
+            // Smart Link: Check by email
+            $this->employee = Employee::where('email', $user->email)
+                ->with(['position', 'department'])
+                ->first();
+                
+            if ($this->employee) {
+                $this->employee->update(['user_id' => $user->id]);
+            } else {
+                $lastEmployee = Employee::orderBy('id', 'desc')->first();
+                $lastCode = $lastEmployee ? intval(substr($lastEmployee->code, -4)) : 0;
+                $newCode = 'EMP-' . str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
 
-            $this->employee = Employee::create([
-                'code'            => $newCode,
-                'first_name'      => $user->first_name,
-                'last_name'       => $user->last_name,
-                'email'           => $user->email,
-                'phone_number'    => $user->phone_number,
-                'user_id'         => $user->id,
-                'approval_status' => \App\Enum\ApprovalStatus::Approved,
-            ]);
+                $this->employee = Employee::create([
+                    'code'            => $newCode,
+                    'first_name'      => $user->first_name,
+                    'last_name'       => $user->last_name,
+                    'email'           => $user->email,
+                    'phone_number'    => $user->phone_number,
+                    'user_id'         => $user->id,
+                    'approval_status' => \App\Enum\ApprovalStatus::Approved,
+                ]);
+            }
         }
 
-        $this->currentMonth = now()->startOfMonth();
+        $this->currentMonth = Carbon::now();
         $this->currentYear  = now()->year;
         $this->tasks        = collect([]);
 
         $this->loadCalendarData();
         $this->loadTasks();
+        $this->generateCalendarDays();
     }
 
     public function loadCalendarData()
     {
+        \Log::info('Loading calendar data - Schedules count: ' . $this->getWorkSchedules()->count());
         try {
             $monthStart = Carbon::create($this->currentYear, $this->currentMonth->month, 1)->startOfMonth();
             $monthEnd   = $monthStart->copy()->endOfMonth();
@@ -101,8 +115,9 @@ class EmployeeCalendar extends Component
                 ->whereMonth('date', $this->currentMonth->month)
                 ->get();
 
-            // ── Work schedules (session-based) ─────────────────────────────
+            // ── Work schedules (database) ───────────────────────────────
             $this->workSchedules = $this->getWorkSchedules();
+            \Log::info('Work schedules loaded for calendar: ' . $this->workSchedules->count());
 
             // ── Upcoming / recent leave sidebar list ───────────────────────
             // FIX: employee_id scoped, broader window so leave actually appears
@@ -135,8 +150,8 @@ class EmployeeCalendar extends Component
 
         $firstDay  = Carbon::create($this->currentYear, $this->currentMonth->month, 1);
         $lastDay   = $firstDay->copy()->endOfMonth();
-        $startDate = $firstDay->copy()->startOfWeek();
-        $endDate   = $lastDay->copy()->endOfWeek();
+        $startDate = $firstDay->copy()->startOfWeek(Carbon::SUNDAY);
+        $endDate   = $lastDay->copy()->endOfWeek(Carbon::SUNDAY);
         $current   = $startDate->copy();
 
         while ($current <= $endDate) {
@@ -145,7 +160,7 @@ class EmployeeCalendar extends Component
                 'dateObj'        => $current->copy(),
                 'fullDate'       => $current->format('Y-m-d'),
                 'isCurrentMonth' => $current->month === $this->currentMonth->month,
-                'isToday'        => $current->isToday(),
+                'isToday'        => $current->format('Y-m-d') === now()->format('Y-m-d'),
                 'isWeekend'      => $current->isWeekend(),
                 'leaveRequests'  => [],
                 'holidays'       => [],
@@ -208,8 +223,8 @@ class EmployeeCalendar extends Component
 
         $firstDay  = Carbon::create($this->currentYear, $this->currentMonth->month, 1);
         $lastDay   = $firstDay->copy()->endOfMonth();
-        $startDate = $firstDay->copy()->startOfWeek();
-        $endDate   = $lastDay->copy()->endOfWeek();
+        $startDate = $firstDay->copy()->startOfWeek(Carbon::SUNDAY);
+        $endDate   = $lastDay->copy()->endOfWeek(Carbon::SUNDAY);
         $current   = $startDate->copy();
 
         while ($current <= $endDate) {
@@ -218,7 +233,7 @@ class EmployeeCalendar extends Component
             $this->miniCalendarDays[] = [
                 'date'           => $current->copy(),
                 'isCurrentMonth' => $isCurrentMonth,
-                'isToday'        => $current->isToday(),
+                'isToday'        => $current->format('Y-m-d') === now()->format('Y-m-d'),
                 'isWeekend'      => $current->isWeekend(),
                 'hasEvents'      => $isCurrentMonth && $this->hasEventsForDay($current),
             ];
@@ -267,11 +282,16 @@ class EmployeeCalendar extends Component
     // ── Tasks ──────────────────────────────────────────────────────────────
     public function loadTasks()
     {
-        $this->tasks = collect([
-            (object)['id' => 1, 'title' => 'Team standup',   'hour' => 9,  'day' => 1, 'description' => 'Daily sync with the team'],
-            (object)['id' => 2, 'title' => 'Project review', 'hour' => 14, 'day' => 2, 'description' => 'Q2 progress review'],
-            (object)['id' => 3, 'title' => 'Client call',    'hour' => 11, 'day' => 3, 'description' => ''],
-        ]);
+        if ($this->employee) {
+            $this->tasks = TaskModel::where('employee_id', $this->employee->id)->get();
+        } else {
+            $this->tasks = collect([]);
+        }
+    }
+
+    public function forceRefreshCalendarData()
+    {
+        $this->generateCalendarDays();
     }
 
     public function addTask($hour, $day)
@@ -306,22 +326,32 @@ class EmployeeCalendar extends Component
         ]);
 
         if ($this->editingTaskId) {
-            $task = $this->tasks->firstWhere('id', $this->editingTaskId);
-            if ($task) {
-                $task->title       = $this->taskTitle;
-                $task->description = $this->taskDescription;
-                $task->hour        = (int) $this->taskHour;
-                $task->day         = (int) $this->taskDay;
+            $task = TaskModel::find($this->editingTaskId);
+            if ($task && $task->employee_id === $this->employee->id) {
+                $task->update([
+                    'title'       => $this->taskTitle,
+                    'description' => $this->taskDescription,
+                    'hour'        => (int) $this->taskHour,
+                    'day'         => (int) $this->taskDay,
+                ]);
             }
         } else {
-            $this->tasks->push((object)[
-                'id'          => ($this->tasks->max('id') ?? 0) + 1,
-                'title'       => $this->taskTitle,
-                'description' => $this->taskDescription,
-                'hour'        => (int) $this->taskHour,
-                'day'         => (int) $this->taskDay,
+            // Generate unique task code
+            $lastCode = TaskModel::withTrashed()->max('code');
+            $lastCodeNum = $lastCode ? (int)str_replace('TSK-', '', $lastCode) : 0;
+            $newCode = 'TSK-' . str_pad($lastCodeNum + 1, 4, '0', STR_PAD_LEFT);
+
+            TaskModel::create([
+                'code'          => $newCode,
+                'employee_id'   => $this->employee->id,
+                'title'         => $this->taskTitle,
+                'description'   => $this->taskDescription,
+                'hour'          => (int) $this->taskHour,
+                'day'           => (int) $this->taskDay,
             ]);
         }
+
+        $this->loadTasks();
 
         $this->closeTaskModal();
         session()->flash('success', 'Task saved successfully!');
@@ -329,7 +359,12 @@ class EmployeeCalendar extends Component
 
     public function deleteTask($taskId)
     {
-        $this->tasks = $this->tasks->reject(fn ($t) => $t->id == $taskId);
+        $task = TaskModel::find($taskId);
+        if ($task && $task->employee_id === $this->employee->id) {
+            $task->delete();
+            $this->loadTasks();
+            session()->flash('success', 'Task removed successfully!');
+        }
     }
 
     public function openTaskModal()
@@ -372,8 +407,7 @@ class EmployeeCalendar extends Component
             'scheduleEndTime'   => 'required|after:scheduleStartTime',
         ]);
 
-        $schedule = [
-            'id'          => uniqid(),
+        \App\Models\WorkSchedule::create([
             'employee_id' => $this->employee->id,
             'date'        => $this->selectedDate,
             'title'       => $this->scheduleTitle,
@@ -381,9 +415,8 @@ class EmployeeCalendar extends Component
             'start_time'  => $this->scheduleStartTime,
             'end_time'    => $this->scheduleEndTime,
             'created_at'  => now(),
-        ];
+        ]);
 
-        session()->put("work_schedule_{$schedule['id']}", $schedule);
         $this->closeScheduleModal();
         session()->flash('success', 'Work schedule added successfully!');
         $this->loadCalendarData();
@@ -391,16 +424,11 @@ class EmployeeCalendar extends Component
 
     public function getWorkSchedules()
     {
-        $schedules = [];
-        foreach (session()->all() as $key => $value) {
-            if (str_starts_with($key, 'work_schedule_') && is_array($value)) {
-                $d = Carbon::parse($value['date']);
-                if ($d->month == $this->currentMonth->month && $d->year == $this->currentYear) {
-                    $schedules[] = $value;
-                }
-            }
-        }
-        return collect($schedules);
+        return \App\Models\WorkSchedule::where('employee_id', $this->employee->id)
+            ->whereMonth('date', $this->currentMonth->format('m'))
+            ->whereYear('date', $this->currentYear)
+            ->orderBy('date')
+            ->get();
     }
 
     public function selectDate($date)

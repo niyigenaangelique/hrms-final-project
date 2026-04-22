@@ -1,220 +1,121 @@
-<div>
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p class="text-gray-600 mt-2">System overview and quick actions</p>
+{{-- ═══════════════════════════════════════════════════════════════
+     resources/views/livewire/admin/enhanced-dashboard.blade.php
+═══════════════════════════════════════════════════════════════ --}}
+<x-admin-content-styles />
+<div class="ac-root">
+
+    <div class="ac-header">
+        <div>
+            <div class="ac-header-title">Admin Dashboard</div>
+            <div class="ac-header-sub">System overview · {{ now()->format('l, F j, Y') }}</div>
+        </div>
+        <a href="{{ route('admin.users') }}" class="ac-btn ac-btn-primary" wire:navigate>
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Account
+        </a>
     </div>
 
-    <!-- Top Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="admin-dashboard-card stats-card-gradient-1">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 stat-icon">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-white opacity-90 truncate">Total Employees</dt>
-                            <dd class="text-lg font-medium text-white">{{ $stats['total_employees'] ?? 0 }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+    {{-- Stat tiles --}}
+    <div class="ac-tiles">
+        <div class="ac-tile ac-t-indigo">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--indigo);border-radius:var(--r-lg) var(--r-lg) 0 0;"></div>
+            <div class="ac-tile-icon" style="background:var(--indigo-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--indigo);"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div><div class="ac-tile-lbl">Total Users</div><div class="ac-tile-val" style="color:var(--indigo);">{{ $totalUsers }}</div><div class="ac-tile-sub">{{ $adminCount }} admin · {{ $hrCount }} HR · {{ $empCount }} employee</div></div>
         </div>
-        <div class="admin-dashboard-card stats-card-gradient-2">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 stat-icon">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-white opacity-90 truncate">Monthly Payroll</dt>
-                            <dd class="text-lg font-medium text-white">${{ number_format($stats['monthly_payroll'] ?? 0, 0) }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+        <div class="ac-tile ac-t-teal">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--teal);border-radius:var(--r-lg) var(--r-lg) 0 0;"></div>
+            <div class="ac-tile-icon" style="background:var(--teal-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--teal);"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <div><div class="ac-tile-lbl">Approved Payroll</div><div class="ac-tile-val" style="color:var(--teal);font-size:18px;">{{ number_format($payrollTotal,0) }}</div><div class="ac-tile-sub">RWF · {{ $payrollCount }} entries</div></div>
         </div>
-        <div class="admin-dashboard-card stats-card-gradient-3">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 stat-icon">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-white opacity-90 truncate">Pending Leaves</dt>
-                            <dd class="text-lg font-medium text-white">{{ $stats['pending_leaves'] ?? 0 }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+        <div class="ac-tile ac-t-blue">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue);border-radius:var(--r-lg) var(--r-lg) 0 0;"></div>
+            <div class="ac-tile-icon" style="background:var(--blue-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--blue);"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <div><div class="ac-tile-lbl">Active Sessions</div><div class="ac-tile-val" style="color:var(--blue);">{{ $sessionCount }}</div><div class="ac-tile-sub">live right now</div></div>
         </div>
-        <div class="admin-dashboard-card stats-card-gradient-4">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 stat-icon">
-                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-white opacity-90 truncate">Avg Performance</dt>
-                            <dd class="text-lg font-medium text-white">{{ $stats['avg_performance'] ?? 0 }}%</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
+        <div class="ac-tile ac-t-amber">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--amber);border-radius:var(--r-lg) var(--r-lg) 0 0;"></div>
+            <div class="ac-tile-icon" style="background:var(--amber-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--amber);"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div><div class="ac-tile-lbl">Today's Events</div><div class="ac-tile-val" style="color:var(--amber);">{{ $auditCount }}</div><div class="ac-tile-sub">audit log entries</div></div>
         </div>
     </div>
 
-    <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Department Distribution -->
-        <div class="admin-dashboard-card p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Department Distribution</h3>
-            <div class="chart-placeholder h-64 flex items-center justify-center rounded">
-                <div class="text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <p class="mt-2 text-sm text-gray-500">Department chart will be displayed here</p>
-                </div>
+    {{-- Two-column layout --}}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+
+        {{-- Recent users --}}
+        <div class="ac-card">
+            <div class="ac-card-hd">
+                <div><div class="ac-card-title">Recent Users</div><div class="ac-card-sub">Latest accounts created</div></div>
+                <a href="{{ route('admin.users') }}" class="ac-btn ac-btn-ghost ac-btn-sm" wire:navigate>View all →</a>
             </div>
+            @forelse($recentUsers as $u)
+            @php $r=$u->role??'employee'; $rc=match($r){'admin'=>'ab-indigo','hr_manager'=>'ab-teal',default=>'ab-green'}; @endphp
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);">
+                <div class="ac-user-cell">
+                    <div class="ac-av">{{ strtoupper(substr($u->first_name??'',0,1).substr($u->last_name??'',0,1)) }}</div>
+                    <div>
+                        <div class="ac-user-name">{{ trim(($u->first_name??'').' '.($u->last_name??'')) }}</div>
+                        <div class="ac-user-meta">{{ $u->email }}</div>
+                    </div>
+                </div>
+                <span class="ac-badge {{ $rc }}">{{ ['admin'=>'Admin','hr_manager'=>'HR Mgr','employee'=>'Employee'][$r]??$r }}</span>
+            </div>
+            @empty
+            <div class="ac-empty" style="padding:28px;"><div class="ac-empty-sub">No users yet.</div></div>
+            @endforelse
         </div>
 
-        <!-- Weekly Attendance -->
-        <div class="admin-dashboard-card p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Weekly Attendance</h3>
-            <div class="chart-placeholder h-64 flex items-center justify-center rounded">
-                <div class="text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <p class="mt-2 text-sm text-gray-500">Weekly attendance chart will be displayed here</p>
-                </div>
+        {{-- Recent activity --}}
+        <div class="ac-card">
+            <div class="ac-card-hd">
+                <div><div class="ac-card-title">Recent Activity</div><div class="ac-card-sub">Latest audit events</div></div>
+                <a href="{{ route('admin.dashboard') }}" class="ac-btn ac-btn-ghost ac-btn-sm" wire:navigate>View all →</a>
             </div>
+            @forelse($recentActivity as $log)
+            @php
+                $ev    = $log->event ?? 'system';
+                $color = match(true) { str_contains($ev,'create')=>'#10B981',str_contains($ev,'update')=>'#3B82F6',str_contains($ev,'delete')=>'#EF4444',str_contains($ev,'login')=>'#A855F7', default=>'#94A3B8' };
+            @endphp
+            <div class="ac-log-row">
+                <div class="ac-log-dot" style="background:{{ $color }};margin-top:6px;"></div>
+                <div class="ac-log-desc">{{ $log->description ?? 'System event' }}</div>
+                <div class="ac-log-time">{{ \Carbon\Carbon::parse($log->created_at)->format('H:i') }}</div>
+            </div>
+            @empty
+            <div class="ac-empty" style="padding:28px;"><div class="ac-empty-sub">No activity logged yet.</div></div>
+            @endforelse
+        </div>
+
+    </div>
+
+    {{-- Quick links --}}
+    <div class="ac-card">
+        <div class="ac-card-hd"><div><div class="ac-card-title">Quick Navigation</div><div class="ac-card-sub">Jump to any admin section</div></div></div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;">
+            @foreach([
+                ['route'=>'admin.users',              'icon'=>'users',       'label'=>'Users'],
+                ['route'=>'admin.dashboard',          'icon'=>'activity',    'label'=>'Dashboard'],
+                ['route'=>'admin.notifications',      'icon'=>'bell',        'label'=>'Notifications'],
+            ] as $link)
+            <a href="{{ route($link['route']) }}" wire:navigate
+               style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);text-decoration:none;color:var(--ink2);font-size:12.5px;font-weight:700;transition:background .12s;"
+               onmouseover="this.style.background='#F0F9FF'" onmouseout="this.style.background=''">
+                <div style="width:38px;height:38px;border-radius:10px;background:var(--indigo-lt);display:flex;align-items:center;justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--indigo)" stroke-width="2">
+                        @if($link['icon']==='users')<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        @elseif($link['icon']==='key')<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                        @elseif($link['icon']==='shield')<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        @elseif($link['icon']==='monitor')<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                        @elseif($link['icon']==='refresh')<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+                        @elseif($link['icon']==='bell')<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+                        @else<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        @endif
+                    </svg>
+                </div>
+                {{ $link['label'] }}
+            </a>
+            @endforeach
         </div>
     </div>
 
-    <!-- Employee Type Chart -->
-    <div class="admin-dashboard-card p-6 mb-8">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Employee Type Distribution</h3>
-        <div class="chart-placeholder h-64 flex items-center justify-center rounded">
-            <div class="text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                </svg>
-                <p class="mt-2 text-sm text-gray-500">Employee type chart will be displayed here</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Row: Recent Activities and Upcoming Tasks -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Recent Activities -->
-        <div class="admin-dashboard-card p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activities</h3>
-            <div class="space-y-4">
-                @forelse($activityLogs->take(5) as $activity)
-                    <div class="activity-item">
-                        <div class="flex-1">
-                            <p class="text-sm text-gray-900">{{ $activity->description ?? 'System activity' }}</p>
-                            <p class="text-xs text-gray-500">{{ $activity->created_at->diffForHumans() }}</p>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-sm text-gray-500">No recent activities</p>
-                @endforelse
-            </div>
-        </div>
-
-        <!-- Upcoming Tasks -->
-        <div class="admin-dashboard-card p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Upcoming Tasks</h3>
-            <div class="space-y-4">
-                <div class="activity-item">
-                    <div class="flex-1">
-                        <p class="text-sm text-gray-900">Process monthly payroll</p>
-                        <p class="text-xs text-gray-500">Due in 3 days</p>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <div class="flex-1">
-                        <p class="text-sm text-gray-900">Review pending leave requests</p>
-                        <p class="text-xs text-gray-500">{{ $stats['pending_leaves'] }} requests pending</p>
-                    </div>
-                </div>
-                <div class="activity-item">
-                    <div class="flex-1">
-                        <p class="text-sm text-gray-900">Complete performance reviews</p>
-                        <p class="text-xs text-gray-500">12 reviews remaining</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="admin-dashboard-card p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button wire:click="openCreateEmployeeModal" class="quick-action-card">
-                <div class="icon-wrapper">
-                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Add Employee</span>
-            </button>
-            <button wire:click="processPayroll" class="quick-action-card">
-                <div class="icon-wrapper">
-                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Process Payroll</span>
-            </button>
-            <button wire:click="reviewLeaves" class="quick-action-card">
-                <div class="icon-wrapper">
-                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Review Leaves</span>
-            </button>
-            <button wire:click="performanceReview" class="quick-action-card">
-                <div class="icon-wrapper">
-                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Performance Review</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Success Message -->
-    @if(session()->has('success'))
-        <div class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <!-- Error Message -->
-    @if(session()->has('error'))
-        <div class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
-            {{ session('error') }}
-        </div>
-    @endif
 </div>

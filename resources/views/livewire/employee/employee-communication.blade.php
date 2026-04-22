@@ -404,20 +404,19 @@
         </div>
 
         <div class="users-list" id="usersList">
-            @foreach($hrUsers as $hrUser)
+            @foreach($availableUsers as $user)
                 @php
-                    $initials = strtoupper(substr($hrUser->first_name,0,1).substr($hrUser->last_name,0,1));
-                    $isActive = isset($selectedConversation) && $selectedConversation == $hrUser->id;
+                    $initials = strtoupper(substr($user->first_name,0,1).substr($user->last_name,0,1));
+                    $isActive = isset($selectedConversation) && $selectedConversation == $user->id;
                 @endphp
                 <div class="user-item {{ $isActive ? 'active' : '' }}"
-                     wire:click="selectConversation('{{ $hrUser->id }}')"
-                     onclick="toggleUsersDrawer()"
-                     data-name="{{ strtolower($hrUser->first_name.' '.$hrUser->last_name) }}"
-                     data-role="{{ strtolower($hrUser->role->value) }}">
+                     wire:click="selectConversation('{{ $user->id }}')"
+                     data-name="{{ strtolower($user->first_name.' '.$user->last_name) }}"
+                     data-role="{{ strtolower($user->role) }}">
                     <div class="user-avatar">{{ $initials }}</div>
                     <div>
-                        <div class="user-name">{{ $hrUser->first_name }} {{ $hrUser->last_name }}</div>
-                        <div class="user-role">{{ ucfirst($hrUser->role->value) }}</div>
+                        <div class="user-name">{{ $user->first_name }} {{ $user->last_name }}</div>
+                        <div class="user-role">{{ ucfirst($user->role) }}</div>
                     </div>
                 </div>
             @endforeach
@@ -510,14 +509,14 @@
                 
             </div>
         @elseif(isset($selectedConversation))
-            @php $selectedUser = $hrUsers->firstWhere('id', $selectedConversation); @endphp
+            @php $selectedUser = $availableUsers->firstWhere('id', $selectedConversation); @endphp
             <div class="chat-header">
                 <div class="chat-header-left">
                     @if($selectedUser)
                         <div class="chat-user-avatar">{{ strtoupper(substr($selectedUser->first_name,0,1).substr($selectedUser->last_name,0,1)) }}</div>
                         <div>
                             <p class="chat-user-name">{{ $selectedUser->first_name }} {{ $selectedUser->last_name }}</p>
-                            <p class="chat-user-status">{{ ucfirst($selectedUser->role->value) }}</p>
+                            <p class="chat-user-status">{{ ucfirst($selectedUser->role) }}</p>
                         </div>
                     @endif
                 </div>
@@ -653,6 +652,14 @@
         });
     }
     window.filterUsers = filterUsers;
+    
+    /* Listen for Livewire events */
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('closeUsersDrawer', () => {
+            var d = document.getElementById('usersDrawer');
+            if (d) d.classList.remove('open');
+        });
+    });
 
     /* ── Click outside drawer closes it ── */
     document.addEventListener('click', function (e) {

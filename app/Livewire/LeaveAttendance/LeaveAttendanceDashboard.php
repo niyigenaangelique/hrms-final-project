@@ -38,7 +38,19 @@ class LeaveAttendanceDashboard extends Component
         
         $this->totalEmployees = Employee::where('is_active', true)->count();
         $this->presentToday = Attendance::where('date', $today)->where('status', 'Approved')->count();
-        $this->absentToday = $this->totalEmployees - $this->presentToday - $this->onLeaveToday;
+        
+        // Count employees who are late today (no attendance or arrived after 8:30 AM)
+        $employeesWhoClockedIn = Attendance::where('date', $today)
+            ->where('status', 'Approved')
+            ->whereTime('check_in', '<', '08:30:00')
+            ->pluck('employee_id')->toArray();
+        
+        $employeesOnLeave = LeaveRequest::where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->where('status', 'approved')
+            ->pluck('employee_id')->toArray();
+        
+        $this->absentToday = $this->totalEmployees - count($employeesWhoClockedIn) - count($employeesOnLeave);
         
         // Count employees on leave today
         $this->onLeaveToday = LeaveRequest::where('start_date', '<=', $today)
@@ -49,13 +61,22 @@ class LeaveAttendanceDashboard extends Component
         $this->pendingLeaveRequests = LeaveRequest::where('status', 'pending')->count();
         $this->approvedLeaveRequests = LeaveRequest::where('status', 'approved')->count();
         
-        // This month attendance rate
+        // This month attendance rate (including late attendances)
         $thisMonthStart = now()->startOfMonth();
         $thisMonthEnd = now()->endOfMonth();
         $workingDays = $this->getWorkingDays($thisMonthStart, $thisMonthEnd);
+        
+        // Count all attendances (approved + late)
         $totalAttendances = Attendance::whereBetween('date', [$thisMonthStart, $thisMonthEnd])
-            ->where('status', 'Approved')
+            ->where(function($query) {
+                $query->where('status', 'Approved')
+                      ->orWhere(function($subQuery) {
+                          $subQuery->where('status', 'Late')
+                              ->whereTime('check_in', '>', '08:30:00');
+                      });
+            })
             ->count();
+            
         $expectedAttendances = $this->totalEmployees * $workingDays;
         $this->thisMonthAttendance = $expectedAttendances > 0 ? round(($totalAttendances / $expectedAttendances) * 100, 1) : 0;
         

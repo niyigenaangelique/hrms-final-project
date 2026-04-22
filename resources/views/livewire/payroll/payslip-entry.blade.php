@@ -117,7 +117,7 @@
             align-items: flex-end;
             justify-content: space-between;
             gap: 16px;
-            margin-top: -26px;
+            margin-top: 2px;
         }
 
         .pe-hero-icon {
@@ -1124,6 +1124,288 @@
         </div>
     @endif
 
+    {{-- ══ GENERATE PAYSLIP MODAL ══════════════════════════════ --}}
+    @if($showGenerateModal)
+        <div class="pe-modal-bg" wire:click.self="closeGenerateModal">
+            <div class="pe-modal">
+                <div class="pe-modal-hd">
+                    <div class="pe-modal-hd-left">
+                        <div class="pe-modal-hd-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="pe-modal-title">
+                                {{ $generateEditingId ? 'Edit Payslip Entry' : 'Generate Payslip Entry' }}</div>
+                            <div class="pe-modal-sub">
+                                {{ $generateEditingId ? 'Update payslip details and calculations' : 'Generate payslip with automatic tax calculations' }}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="pe-modal-close" wire:click="closeGenerateModal">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="pe-modal-body">
+                    @if(!$generateEditingId)
+                        {{-- Payroll Entry Selection for New Payslip --}}
+                        <div class="pe-grid2">
+                            <div>
+                                <label class="pe-label">Select Payroll Entry</label>
+                                <select class="pe-sel" wire:model.live="generatePayrollEntryId">
+                                    <option value="">Choose payroll entry...</option>
+                                    @foreach(\App\Models\PayrollEntry::with('employee')->orderBy('created_at', 'desc')->limit(50)->get() as $entry)
+                                        <option value="{{ $entry->id }}">
+                                            {{ $entry->code }} - {{ $entry->employee?->first_name }}
+                                            {{ $entry->employee?->last_name }} ({{ number_format($entry->total_amount, 2) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('generatePayrollEntryId')
+                                    <div class="pe-err">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    @else
+                        {{-- Payroll Entry Info for Edit --}}
+                        <div class="pe-grid2">
+                            <div>
+                                <label class="pe-label">Payroll Entry</label>
+                                <div
+                                    style="padding: 8px; background: var(--bg-light); border-radius: 4px; font-size: 12px; border: 1px solid var(--border);">
+                                    @php
+                                        $payrollEntry = \App\Models\PayrollEntry::find($generatePayrollEntryId);
+                                    @endphp
+                                    @if($payrollEntry)
+                                        <strong>{{ $payrollEntry->code }}</strong> - {{ $payrollEntry->employee?->first_name }}
+                                        {{ $payrollEntry->employee?->last_name }}
+                                        ({{ number_format($payrollEntry->total_amount, 2) }})
+                                    @else
+                                        Payroll entry not found
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($generatePayrollEntryId)
+                        @php
+                            $selectedEntry = \App\Models\PayrollEntry::find($generatePayrollEntryId);
+                            if ($selectedEntry) {
+                                // Always update form values when payroll entry changes
+                                $this->grossPay = (string) $selectedEntry->total_amount;
+                                $this->recalculate();
+                            }
+                        @endphp
+
+                        {{-- Editable Payslip Fields --}}
+                        <div
+                            style="margin-top: 16px; padding: 16px; background: var(--bg); border-radius: var(--r); border: 1px solid var(--border);">
+                            <div style="font-weight: 600; color: var(--ink2); margin-bottom: 12px;">Edit Payslip Details:</div>
+                            <button type="button" class="pe-btn pe-btn-outline pe-btn-sm" style="margin-bottom: 8px;"
+                                wire:click="refreshPayrollData">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 4v3a2 2 0 00-2 2h12a2 2 0 002 2v-3" />
+                                    <line x1="9" y1="9" x2="15" y2="9" />
+                                    <line x1="15" y1="9" x2="9" y2="15" />
+                                </svg>
+                                Refresh Data
+                            </button>
+
+                            {{-- Gross Pay Section --}}
+                            <div class="pe-section-lbl" style="font-size: 12px; margin-bottom: 8px;">Gross Pay Information</div>
+                            <div class="pe-grid2" style="margin-bottom: 12px;">
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Gross Pay (RWF)</label>
+                                    <input type="number" wire:model.live="grossPay" wire:input="recalculate" placeholder="0.00"
+                                        step="0.01" min="0" style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Taxable Income (RWF)</label>
+                                    <input type="number" wire:model="taxableIncome" placeholder="0.00" step="0.01" min="0"
+                                        style="font-size: 12px; padding: 6px;">
+                                </div>
+                            </div>
+
+                            {{-- Additional Benefits --}}
+                            <div class="pe-section-lbl" style="font-size: 12px; margin-bottom: 8px;">Additional Benefits</div>
+                            <div class="pe-grid2" style="margin-bottom: 12px;">
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Housing Allowance (RWF)</label>
+                                    <input type="number" wire:model.live="housingAllowance" placeholder="0.00" step="0.01"
+                                        min="0" style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Transport Allowance (RWF)</label>
+                                    <input type="number" wire:model.live="transportAllowance" placeholder="0.00" step="0.01"
+                                        min="0" style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Meal Allowance (RWF)</label>
+                                    <input type="number" wire:model.live="mealAllowance" placeholder="0.00" step="0.01" min="0"
+                                        style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Other Benefits (RWF)</label>
+                                    <input type="number" wire:model.live="otherBenefits" placeholder="0.00" step="0.01" min="0"
+                                        style="font-size: 12px; padding: 6px;">
+                                </div>
+                            </div>
+
+                            {{-- Additional Deductions --}}
+                            <div class="pe-section-lbl" style="font-size: 12px; margin-bottom: 8px;">Additional Deductions</div>
+                            <div class="pe-grid2" style="margin-bottom: 12px;">
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Loan Deduction (RWF)</label>
+                                    <input type="number" wire:model.live="loanDeduction" placeholder="0.00" step="0.01" min="0"
+                                        style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Advance Deduction (RWF)</label>
+                                    <input type="number" wire:model.live="advanceDeduction" placeholder="0.00" step="0.01"
+                                        min="0" style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Other Deductions (RWF)</label>
+                                    <input type="number" wire:model.live="otherDeductions" placeholder="0.00" step="0.01"
+                                        min="0" style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">CBHI (RWF)</label>
+                                    <input type="number" wire:model.live="cbhi" placeholder="0.00" step="0.01" min="0"
+                                        style="font-size: 12px; padding: 6px;">
+                                </div>
+                            </div>
+
+                            {{-- Tax Override Options --}}
+                            <div class="pe-section-lbl" style="font-size: 12px; margin-bottom: 8px;">Tax Configuration</div>
+                            <div class="pe-field" style="margin-bottom: 12px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
+                                    <input type="checkbox" wire:model="overrideAutoTax" style="width: auto;">
+                                    <span>Override Automatic Tax Calculation</span>
+                                </label>
+                            </div>
+
+                            @if($overrideAutoTax)
+                                <div class="pe-grid2" style="margin-bottom: 12px;">
+                                    <div class="pe-field" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px;">Custom Tax Rate (%)</label>
+                                        <input type="number" wire:model="customTaxRate" placeholder="15.0" step="0.1" min="0"
+                                            max="100" style="font-size: 12px; padding: 6px;">
+                                    </div>
+                                    <div class="pe-field" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px;">Manual Tax Amount (RWF)</label>
+                                        <input type="number" wire:model="manualTaxAmount" placeholder="0.00" step="0.01" min="0"
+                                            style="font-size: 12px; padding: 6px;">
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Editable Calculation Fields --}}
+                            <div class="pe-section-lbl" style="font-size: 12px; margin-bottom: 8px;">Tax & Deduction
+                                Calculations (Editable)</div>
+                            <div class="pe-grid2" style="margin-bottom: 12px;">
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Gross + Benefits (RWF)</label>
+                                    <input type="number" wire:model.live="adjustedGrossPay" placeholder="0.00" step="0.01"
+                                        min="0" style="font-size: 12px; padding: 6px; background: var(--bg);" readonly>
+                                </div>
+                                <div class="pe-grid2">
+                                    <div class="pe-field" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px;">Pension Rate (%) <span
+                                                style="color: var(--indigo); font-size: 9px;">Editable</span></label>
+                                        <input type="number" wire:model.live="pensionRate" placeholder="3.0" step="0.1" min="0"
+                                            max="100" style="font-size: 12px; padding: 6px;">
+                                    </div>
+                                    <div class="pe-field" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px;">Pension Amount (RWF) <span
+                                                style="color: var(--ink4); font-size: 9px;">Calculated</span></label>
+                                        <input type="number" wire:model="pension" placeholder="0.00" step="0.01" min="0"
+                                            style="font-size: 12px; padding: 6px; background: var(--bg);" readonly>
+                                    </div>
+                                </div>
+                                <div class="pe-grid2">
+                                    <div class="pe-field" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px;">Maternity Rate (%) <span
+                                                style="color: var(--indigo); font-size: 9px;">Editable</span></label>
+                                        <input type="number" wire:model.live="maternityRate" placeholder="0.3" step="0.1"
+                                            min="0" max="100" style="font-size: 12px; padding: 6px;">
+                                    </div>
+                                    <div class="pe-field" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px;">Maternity Amount (RWF) <span
+                                                style="color: var(--ink4); font-size: 9px;">Calculated</span></label>
+                                        <input type="number" wire:model="maternity" placeholder="0.00" step="0.01" min="0"
+                                            style="font-size: 12px; padding: 6px; background: var(--bg);" readonly>
+                                    </div>
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Taxable Income (RWF) <span
+                                            style="color: var(--indigo); font-size: 9px;">Editable</span></label>
+                                    <input type="number" wire:model.live="taxableIncome" placeholder="0.00" step="0.01" min="0"
+                                        style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">PAYE (Tax) (RWF) <span
+                                            style="color: var(--indigo); font-size: 9px;">Editable</span></label>
+                                    <input type="number" wire:model.live="paye" placeholder="0.00" step="0.01" min="0"
+                                        style="font-size: 12px; padding: 6px;">
+                                </div>
+                                <div class="pe-field" style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px;">Total Deductions (RWF) <span
+                                            style="color: var(--indigo); font-size: 9px;">Calculated</span></label>
+                                    <input type="number" wire:model.live="totalDeductions" placeholder="0.00" step="0.01"
+                                        min="0" style="font-size: 12px; padding: 6px; background: var(--bg);" readonly>
+                                </div>
+                            </div>
+
+                            {{-- Final Net Pay Preview --}}
+                            <div class="pe-section-lbl" style="font-size: 12px; margin-bottom: 8px;">Final Net Pay</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div
+                                    style="background: var(--green-lt); padding: 12px; border-radius: var(--r); text-align: center;">
+                                    <div style="font-size: 10px; color: #087A42; margin-bottom: 4px;">Net Pay</div>
+                                    <div style="font-size: 16px; font-weight: 800; color: #087A42;">
+                                        {{ number_format((float) ($this->netPay ?: 0), 2) }}</div>
+                                </div>
+                                @if($effectiveTaxRate)
+                                    <div
+                                        style="background: var(--blue-lt); padding: 12px; border-radius: var(--r); text-align: center;">
+                                        <div style="font-size: 10px; color: var(--blue); margin-bottom: 4px;">Effective Tax Rate
+                                        </div>
+                                        <div style="font-size: 16px; font-weight: 800; color: var(--blue);">{{ $effectiveTaxRate }}%
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="pe-modal-footer">
+                    <button class="pe-btn pe-btn-outline" wire:click="closeGenerateModal">Cancel</button>
+                    <button class="pe-btn pe-btn-indigo" wire:click="generatePayslip" wire:loading.attr="disabled">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                        </svg>
+                        <span wire:loading.remove
+                            wire:target="generatePayslip">{{ $generateEditingId ? 'Update Payslip' : 'Generate Payslip' }}</span>
+                        <span wire:loading
+                            wire:target="generatePayslip">{{ $generateEditingId ? 'Updating…' : 'Generating…' }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- ══ HERO ════════════════════════════════════════════════ --}}
     <div class="pe-hero">
         <div class="pe-hero-cover"></div>
@@ -1144,12 +1426,14 @@
                         totals auto-calculated</div>
                 </div>
             </div>
-            <button class="pe-btn pe-btn-primary" wire:click="openCreate">
+            <button class="pe-btn pe-btn-indigo" wire:click="openGenerateModal" style="margin-left: 8px;">
                 <svg viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
                 </svg>
-                New Entry
+                Generate Payslip
             </button>
         </div>
     </div>
@@ -1246,22 +1530,26 @@
                     </svg>
                 </div>
                 <div>
-                    <div class="pe-card-title">Payroll Entry Register</div>
+                    <div class="pe-card-title">Payslip Register</div>
                     <div class="pe-card-sub">{{ $records->total() }} record{{ $records->total() != 1 ? 's' : '' }}</div>
                 </div>
             </div>
         </div>
 
+
         <div class="pe-table-wrap">
             <table class="pe-table">
                 <thead>
                     <tr>
-                        <th>Code</th>
+                        <th>Payslip Code</th>
                         <th>Employee</th>
-                        <th>Payroll Month</th>
                         <th>Work Days</th>
-                        <th>Overtime</th>
-                        <th>Total Amount</th>
+                        <th>Overtime Hours</th>
+                        <th>Overtime Amount</th>
+                        <th>Gross Pay</th>
+                        <th>Net Pay</th>
+                        <th>Pension</th>
+                        <th>PAYE Tax</th>
                         <th>Status</th>
                         <th>Approval</th>
                         <th>Actions</th>
@@ -1272,7 +1560,10 @@
                         @php
                             $emp = $row->employee;
                             $empInit = $emp ? strtoupper(substr($emp->first_name ?? '', 0, 1) . substr($emp->last_name ?? '', 0, 1)) : '??';
-                            $month = $row->payrollMonth;
+                            $payrollEntry = $row->payrollEntry;
+                            $workDays = $payrollEntry ? $payrollEntry->work_days : 0;
+                            $overtimeHours = $payrollEntry ? $payrollEntry->overtime_hours_worked : 0;
+                            $overtimeAmount = $payrollEntry ? $payrollEntry->overtime_total_amount : 0;
                             $st = $row->status instanceof \BackedEnum ? $row->status->value : ($row->status ?? 'draft');
                             $ap = $row->approval_status instanceof \BackedEnum ? $row->approval_status->value : ($row->approval_status ?? 'pending');
                             $stCls = match ($st) { 'paid' => 'pb-green', 'processed' => 'pb-blue', 'cancelled' => 'pb-red', default => 'pb-gray'};
@@ -1285,50 +1576,43 @@
                                     <div class="pe-emp-av">{{ $empInit }}</div>
                                     <div>
                                         <div class="pe-emp-name">
-                                            {{ $emp ? trim(($emp->first_name ?? '') . ' ' . ($emp->last_name ?? '')) : '—' }}</div>
+                                            {{ $emp ? trim(($emp->first_name ?? '') . ' ' . ($emp->last_name ?? '')) : '—' }}
+                                        </div>
                                         <div class="pe-emp-dept">{{ $emp?->department?->name ?? '' }}</div>
                                     </div>
                                 </div>
                             </td>
+                            <td>{{ $workDays }} days</td>
+                            <td>{{ $overtimeHours }} hrs</td>
+                            <td>RWF {{ number_format($overtimeAmount, 2) }}</td>
                             <td>
-                                <div style="font-weight:700;color:var(--ink2);">{{ $month?->name ?? '—' }}</div>
-                                @if($month)
-                                    <div style="font-size:11px;color:var(--ink4);">
-                                        {{ \Carbon\Carbon::parse($month->start_date)->format('M d') }} –
-                                        {{ \Carbon\Carbon::parse($month->end_date)->format('M d, Y') }}
-                                    </div>
-                                @endif
-                            </td>
-                            <td>
-                                <div style="font-weight:700;color:var(--ink);">{{ number_format($row->work_days, 1) }} days
-                                </div>
-                                <div class="pe-amount-sub">@ RWF {{ number_format($row->daily_rate, 0) }}/day</div>
-                            </td>
-                            <td>
-                                @if($row->overtime_hours_worked > 0)
-                                    <div style="font-weight:700;color:var(--indigo);">
-                                        {{ number_format($row->overtime_hours_worked, 1) }} hrs</div>
-                                    <div class="pe-amount-sub">RWF {{ number_format($row->overtime_total_amount, 0) }}</div>
-                                @else
-                                    <span style="color:var(--ink4);font-size:12px;">—</span>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="pe-amount">RWF {{ number_format($row->total_amount, 2) }}</div>
+                                <div class="pe-amount">RWF {{ number_format($row->gross_pay, 2) }}</div>
                                 <div class="pe-amount-sub">gross pay</div>
+                            </td>
+                            <td>
+                                <div class="pe-amount">RWF {{ number_format($row->net_pay, 2) }}</div>
+                                <div class="pe-amount-sub">net pay</div>
+                            </td>
+                            <td>
+                                <div class="pe-amount">RWF {{ number_format($row->pension, 2) }}</div>
+                                <div class="pe-amount-sub">pension</div>
+                            </td>
+                            <td>
+                                <div class="pe-amount">RWF {{ number_format($row->paye, 2) }}</div>
+                                <div class="pe-amount-sub">PAYE tax</div>
                             </td>
                             <td><span class="pe-badge {{ $stCls }}">{{ ucfirst($st) }}</span></td>
                             <td><span class="pe-badge {{ $apCls }}">{{ ucfirst($ap) }}</span></td>
                             <td>
                                 <div class="pe-actions">
-                                    <button class="pe-btn pe-btn-ghost pe-btn-sm" wire:click="openView({{ $row->id }})"
+                                    <button class="pe-btn pe-btn-ghost pe-btn-sm" wire:click="openView('{{ $row->id }}')"
                                         title="View">
                                         <svg viewBox="0 0 24 24">
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                             <circle cx="12" cy="12" r="3" />
                                         </svg>
                                     </button>
-                                    <button class="pe-btn pe-btn-outline pe-btn-sm" wire:click="openEdit({{ $row->id }})"
+                                    <button class="pe-btn pe-btn-outline pe-btn-sm" wire:click="openEdit('{{ $row->id }}')"
                                         title="Edit">
                                         <svg viewBox="0 0 24 24">
                                             <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -1336,7 +1620,7 @@
                                         </svg>
                                     </button>
                                     @if($ap !== 'approved')
-                                        <button class="pe-btn pe-btn-green pe-btn-sm" wire:click="approve({{ $row->id }})"
+                                        <button class="pe-btn pe-btn-green pe-btn-sm" wire:click="approve('{{ $row->id }}')"
                                             wire:confirm="Approve this payroll entry?" title="Approve">
                                             <svg viewBox="0 0 24 24">
                                                 <polyline points="20 6 9 17 4 12" />
@@ -1344,7 +1628,7 @@
                                         </button>
                                     @endif
                                     <button class="pe-btn pe-btn-danger pe-btn-sm"
-                                        wire:click="confirmDelete({{ $row->id }})" title="Delete">
+                                        wire:click="confirmDelete('{{ $row->id }}')" title="Delete">
                                         <svg viewBox="0 0 24 24">
                                             <polyline points="3 6 5 6 21 6" />
                                             <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
@@ -1355,7 +1639,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9">
+                            <td colspan="13">
                                 <div class="pe-empty">
                                     <div class="pe-empty-icon">
                                         <svg viewBox="0 0 24 24">
@@ -1365,17 +1649,8 @@
                                     </div>
                                     <div class="pe-empty-ttl">No payroll entries found</div>
                                     <div class="pe-empty-sub">
-                                        {{ $search || $filterStatus || $filterApproval || $filterMonth ? 'Try adjusting your filters.' : 'Click "New Entry" to add the first payroll entry.' }}
+                                        {{ $search || $filterStatus || $filterApproval || $filterMonth ? 'Try adjusting your filters.' : 'Click "Generate Payslip" to create the first payslip.' }}
                                     </div>
-                                    @unless($search || $filterStatus || $filterApproval || $filterMonth)
-                                        <button class="pe-btn pe-btn-primary" wire:click="openCreate" style="margin-top:8px;">
-                                            <svg viewBox="0 0 24 24">
-                                                <line x1="12" y1="5" x2="12" y2="19" />
-                                                <line x1="5" y1="12" x2="19" y2="12" />
-                                            </svg>
-                                            Create First Entry
-                                        </button>
-                                    @endunless
                                 </div>
                             </td>
                         </tr>
@@ -1387,362 +1662,294 @@
         @if($records->hasPages())
             <div class="pe-pager">
                 <div class="pe-pager-info">Showing {{ $records->firstItem() }}–{{ $records->lastItem() }} of
-                    {{ $records->total() }}</div>
+                    {{ $records->total() }}
+                </div>
                 {{ $records->links() }}
             </div>
         @endif
     </div>
 
-    {{-- ══ CREATE / EDIT MODAL ════════════════════════════════ --}}
-    @if($showModal)
-        <div class="pe-modal-bg" wire:click.self="closeModal">
-            <div class="pe-modal pe-modal-lg">
-
-                <div class="pe-modal-hd">
-                    <div class="pe-modal-hd-left">
-                        <div class="pe-modal-hd-icon">
+    {{-- Removed orphaned HTML elements --}}
+    {{-- <div class="pe-actions">
+        <button class="pe-btn pe-btn-ghost pe-btn-sm" wire:click="openView({{ $row->id }})" title="View">
+            <svg viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+            @empty
+            <tr>
+                <td colspan="13">
+                    <div class="pe-empty">
+                        <div class="pe-empty-icon">
                             <svg viewBox="0 0 24 24">
                                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                                 <polyline points="14 2 14 8 20 8" />
                             </svg>
                         </div>
-                        <div>
-                            <div class="pe-modal-title">{{ $editingId ? 'Edit Payroll Entry' : 'New Payroll Entry' }}</div>
-                            <div class="pe-modal-sub">Work days pay and overtime totals are auto-calculated</div>
+                        <div class="pe-empty-ttl">No payslip entries found</div>
+                        <div class="pe-empty-sub">
+                            {{ $search || $filterStatus || $filterApproval || $filterMonth ? 'Try adjusting your
+                            filters.' : 'Click "Generate Payslip" to create the first payslip.' }}
                         </div>
                     </div>
-                    <button class="pe-modal-close" wire:click="closeModal">
-                        <svg viewBox="0 0 24 24">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
+                </td>
+            </tr>
+            @endforelse
+            </tbody>
+            </table>
+    </div>
 
-                <div class="pe-modal-body">
-
-                    {{-- Code + identifiers --}}
-                    <div class="pe-grid2">
-                        <div class="pe-field">
-                            <label>Entry Code <span class="req">*</span></label>
-                            <input type="text" wire:model="code" placeholder="PE-00001" style="text-transform:uppercase;">
-                            @error('code')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="pe-field">
-                            <label>Payroll Month <span class="req">*</span></label>
-                            <select wire:model="payrollMonthId">
-                                <option value="">— Select month —</option>
-                                @foreach($payrollMonths as $pm)
-                                    <option value="{{ $pm['id'] }}">{{ $pm['code'] }} — {{ $pm['name'] }}</option>
-                                @endforeach
-                            </select>
-                            @error('payrollMonthId')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-
-                    <div class="pe-field">
-                        <label>Employee <span class="req">*</span></label>
-                        <select wire:model="employeeId">
-                            <option value="">— Select employee —</option>
-                            @foreach($employees as $emp)
-                                <option value="{{ $emp['id'] }}">{{ $emp['first_name'] }} {{ $emp['last_name'] }}</option>
-                            @endforeach
-                        </select>
-                        @error('employeeId')<div class="pe-field-err">{{ $message }}</div>@enderror
-                    </div>
-
-                    {{-- Regular pay ─────────────────────────────── --}}
-                    <div class="pe-section-lbl">Regular Pay</div>
-                    <div class="pe-grid2">
-                        <div class="pe-field">
-                            <label>Daily Rate (RWF) <span class="req">*</span></label>
-                            <input type="number" wire:model.live="dailyRate" placeholder="0.00" step="0.01" min="0">
-                            @error('dailyRate')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="pe-field">
-                            <label>Work Days <span class="req">*</span></label>
-                            <input type="number" wire:model.live="workDays" placeholder="0" step="0.5" min="0">
-                            @error('workDays')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-                    <div class="pe-field">
-                        <label>Work Days Pay (auto-calculated)</label>
-                        <input type="number" wire:model="workDaysPay" placeholder="0.00" step="0.01" readonly>
-                        @error('workDaysPay')<div class="pe-field-err">{{ $message }}</div>@enderror
-                    </div>
-
-                    {{-- Overtime ─────────────────────────────────── --}}
-                    <div class="pe-section-lbl">Overtime</div>
-                    <div class="pe-grid2">
-                        <div class="pe-field">
-                            <label>Overtime Hour Rate (RWF)</label>
-                            <input type="number" wire:model.live="overtimeHourRate" placeholder="0.00" step="0.01" min="0">
-                            @error('overtimeHourRate')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="pe-field">
-                            <label>Overtime Hours Worked</label>
-                            <input type="number" wire:model.live="overtimeHoursWorked" placeholder="0" step="0.5" min="0">
-                            @error('overtimeHoursWorked')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-                    <div class="pe-field">
-                        <label>Overtime Total Amount (auto-calculated)</label>
-                        <input type="number" wire:model="overtimeTotalAmount" placeholder="0.00" step="0.01" readonly>
-                        @error('overtimeTotalAmount')<div class="pe-field-err">{{ $message }}</div>@enderror
-                    </div>
-
-                    {{-- Live calculation preview --}}
-                    <div class="pe-calc-preview">
-                        <div class="pe-calc-item">
-                            <div class="pe-calc-lbl">Gross Pay</div>
-                            <div class="pe-calc-val">RWF {{ number_format((float) ($grossPay ?: 0), 0) }}</div>
-                        </div>
-                        <div class="pe-calc-item">
-                            <div class="pe-calc-lbl">Taxable Income</div>
-                            <div class="pe-calc-val">RWF {{ number_format((float) ($taxableIncome ?: 0), 0) }}</div>
-                        </div>
-                        <div class="pe-calc-item total">
-                            <div class="pe-calc-lbl">Net Pay</div>
-                            <div class="pe-calc-val">RWF {{ number_format((float) ($netPay ?: 0), 0) }}</div>
-                        </div>
-                    </div>
-
-                    {{-- Total (manual override) ──────────────────── --}}
-                    <div class="pe-field">
-                        <label>Total Amount (RWF) <span class="req">*</span></label>
-                        <input type="number" wire:model="totalAmount" placeholder="0.00" step="0.01" min="0">
-                        <div style="font-size:11px;color:var(--ink4);margin-top:3px;">Auto-filled from calculation above.
-                            You may adjust manually if needed.</div>
-                        @error('totalAmount')<div class="pe-field-err">{{ $message }}</div>@enderror
-                    </div>
-
-                    {{-- Status ───────────────────────────────────── --}}
-                    <div class="pe-section-lbl">Status</div>
-                    <div class="pe-grid2">
-                        <div class="pe-field">
-                            <label>Entry Status <span class="req">*</span></label>
-                            <select wire:model="status">
-                                @foreach($statuses as $val => $label)
-                                    <option value="{{ $val }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @error('status')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="pe-field">
-                            <label>Approval Status <span class="req">*</span></label>
-                            <select wire:model="approvalStatus">
-                                @foreach($approvalStatuses as $val => $label)
-                                    <option value="{{ $val }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @error('approvalStatus')<div class="pe-field-err">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-
-                </div>{{-- /pe-modal-body --}}
-
-                <div class="pe-modal-footer">
-                    <button class="pe-btn pe-btn-outline" wire:click="closeModal">Cancel</button>
-                    <button class="pe-btn pe-btn-primary" wire:click="save" wire:loading.attr="disabled">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                            <polyline points="17 21 17 13 7 13 7 21" />
-                        </svg>
-                        <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update' : 'Create' }} Entry</span>
-                        <span wire:loading wire:target="save">Saving…</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+    @if($records->hasPages())
+    <div class="pe-pager">
+        <div class="pe-pager-info">Showing {{ $records->firstItem() }}–{{ $records->lastItem() }} of
+            {{ $records->total() }}</div>
+        {{ $records->links() }}
+    </div>
     @endif
+</div>
 
-    {{-- ══ VIEW MODAL ══════════════════════════════════════════ --}}
-    @if($showView && $viewRecord)
-        <div class="pe-modal-bg" wire:click.self="closeView">
-            <div class="pe-modal pe-modal-lg">
+{{-- ══ VIEW MODAL ══════════════════════════════════════════ --}}
+@if($showView && $viewRecord)
+    <div class="pe-modal-bg" wire:click.self="closeView">
+        <div class="pe-modal pe-modal-lg">
 
-                <div class="pe-modal-hd">
-                    <div class="pe-modal-hd-left">
-                        <div class="pe-modal-hd-icon">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="pe-modal-title">{{ $viewRecord->code }}</div>
-                            <div class="pe-modal-sub">
-                                {{ $viewRecord->employee ? trim(($viewRecord->employee->first_name ?? '') . ' ' . ($viewRecord->employee->last_name ?? '')) : '—' }}
-                                @if($viewRecord->payrollMonth) · {{ $viewRecord->payrollMonth->name }} @endif
-                            </div>
-                        </div>
-                    </div>
-                    <button class="pe-modal-close" wire:click="closeView">
+            <div class="pe-modal-hd">
+                <div class="pe-modal-hd-left">
+                    <div class="pe-modal-hd-icon">
                         <svg viewBox="0 0 24 24">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
                         </svg>
-                    </button>
+                    </div>
+                    <div>
+                        <div class="pe-modal-title">{{ $viewRecord->code }}</div>
+                        @php
+                            $vEmp = $viewRecord->payrollEntry?->employee ?? $viewRecord->employee ?? null;
+                            $vEmpName = $vEmp ? trim(($vEmp->first_name ?? '') . ' ' . ($vEmp->last_name ?? '')) : '—';
+                            $vMonth = $viewRecord->payrollEntry?->payrollMonth ?? $viewRecord->payrollMonth ?? null;
+                        @endphp
+                        <div class="pe-modal-sub">{{ $vEmpName }}{{ $vMonth ? ' · ' . $vMonth->name : '' }}</div>
+                    </div>
                 </div>
+                <button class="pe-modal-close" wire:click="closeView">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
 
-                <div class="pe-modal-body" style="padding-top:20px;">
-                    @php
-                        $vSt = $viewRecord->status instanceof \BackedEnum ? $viewRecord->status->value : ($viewRecord->status ?? '');
-                        $vAp = $viewRecord->approval_status instanceof \BackedEnum ? $viewRecord->approval_status->value : ($viewRecord->approval_status ?? '');
-                        $vStCls = match ($vSt) { 'paid' => 'pb-green', 'processed' => 'pb-blue', 'cancelled' => 'pb-red', default => 'pb-gray'};
-                        $vApCls = match ($vAp) { 'approved' => 'pb-green', 'rejected' => 'pb-red', 'cancelled' => 'pb-red', 'draft' => 'pb-gray', default => 'pb-amber'};
-                    @endphp
-                    <div class="pe-view-grid">
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Code</div>
-                            <div class="pe-view-val"><span class="pe-code">{{ $viewRecord->code }}</span></div>
-                        </div>
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Employee</div>
-                            <div class="pe-view-val">
-                                {{ $viewRecord->employee ? trim(($viewRecord->employee->first_name ?? '') . ' ' . ($viewRecord->employee->last_name ?? '')) : '—' }}
-                            </div>
-                        </div>
+            <div class="pe-modal-body" style="padding-top:20px;">
+                @php
+                    $vSt = $viewRecord->status instanceof \BackedEnum ? $viewRecord->status->value : ($viewRecord->status ?? '');
+                    $vAp = $viewRecord->approval_status instanceof \BackedEnum ? $viewRecord->approval_status->value : ($viewRecord->approval_status ?? '');
+                    $vStCls = match ($vSt) { 'Posted' => 'pb-green', 'Approved' => 'pb-blue', 'Printed' => 'pb-blue', 'Cancelled' => 'pb-red', default => 'pb-gray'};
+                    $vApCls = match ($vAp) { 'approved' => 'pb-green', 'rejected' => 'pb-red', 'cancelled' => 'pb-red', default => 'pb-amber'};
+                    $vPE = $viewRecord->payrollEntry;
+                @endphp
+
+                <div class="pe-view-grid">
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Payslip Code</div>
+                        <div class="pe-view-val"><span class="pe-code">{{ $viewRecord->code }}</span></div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Employee</div>
+                        <div class="pe-view-val">{{ $vEmpName }}</div>
+                    </div>
+                    @if($vMonth)
                         <div class="pe-view-row full">
                             <div class="pe-view-lbl">Payroll Month</div>
                             <div class="pe-view-val">
-                                {{ $viewRecord->payrollMonth?->name ?? '—' }}
-                                @if($viewRecord->payrollMonth)
-                                    <span style="font-size:12px;color:var(--ink4);margin-left:8px;">
-                                        {{ \Carbon\Carbon::parse($viewRecord->payrollMonth->start_date)->format('M d') }}
-                                        – {{ \Carbon\Carbon::parse($viewRecord->payrollMonth->end_date)->format('M d, Y') }}
-                                    </span>
-                                @endif
+                                {{ $vMonth->name }}
+                                <span style="font-size:12px;color:var(--ink4);margin-left:8px;">
+                                    {{ \Carbon\Carbon::parse($vMonth->start_date)->format('M d') }} –
+                                    {{ \Carbon\Carbon::parse($vMonth->end_date)->format('M d, Y') }}
+                                </span>
                             </div>
                         </div>
-
-                        {{-- Pay breakdown ─────────────────────────── --}}
-                        <div class="pe-breakdown">
-                            <div class="pe-breakdown-title">Pay Breakdown</div>
-                            <div class="pe-breakdown-row">
-                                <span>Daily Rate</span>
-                                <span>RWF {{ number_format($viewRecord->daily_rate, 2) }}</span>
-                            </div>
-                            <div class="pe-breakdown-row">
-                                <span>Work Days</span>
-                                <span>{{ number_format($viewRecord->work_days, 1) }} days</span>
-                            </div>
-                            <div class="pe-breakdown-row">
-                                <span>Work Days Pay</span>
-                                <span>RWF {{ number_format($viewRecord->work_days_pay, 2) }}</span>
-                            </div>
-                            @if($viewRecord->overtime_hours_worked > 0)
-                                <div class="pe-breakdown-row">
-                                    <span>Overtime Rate</span>
-                                    <span>RWF {{ number_format($viewRecord->overtime_hour_rate, 2) }}/hr</span>
-                                </div>
-                                <div class="pe-breakdown-row">
-                                    <span>Overtime Hours</span>
-                                    <span>{{ number_format($viewRecord->overtime_hours_worked, 1) }} hrs</span>
-                                </div>
-                                <div class="pe-breakdown-row">
-                                    <span>Overtime Total</span>
-                                    <span>RWF {{ number_format($viewRecord->overtime_total_amount, 2) }}</span>
-                                </div>
-                            @endif
-                            <div class="pe-breakdown-row">
-                                <span>Gross Total</span>
-                                <span style="color:var(--indigo);">RWF
-                                    {{ number_format($viewRecord->total_amount, 2) }}</span>
-                            </div>
-                        </div>
-
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Entry Status</div>
-                            <div class="pe-view-val"><span class="pe-badge {{ $vStCls }}">{{ ucfirst($vSt) }}</span></div>
-                        </div>
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Approval Status</div>
-                            <div class="pe-view-val"><span class="pe-badge {{ $vApCls }}">{{ ucfirst($vAp) }}</span></div>
-                        </div>
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Payslip Linked</div>
-                            <div class="pe-view-val">
-                                @if($viewRecord->payslipEntry)
-                                    <span class="pe-badge pb-blue">{{ $viewRecord->payslipEntry->code }}</span>
-                                @else
-                                    <span style="color:var(--ink4);">None</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Payments</div>
-                            <div class="pe-view-val">
-                                <span class="pe-badge pb-purple">{{ $viewRecord->paymentHistories?->count() ?? 0 }}
-                                    record(s)</span>
-                            </div>
-                        </div>
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Created</div>
-                            <div class="pe-view-val" style="font-size:12.5px;">
-                                {{ \Carbon\Carbon::parse($viewRecord->created_at)->format('M d, Y · H:i') }}</div>
-                        </div>
-                        <div class="pe-view-row">
-                            <div class="pe-view-lbl">Last Updated</div>
-                            <div class="pe-view-val" style="font-size:12.5px;">
-                                {{ \Carbon\Carbon::parse($viewRecord->updated_at)->format('M d, Y · H:i') }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pe-modal-footer">
-                    <button class="pe-btn pe-btn-outline" wire:click="closeView">Close</button>
-                    <button class="pe-btn pe-btn-ghost" wire:click="openEdit({{ $viewRecord->id }})">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                        Edit
-                    </button>
-                    @if($vAp !== 'approved')
-                        <button class="pe-btn pe-btn-green" wire:click="approve({{ $viewRecord->id }})"
-                            wire:confirm="Approve this payroll entry?">
-                            <svg viewBox="0 0 24 24">
-                                <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            Approve
-                        </button>
                     @endif
-                </div>
-            </div>
-        </div>
-    @endif
 
-    {{-- ══ DELETE CONFIRM ══════════════════════════════════════ --}}
-    @if($showDelete)
-        <div class="pe-modal-bg" wire:click.self="cancelDelete">
-            <div class="pe-modal pe-del-modal">
-                <div class="pe-del-body">
-                    <div class="pe-del-icon">
-                        <svg viewBox="0 0 24 24">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                        </svg>
+                    {{-- Pay Breakdown --}}
+                    <div class="pe-breakdown">
+                        <div class="pe-breakdown-title">Pay Breakdown</div>
+                        @if($vPE)
+                            <div class="pe-breakdown-row"><span>Daily Rate</span><span>RWF
+                                    {{ number_format($vPE->daily_rate, 2) }}</span></div>
+                            <div class="pe-breakdown-row"><span>Work Days</span><span>{{ number_format($vPE->work_days, 1) }}
+                                    days</span></div>
+                            <div class="pe-breakdown-row"><span>Work Days Pay</span><span>RWF
+                                    {{ number_format($vPE->work_days_pay, 2) }}</span></div>
+                            @if($vPE->overtime_hours_worked > 0)
+                                <div class="pe-breakdown-row"><span>Overtime ({{ number_format($vPE->overtime_hours_worked, 1) }}
+                                        hrs)</span><span>RWF {{ number_format($vPE->overtime_total_amount, 2) }}</span></div>
+                            @endif
+                        @endif
+                        <div class="pe-breakdown-row"><span>Gross Pay</span><span>RWF
+                                {{ number_format($viewRecord->gross_pay, 2) }}</span></div>
+                        <div class="pe-breakdown-row"><span>Pension (Employee)</span><span>– RWF
+                                {{ number_format($viewRecord->pension, 2) }}</span></div>
+                        <div class="pe-breakdown-row"><span>Maternity (Employee)</span><span>– RWF
+                                {{ number_format($viewRecord->maternity, 2) }}</span></div>
+                        <div class="pe-breakdown-row"><span>PAYE Tax</span><span>– RWF
+                                {{ number_format($viewRecord->paye, 2) }}</span></div>
+                        @if($viewRecord->cbhi > 0)
+                            <div class="pe-breakdown-row"><span>CBHI</span><span>– RWF
+                                    {{ number_format($viewRecord->cbhi, 2) }}</span></div>
+                        @endif
+                        @if(($viewRecord->employer_contribution ?? 0) > 0)
+                            <div class="pe-breakdown-row"><span>Employer Contribution</span><span>RWF
+                                    {{ number_format($viewRecord->employer_contribution, 2) }}</span></div>
+                        @endif
+                        <div class="pe-breakdown-row">
+                            <span>Net Pay</span>
+                            <span style="color:var(--green);">RWF {{ number_format($viewRecord->net_pay, 2) }}</span>
+                        </div>
                     </div>
-                    <div class="pe-del-ttl">Delete Payroll Entry?</div>
-                    <div class="pe-del-sub">This will permanently remove this entry. Entries with linked payslips or payment
-                        records cannot be deleted.</div>
-                </div>
-                <div class="pe-modal-footer" style="justify-content:center;gap:12px;">
-                    <button class="pe-btn pe-btn-outline" wire:click="cancelDelete">Cancel</button>
-                    <button class="pe-btn pe-btn-danger" wire:click="deleteRecord" wire:loading.attr="disabled">
-                        <svg viewBox="0 0 24 24">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                        </svg>
-                        <span wire:loading.remove wire:target="deleteRecord">Yes, Delete</span>
-                        <span wire:loading wire:target="deleteRecord">Deleting…</span>
-                    </button>
+
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Taxable Income</div>
+                        <div class="pe-view-val">RWF {{ number_format($viewRecord->taxable_income, 2) }}</div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Tax Bracket</div>
+                        <div class="pe-view-val" style="font-size:12.5px;">{{ $viewRecord->tax_bracket_used ?: '—' }}</div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Effective Tax Rate</div>
+                        <div class="pe-view-val">{{ $viewRecord->effective_tax_rate ?? 0 }}%</div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Employer Contribution</div>
+                        <div class="pe-view-val">RWF {{ number_format($viewRecord->employer_contribution ?? 0, 2) }}</div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Status</div>
+                        <div class="pe-view-val"><span class="pe-badge {{ $vStCls }}">{{ ucfirst($vSt) }}</span></div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Approval</div>
+                        <div class="pe-view-val"><span class="pe-badge {{ $vApCls }}">{{ ucfirst($vAp) }}</span></div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Created</div>
+                        <div class="pe-view-val" style="font-size:12.5px;">
+                            {{ \Carbon\Carbon::parse($viewRecord->created_at)->format('M d, Y · H:i') }}</div>
+                    </div>
+                    <div class="pe-view-row">
+                        <div class="pe-view-lbl">Last Updated</div>
+                        <div class="pe-view-val" style="font-size:12.5px;">
+                            {{ \Carbon\Carbon::parse($viewRecord->updated_at)->format('M d, Y · H:i') }}</div>
+                    </div>
                 </div>
             </div>
+
+            <div class="pe-modal-footer">
+                <button class="pe-btn pe-btn-outline" wire:click="closeView">Close</button>
+
+
+                @if($vAp !== 'approved')
+                    <button class="pe-btn pe-btn-green" wire:click="approve('{{ $viewRecord->id }}')"
+                        wire:confirm="Are you sure you want to approve payslip {{ $viewRecord->code }}? This action cannot be undone.">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Approve Payslip
+                    </button>
+                @endif
+            </div>
         </div>
-    @endif
+    </div>
+@endif
+{{-- ══ DELETE CONFIRM ══════════════════════════════════════ --}}
+@if($showDelete)
+    <div class="pe-modal-bg" wire:click.self="cancelDelete">
+        <div class="pe-modal pe-del-modal">
+            <div class="pe-del-body">
+                <div class="pe-del-icon">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                    </svg>
+                </div>
+                <div class="pe-del-ttl">Delete Payroll Entry?</div>
+                <div class="pe-del-sub">This will permanently remove this entry. Entries with linked payslips or payment
+                    records cannot be deleted.</div>
+            </div>
+            <div class="pe-modal-footer" style="justify-content:center;gap:12px;">
+                <button class="pe-btn pe-btn-outline" wire:click="cancelDelete">Cancel</button>
+                <button class="pe-btn pe-btn-danger" wire:click="deleteRecord" wire:loading.attr="disabled">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                    </svg>
+                    <span wire:loading.remove wire:target="deleteRecord">Yes, Delete</span>
+                    <span wire:loading wire:target="deleteRecord">Deleting…</span>
+                </button>
+            </div>
+        </div>
+    </div>
+@endif
 
 </div>{{-- /pe-root --}}
+
+<script>
+    // Payslip Entry Manager - Enhanced UI Interactions
+    document.addEventListener('livewire:init', () => {
+        // Initialize form enhancements
+        initializeFormEnhancements();
+        initializeTooltips();
+        initializeValidation();
+    });
+
+    function initializeFormEnhancements() {
+        // Auto-format numeric inputs
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('blur', function () {
+                if (this.value && !isNaN(this.value)) {
+                    this.value = parseFloat(this.value).toFixed(2);
+                }
+            });
+        });
+
+        // Auto-uppercase code inputs
+        document.querySelectorAll('input[wire\\:model*="code"]').forEach(input => {
+            input.addEventListener('input', function () {
+                this.value = this.value.toUpperCase();
+            });
+        });
+    }
+
+    function initializeTooltips() {
+        // Add helpful tooltips for key fields
+        const tooltips = {
+            'grossPay': 'Base salary before any deductions or benefits',
+            'housingAllowance': 'Housing allowance provided by employer',
+            'transportAllowance': 'Transportation allowance for work-related travel',
+            'mealAllowance': 'Meal allowance provided by employer',
+            'overrideAutoTax': 'Enable to manually set tax calculations'
+        };
+
+        Object.keys(tooltips).forEach(fieldName => {
+            const field = document.querySelector(`[wire\\:model="${fieldName}"]`);
+            if (field) {
+                field.title = tooltips[fieldName];
+            }
+        });
+    }
+
+    function initializeValidation() {
+        // Real-time validation feedback
+        document.querySelectorAll('input[wire\\:model]').forEach(field => {
+            field.addEventListener('input', function () {
+                if (this.hasAttribute('min') && parseFloat(this.value) < parseFloat(this.getAttribute('min'))) {
+                    this.style.borderColor = 'var(--red)';
+                } else {
+                    this.style.borderColor = '';
+                }
+            });
+        });
+    }
+</script>

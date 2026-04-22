@@ -572,7 +572,7 @@ table.pay-table { width: 100%; border-collapse: collapse; }
                             </td>
                             <td>
                                 @if($entry->payslipEntry)
-                                    <button class="btn-payslip">View Payslip</button>
+                                    <a class="btn-payslip" href="{{ route('employee.payroll.download', ['entryId' => $entry->payslipEntry->id]) }}" target="_blank">View Payslip</a>
                                 @else
                                     <span style="font-size:11.5px;color:var(--ink4);">Not yet</span>
                                 @endif

@@ -1,329 +1,193 @@
-<div class="space-y-6">
-    <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Custom Report Builder</h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Create custom HR reports with your preferred metrics and filters</p>
-            </div>
-            <button
-                wire:click="$set('showBuilder', true)"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-12l-4 4M4 4l4 4m-12-8V4m0 0L8 8m4 4l4-4m4-4v12"></path>
-                </svg>
-                Create New Report
+<div class="rp-local-shell">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Sora:wght@700;800;900&display=swap');
+
+    .rp-local-shell {
+        --blue: #3B6FE8;
+        --blue-2: #2755CC;
+        --blue-lt: rgba(59, 111, 232, 0.08);
+        --bg: #F8F9FE;
+        --white: #FFFFFF;
+        --ink: #1E293B;
+        --ink2: #475569;
+        --ink3: #64748B;
+        --ink4: #94A3B8;
+        --border: rgba(226, 232, 240, 0.8);
+        --sh-sm: 0 4px 20px rgba(0, 0, 0, 0.02);
+        --sh-md: 0 10px 30px rgba(59, 111, 232, 0.06);
+        --r: 16px;
+        --r-lg: 24px;
+
+        font-family: 'DM Sans', sans-serif;
+        color: var(--ink);
+        display: grid; 
+        grid-template-columns: 260px 1fr; 
+        gap: 32px; 
+        align-items: flex-start;
+        padding: 32px 40px;
+        background: var(--bg);
+        min-height: 100vh;
+    }
+
+    /* ══ SIDE NAV ═════════════════════════════════════════════ */
+    .rp-local-sidebar { position: sticky; top: 32px; display: flex; flex-direction: column; gap: 24px; }
+    .rp-local-nav { display: flex; flex-direction: column; gap: 8px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 12px; box-shadow: var(--sh-sm); }
+    .rp-nav-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--ink4); padding: 12px 16px 4px; letter-spacing: 0.08em; }
+    .rp-nav-item {
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r);
+        font-size: 14px; font-weight: 700; color: var(--ink2); cursor: pointer; border: none; background: transparent; 
+        font-family: 'DM Sans', sans-serif; transition: all .2s; text-align: left; width: 100%;
+    }
+    .rp-nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; opacity: 0.6; }
+    .rp-nav-item:hover { background: var(--blue-lt); color: var(--blue); }
+    .rp-nav-item.active { background: var(--blue); color: #fff; box-shadow: 0 8px 20px rgba(59, 111, 232, 0.25); }
+    .rp-nav-item.active svg { opacity: 1; stroke: #fff; }
+
+    /* Main Content */
+    .rp-local-main { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+    .rp-header { display: flex; justify-content: space-between; align-items: center; }
+    .rp-title { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; }
+
+    /* Card */
+    .rp-card { background: var(--white); border-radius: var(--r); border: 1px solid var(--border); box-shadow: var(--sh-sm); overflow: hidden; padding: 32px; }
+    .rp-card-hd { padding-bottom: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    
+    .rp-form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+    .rp-group { display: flex; flex-direction: column; gap: 8px; }
+    .rp-label { font-size: 12px; font-weight: 700; color: var(--ink4); text-transform: uppercase; letter-spacing: 0.05em; }
+    .rp-input { padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); font-family: inherit; font-size: 14px; background: var(--white); color: var(--ink); transition: border-color .15s; }
+    .rp-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-lt); }
+
+    .rp-table { width: 100%; border-collapse: collapse; }
+    .rp-table th { text-align: left; padding: 16px 24px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--ink4); letter-spacing: 0.08em; border-bottom: 2px solid var(--border); }
+    .rp-table td { padding: 20px 24px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--ink2); }
+
+    .rp-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; font-family: 'Sora', sans-serif; }
+    .rp-btn-primary { background: var(--blue); color: #fff; box-shadow: 0 8px 20px rgba(59, 111, 232, 0.25); }
+    .rp-btn-primary:hover { background: var(--blue-2); transform: translateY(-1px); }
+    .la-hero {
+        background: linear-gradient(118deg, #1A3FA8 0%, #2755CC 36%, #3B6FE8 68%, #6B4FDB 100%);
+        border-radius: 20px;
+        padding: 32px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 16px 48px rgba(59,111,232,0.14);
+        margin-bottom: 24px;
+        color: #fff;
+    }
+    .la-hero::before { content: ''; position: absolute; top: -50px; right: 240px; width: 250px; height: 250px; border-radius: 50%; background: rgba(255,255,255,0.06); pointer-events: none; }
+    .la-hero::after { content: ''; position: absolute; bottom: -40px; left: 60px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.04); pointer-events: none; }
+    .la-hero-left { display: flex; align-items: center; gap: 24px; position: relative; z-index: 1; }
+    .la-hero-icon { width: 64px; height: 64px; border-radius: 18px; background: rgba(255,255,255,0.18); border: 2px solid rgba(255,255,255,0.30); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .la-hero-icon svg { width: 30px; height: 30px; stroke: #fff; fill: none; stroke-width: 2; }
+    .la-hero-title { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .la-hero-sub { font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; }
+    .la-hero-chips { display: flex; gap: 10px; margin-top: 14px; }
+    .la-hero-chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.20); border-radius: 100px; padding: 5px 14px; font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.95); }
+    .la-hero-right { display: flex; gap: 40px; position: relative; z-index: 1; flex-shrink: 0; }
+    .la-hero-stat { text-align: center; }
+    .la-hero-sv { font-family: 'Sora', sans-serif; font-size: 36px; font-weight: 900; color: #fff; line-height: 1; }
+    .la-hero-sl { font-size: 11px; color: rgba(255,255,255,0.60); font-weight: 700; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.1em; }
+</style>
+    <aside class="rp-local-sidebar">
+        <nav class="rp-local-nav">
+            <div class="rp-nav-label">Reports</div>
+            <button class="rp-nav-item {{ $reportCategory === 'employee' ? 'active' : '' }}" wire:click="$set('reportCategory', 'employee')">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>Employee List</span>
             </button>
-        </div>
-    </div>
-
-    <!-- Report Builder Modal -->
-    @if($showBuilder)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            <button class="rp-nav-item {{ $reportCategory === 'attendance' ? 'active' : '' }}" wire:click="$set('reportCategory', 'attendance')">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Attendance</span>
+            </button>
+            <button class="rp-nav-item {{ $reportCategory === 'performance' ? 'active' : '' }}" wire:click="$set('reportCategory', 'performance')">
+                <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                <span>Performance</span>
+            </button>
+            <button class="rp-nav-item {{ $reportCategory === 'leave' ? 'active' : '' }}" wire:click="$set('reportCategory', 'leave')">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>Leaves</span>
+            </button>
+            <button class="rp-nav-item {{ $reportCategory === 'payroll' ? 'active' : '' }}" wire:click="$set('reportCategory', 'payroll')">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <span>Payroll</span>
+            </button>
+        </nav>
+    </aside>
+    <main class="rp-local-main">
+        <div class="la-hero">
+            <div class="la-hero-left">
+                <div class="la-hero-icon">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 </div>
-
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-                    <form wire:submit="generateReport">
-                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                                Create Custom Report
-                            </h3>
-                            
-                            <div class="space-y-6">
-                                <!-- Basic Information -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Report Name</label>
-                                        <input
-                                            type="text"
-                                            wire:model="reportName"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            required
-                                        />
-                                        @error('reportName')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Report Type</label>
-                                        <select
-                                            wire:model="reportType"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            required
-                                        >
-                                            <option value="dashboard">Dashboard</option>
-                                            <option value="turnover">Turnover Analysis</option>
-                                            <option value="diversity">Diversity Statistics</option>
-                                            <option value="attendance">Attendance Report</option>
-                                            <option value="performance">Performance Report</option>
-                                            <option value="skill_gap">Skill Gap Analysis</option>
-                                            <option value="custom">Custom Report</option>
-                                        </select>
-                                        @error('reportType')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-                                        <select
-                                            wire:model="reportCategory"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            required
-                                        >
-                                            <option value="hr">HR</option>
-                                            <option value="finance">Finance</option>
-                                            <option value="operations">Operations</option>
-                                            <option value="management">Management</option>
-                                        </select>
-                                        @error('reportCategory')
-                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                                        <textarea
-                                            wire:model="reportDescription"
-                                            rows="3"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        ></textarea>
-                                    </div>
-                                </div>
-
-                                <!-- Date Range -->
-                                <div class="space-y-4">
-                                    <h4 class="text-md font-medium text-gray-900 dark:text-white">Date Range</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Range Type</label>
-                                            <select
-                                                wire:model.live="dateRangeType"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            >
-                                                <option value="custom">Custom Range</option>
-                                                <option value="this_week">This Week</option>
-                                                <option value="this_month">This Month</option>
-                                                <option value="this_quarter">This Quarter</option>
-                                                <option value="this_year">This Year</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
-                                            <input
-                                                type="date"
-                                                wire:model="startDate"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                required
-                                            />
-                                            @error('startDate')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
-                                            <input
-                                                type="date"
-                                                wire:model="endDate"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                required
-                                            />
-                                            @error('endDate')
-                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Metrics Selection -->
-                                <div>
-                                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Select Metrics</h4>
-                                    <div class="space-y-2">
-                                        @foreach($availableMetrics as $metric => $label)
-                                            <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $label }}</span>
-                                                <button
-                                                    wire:click="addMetric('{{ $metric }}')"
-                                                    class="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                                                    @if(in_array($metric, $selectedMetrics))
-                                                        disabled
-                                                    @endif
-                                                >
-                                                    @if(in_array($metric, $selectedMetrics))
-                                                        ✓ Added
-                                                    @else
-                                                        Add
-                                                    @endif
-                                                </button>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                <!-- Filters -->
-                                <div>
-                                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Filters</h4>
-                                    <div class="space-y-2">
-                                        @foreach($filters as $index => $filter)
-                                            <div class="flex items-center space-x-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                                                <select
-                                                    wire:model.live="filters.{{ $index }}.type"
-                                                    class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                >
-                                                    <option value="department">Department</option>
-                                                    <option value="position">Position</option>
-                                                    <option value="gender">Gender</option>
-                                                    <option value="age_group">Age Group</option>
-                                                    <option value="employment_type">Employment Type</option>
-                                                </select>
-                                                <input
-                                                    type="text"
-                                                    wire:model.live="filters.{{ $index }}.value"
-                                                    placeholder="Filter value"
-                                                    class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                />
-                                                <select
-                                                    wire:model.live="filters.{{ $index }}.operator"
-                                                    class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                >
-                                                    <option value="=">=">Greater or equal</option>
-                                                    <option value="<">Less than</option>
-                                                    <option value="="=">Equal to</option>
-                                                    <option value="!=">Not equal to</option>
-                                                </select>
-                                                <button
-                                                    wire:click="removeFilter('{{ $index }}')"
-                                                    class="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700"
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        @endforeach
-                                        <button
-                                            wire:click="addFilter('department')"
-                                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-white"
-                                        >
-                                            Add Filter
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Display Options -->
-                                <div class="space-y-4">
-                                    <h4 class="text-md font-medium text-gray-900 dark:text-white">Display Options</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Group By</label>
-                                            <select
-                                                wire:model="groupBy"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            >
-                                                <option value="">No Grouping</option>
-                                                <option value="department">Department</option>
-                                                <option value="position">Position</option>
-                                                <option value="gender">Gender</option>
-                                                <option value="age_group">Age Group</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sort By</label>
-                                            <select
-                                                wire:model="sortBy"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            >
-                                                <option value="">No Sorting</option>
-                                                <option value="name">Name</option>
-                                                <option value="date">Date</option>
-                                                <option value="score">Score</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sort Order</label>
-                                            <select
-                                                wire:model="sortOrder"
-                                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                            >
-                                                <option value="asc">Ascending</option>
-                                                <option value="desc">Descending</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Chart Type</label>
-                                        <select
-                                            wire:model="chartType"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        >
-                                            <option value="bar">Bar Chart</option>
-                                            <option value="line">Line Chart</option>
-                                            <option value="pie">Pie Chart</option>
-                                            <option value="area">Area Chart</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button
-                                type="submit"
-                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                            >
-                                Generate Report
-                            </button>
-                            <button
-                                type="button"
-                                wire:click="$set('showBuilder', false); resetForm()"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
+                <div>
+                    <div class="la-hero-title">Unified HR Reporting</div>
+                    <div class="la-hero-sub">Custom reports and data exports for all modules · {{ now()->format('Y') }}</div>
+                    <div class="la-hero-chips">
+                        <span class="la-hero-chip"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>{{ ucfirst($reportCategory) }} Report</span>
+                        <span class="la-hero-chip"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>{{ count($previewData) }} Records Found</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    @endif
-
-    <!-- Generated Reports List -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Generated Reports</h2>
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                View All Reports
-            </button>
+            <div class="la-hero-right">
+                <button class="rp-btn rp-btn-primary" wire:click="generatePdf" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.30);box-shadow:none;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export PDF
+                </button>
+            </div>
         </div>
 
-        <div class="overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Generated</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                    </tr>
+        <div class="rp-card">
+            <div class="rp-form-grid">
+                <div class="rp-group">
+                    <label class="rp-label">Start Date</label>
+                    <input type="date" class="rp-input" wire:model.live="startDate">
+                </div>
+                <div class="rp-group">
+                    <label class="rp-label">End Date</label>
+                    <input type="date" class="rp-input" wire:model.live="endDate">
+                </div>
+                <div class="rp-group">
+                    <label class="rp-label">Department</label>
+                    <select class="rp-input" wire:model.live="selectedDepartment">
+                        <option value="">All Departments</option>
+                        @foreach($departments as $dept)
+                            <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="rp-nav-label">Preview (Top 10)</div>
+            <table class="rp-table">
+                <thead>
+                    @if($reportCategory === 'employee')
+                        <tr><th>Name</th><th>Email</th><th>Dept</th><th>Status</th></tr>
+                    @elseif($reportCategory === 'attendance')
+                        <tr><th>Employee</th><th>Date</th><th>Status</th></tr>
+                    @elseif($reportCategory === 'performance')
+                        <tr><th>Employee</th><th>Type</th><th>Score</th></tr>
+                    @else
+                        <tr><th>ID</th><th>Name</th><th>Date</th></tr>
+                    @endif
                 </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            No reports generated yet
-                        </td>
-                    </tr>
+                <tbody>
+                    @foreach($previewData as $item)
+                        @if($reportCategory === 'employee')
+                            <tr><td>{{ $item->full_name }}</td><td>{{ $item->email }}</td><td>{{ $item->department->name ?? '—' }}</td><td>Active</td></tr>
+                        @elseif($reportCategory === 'attendance')
+                            <tr><td>{{ $item->employee->full_name }}</td><td>{{ $item->date->format('M d') }}</td><td>{{ $item->status }}</td></tr>
+                        @elseif($reportCategory === 'performance')
+                            <tr><td>{{ $item->employee->full_name }}</td><td>{{ $item->type }}</td><td>{{ $item->overall_score }}</td></tr>
+                        @endif
+                    @endforeach
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
+</div>
 </div>

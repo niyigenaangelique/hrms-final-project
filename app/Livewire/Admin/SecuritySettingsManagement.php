@@ -1,126 +1,75 @@
 <?php
 
 namespace App\Livewire\Admin;
-
-use App\Models\SecuritySetting;
-use App\Models\ActivityLog;
+ 
 use Livewire\Component;
-
+use Livewire\Attributes\Title;
+use Illuminate\Support\Facades\DB;
+ 
+#[Title('TalentFlow Pro | Security Settings')]
 class SecuritySettingsManagement extends Component
 {
-    // Security Settings
-    public $password_min_length = 8;
-    public $password_require_uppercase = true;
-    public $password_require_lowercase = true;
-    public $password_require_numbers = true;
-    public $password_require_symbols = true;
-    public $session_timeout_minutes = 120;
-    public $max_login_attempts = 5;
-    public $lockout_duration_minutes = 15;
-    public $enable_two_factor = false;
-    public $force_password_change_days = 90;
-
-    public function mount()
+    public bool   $twoFactorEnabled      = false;
+    public bool   $sessionTimeoutEnabled = true;
+    public int    $sessionTimeoutMinutes = 60;
+    public bool   $passwordExpiry        = false;
+    public int    $passwordExpiryDays    = 90;
+    public bool   $loginAuditEnabled     = true;
+    public int    $maxLoginAttempts      = 5;
+    public bool   $ipWhitelistEnabled    = false;
+    public string $ipWhitelist           = '';
+ 
+    public function mount(): void
     {
-        $this->loadSecuritySettings();
+        try {
+            $rows = DB::table('security_settings')->pluck('value','key');
+            if ($rows->isNotEmpty()) {
+                $this->twoFactorEnabled      = (bool)($rows['two_factor_enabled']      ?? false);
+                $this->sessionTimeoutEnabled = (bool)($rows['session_timeout_enabled'] ?? true);
+                $this->sessionTimeoutMinutes = (int) ($rows['session_timeout_minutes'] ?? 60);
+                $this->passwordExpiry        = (bool)($rows['password_expiry_enabled'] ?? false);
+                $this->passwordExpiryDays    = (int) ($rows['password_expiry_days']    ?? 90);
+                $this->loginAuditEnabled     = (bool)($rows['login_audit_enabled']     ?? true);
+                $this->maxLoginAttempts      = (int) ($rows['max_login_attempts']      ?? 5);
+                $this->ipWhitelistEnabled    = (bool)($rows['ip_whitelist_enabled']    ?? false);
+                $this->ipWhitelist           = (string)($rows['ip_whitelist']          ?? '');
+            }
+        } catch (\Exception) {}
     }
-
+ 
+    public function save(): void
+    {
+        $settings = [
+            'two_factor_enabled'     => $this->twoFactorEnabled      ? '1':'0',
+            'session_timeout_enabled'=> $this->sessionTimeoutEnabled  ? '1':'0',
+            'session_timeout_minutes'=> (string)$this->sessionTimeoutMinutes,
+            'password_expiry_enabled'=> $this->passwordExpiry         ? '1':'0',
+            'password_expiry_days'   => (string)$this->passwordExpiryDays,
+            'login_audit_enabled'    => $this->loginAuditEnabled      ? '1':'0',
+            'max_login_attempts'     => (string)$this->maxLoginAttempts,
+            'ip_whitelist_enabled'   => $this->ipWhitelistEnabled     ? '1':'0',
+            'ip_whitelist'           => $this->ipWhitelist,
+        ];
+        DB::beginTransaction();
+        try {
+            foreach ($settings as $key => $value) {
+                DB::table('security_settings')->upsert(
+                    ['key'=>$key,'value'=>$value,'updated_at'=>now(),'created_at'=>now()],
+                    ['key'], ['value','updated_at']
+                );
+            }
+            DB::commit();
+            session()->flash('success','Security settings saved.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error','Save failed: '.$e->getMessage());
+        }
+    }
+ 
     public function render()
     {
-        return view('livewire.admin.security-settings-management')->layout('components.layouts.admin');
-    }
-
-    private function loadSecuritySettings()
-    {
-        // Create default security settings if they don't exist
-        $defaultSettings = [
-            'password_min_length' => '8',
-            'password_require_uppercase' => 'true',
-            'password_require_lowercase' => 'true',
-            'password_require_numbers' => 'true',
-            'password_require_symbols' => 'true',
-            'session_timeout_minutes' => '120',
-            'max_login_attempts' => '5',
-            'lockout_duration_minutes' => '15',
-            'enable_two_factor' => 'false',
-            'force_password_change_days' => '90',
-        ];
-
-        foreach ($defaultSettings as $key => $value) {
-            SecuritySetting::setValue($key, $value, "Security setting for {$key}");
-        }
-
-        // Load settings as an object for the form
-        $this->password_min_length = SecuritySetting::getInteger('password_min_length', 8);
-        $this->password_require_uppercase = SecuritySetting::getBoolean('password_require_uppercase', true);
-        $this->password_require_lowercase = SecuritySetting::getBoolean('password_require_lowercase', true);
-        $this->password_require_numbers = SecuritySetting::getBoolean('password_require_numbers', true);
-        $this->password_require_symbols = SecuritySetting::getBoolean('password_require_symbols', true);
-        $this->session_timeout_minutes = SecuritySetting::getInteger('session_timeout_minutes', 120);
-        $this->max_login_attempts = SecuritySetting::getInteger('max_login_attempts', 5);
-        $this->lockout_duration_minutes = SecuritySetting::getInteger('lockout_duration_minutes', 15);
-        $this->enable_two_factor = SecuritySetting::getBoolean('enable_two_factor', false);
-        $this->force_password_change_days = SecuritySetting::getInteger('force_password_change_days', 90);
-    }
-
-    public function saveSecuritySettings()
-    {
-        $this->validate([
-            'password_min_length' => 'required|integer|min:6|max:20',
-            'session_timeout_minutes' => 'required|integer|min:5|max:480',
-            'max_login_attempts' => 'required|integer|min:3|max:10',
-            'lockout_duration_minutes' => 'required|integer|min:5|max:1440',
-            'force_password_change_days' => 'required|integer|min:0|max:365',
-        ]);
-
-        // Save all security settings
-        SecuritySetting::setValue('password_min_length', $this->password_min_length);
-        SecuritySetting::setValue('password_require_uppercase', $this->password_require_uppercase ? 'true' : 'false');
-        SecuritySetting::setValue('password_require_lowercase', $this->password_require_lowercase ? 'true' : 'false');
-        SecuritySetting::setValue('password_require_numbers', $this->password_require_numbers ? 'true' : 'false');
-        SecuritySetting::setValue('password_require_symbols', $this->password_require_symbols ? 'true' : 'false');
-        SecuritySetting::setValue('session_timeout_minutes', $this->password_timeout_minutes);
-        SecuritySetting::setValue('max_login_attempts', $this->max_login_attempts);
-        SecuritySetting::setValue('lockout_duration_minutes', $this->lockout_duration_minutes);
-        SecuritySetting::setValue('enable_two_factor', $this->enable_two_factor ? 'true' : 'false');
-        SecuritySetting::setValue('force_password_change_days', $this->force_password_change_days);
-
-        ActivityLog::create([
-            'user_id' => auth()->id(),
-            'action' => 'security_settings_updated',
-            'description' => 'Security settings were updated',
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        session()->flash('success', 'Security settings saved successfully!');
-    }
-
-    public function resetToDefaults()
-    {
-        $this->password_min_length = 8;
-        $this->password_require_uppercase = true;
-        $this->password_require_lowercase = true;
-        $this->password_require_numbers = true;
-        $this->password_require_symbols = true;
-        $this->session_timeout_minutes = 120;
-        $this->max_login_attempts = 5;
-        $this->lockout_duration_minutes = 15;
-        $this->enable_two_factor = false;
-        $this->force_password_change_days = 90;
-
-        session()->flash('info', 'Settings reset to defaults. Click Save to apply.');
-    }
-
-    public function testPasswordPolicy()
-    {
-        // Test password policy functionality placeholder
-        session()->flash('info', 'Password policy test coming soon');
-    }
-
-    public function generateSecurityReport()
-    {
-        // Generate security report functionality placeholder
-        session()->flash('info', 'Security report generation coming soon');
+        return view('livewire.admin.security-settings-management')
+            ->layout('components.layouts.admin');
     }
 }
+ 

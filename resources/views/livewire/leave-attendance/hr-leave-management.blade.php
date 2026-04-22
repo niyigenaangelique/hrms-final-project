@@ -1,65 +1,76 @@
-<div>
+<div class="hlm-local-shell">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Sora:wght@700;800;900&display=swap');
 
-.hlm-root {
-    --glass-bg:       rgba(255,255,255,0.50);
-    --glass-border:   rgba(255,255,255,0.72);
-    --glass-shadow:   0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
-    --blur:           blur(22px) saturate(1.7);
-    --radius:         20px;
-    --radius-sm:      13px;
-    --radius-pill:    100px;
-    --text-primary:   rgba(15,15,25,0.96);
-    --text-secondary: rgba(15,15,25,0.68);
-    --text-tertiary:  rgba(15,15,25,0.44);
-    font-family: 'DM Sans', -apple-system, sans-serif;
-    padding: 32px 36px 110px;
-    display: flex; flex-direction: column; gap: 20px;
-}
-@keyframes fadeSlideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-.anim-1 { animation: fadeSlideUp 0.35s ease both; }
-.anim-2 { animation: fadeSlideUp 0.35s 0.07s ease both; }
-.anim-3 { animation: fadeSlideUp 0.35s 0.14s ease both; }
-.g-card { background:var(--glass-bg); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur); border:1px solid var(--glass-border); border-radius:var(--radius); box-shadow:var(--glass-shadow); position:relative; }
-.g-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.9),transparent); pointer-events:none; border-radius:var(--radius) var(--radius) 0 0; }
-.hlm-header { padding:24px 30px; display:flex; justify-content:space-between; align-items:center; gap:20px; }
-.hlm-header h1 { font-size:24px; font-weight:700; color:var(--text-primary); letter-spacing:-0.4px; margin:0 0 3px; }
-.hlm-header p  { font-size:13.5px; font-weight:500; color:var(--text-secondary); margin:0; }
-.hlm-filters { padding:20px 26px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.hlm-filter-field { display:flex; flex-direction:column; gap:6px; }
-.hlm-filter-field label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); }
-.hlm-filter-field select,
-.hlm-filter-field input { padding:10px 14px; background:rgba(255,255,255,0.78) !important; border:1px solid rgba(0,0,0,0.1) !important; border-radius:var(--radius-sm) !important; font-family:'DM Sans',sans-serif; font-size:13.5px; font-weight:500; color:var(--text-primary); outline:none; width:100%; box-sizing:border-box; transition:border-color .15s,box-shadow .15s; -webkit-appearance:none; }
-.hlm-filter-field select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important; background-repeat:no-repeat !important; background-position:right 14px center !important; padding-right:36px !important; }
-.hlm-filter-field select:focus,
-.hlm-filter-field input:focus { border-color:rgba(13,148,136,0.55) !important; box-shadow:0 0 0 3px rgba(13,148,136,0.1) !important; background:rgba(255,255,255,0.96) !important; }
-.hlm-flash { padding:0 24px; margin-bottom:4px; }
-.flash-ok   { background:rgba(34,197,94,0.1);  border:1px solid rgba(34,197,94,0.28);  border-radius:var(--radius-sm); padding:12px 16px; font-size:13px; font-weight:600; color:#15803d; }
-.flash-err  { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.22);  border-radius:var(--radius-sm); padding:12px 16px; font-size:13px; font-weight:600; color:#b91c1c; }
-.flash-info { background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2);   border-radius:var(--radius-sm); padding:12px 16px; font-size:13px; font-weight:600; color:#1e40af; }
-.hlm-table-wrap { overflow-x:auto; padding:0 4px 4px; }
-table.hlm-table { width:100%; border-collapse:collapse; }
-.hlm-table thead tr { border-bottom:1px solid rgba(0,0,0,0.07); }
-.hlm-table th { padding:11px 18px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-tertiary); text-align:left; white-space:nowrap; }
-.hlm-table tbody tr { border-bottom:1px solid rgba(0,0,0,0.04); transition:background .12s; }
-.hlm-table tbody tr:last-child { border-bottom:none; }
-.hlm-table tbody tr:hover { background:rgba(255,255,255,0.55); }
-.hlm-table td { padding:13px 18px; font-size:13.5px; font-weight:500; color:var(--text-primary); white-space:nowrap; vertical-align:middle; }
-.hlm-table td.muted { color:var(--text-secondary); font-size:13px; }
-.hlm-emp-name { font-size:14px; font-weight:700; color:var(--text-primary); margin-bottom:2px; }
-.hlm-emp-code { font-size:11.5px; font-weight:500; color:var(--text-tertiary); }
-.badge { display:inline-flex; font-size:11px; font-weight:700; padding:4px 11px; border-radius:var(--radius-pill); }
-.badge-green  { background:rgba(34,197,94,0.14);  color:#15803d; }
-.badge-amber  { background:rgba(245,158,11,0.14); color:#b45309; }
-.badge-red    { background:rgba(239,68,68,0.14);  color:#b91c1c; }
-.badge-gray   { background:rgba(0,0,0,0.07);      color:var(--text-secondary); }
-.btn-view    { font-size:12px; font-weight:600; color:#2563eb; background:rgba(37,99,235,0.09); border:none; border-radius:8px; padding:5px 12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .13s; margin-right:6px; }
-.btn-view:hover { background:rgba(37,99,235,0.16); }
-.btn-approve { font-size:12px; font-weight:600; color:#15803d; background:rgba(34,197,94,0.1);  border:none; border-radius:8px; padding:5px 12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .13s; margin-right:6px; }
-.btn-approve:hover { background:rgba(34,197,94,0.18); }
-.btn-reject  { font-size:12px; font-weight:600; color:#b91c1c; background:rgba(239,68,68,0.08); border:none; border-radius:8px; padding:5px 12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .13s; }
-.btn-reject:hover { background:rgba(239,68,68,0.15); }
+    .hlm-local-shell {
+        --blue: #3B6FE8;
+        --blue-2: #2755CC;
+        --blue-lt: rgba(59, 111, 232, 0.08);
+        --bg: #F8F9FE;
+        --white: #FFFFFF;
+        --ink: #1E293B;
+        --ink2: #475569;
+        --ink3: #64748B;
+        --ink4: #94A3B8;
+        --border: rgba(226, 232, 240, 0.8);
+        --sh-sm: 0 4px 20px rgba(0, 0, 0, 0.02);
+        --sh-md: 0 10px 30px rgba(59, 111, 232, 0.06);
+        --r: 16px;
+        --r-lg: 24px;
+
+        font-family: 'DM Sans', sans-serif;
+        color: var(--ink);
+        display: grid; 
+        grid-template-columns: 260px 1fr; 
+        gap: 32px; 
+        align-items: flex-start;
+        padding: 32px 40px;
+        background: var(--bg);
+        min-height: 100vh;
+    }
+
+    /* ══ SIDE NAV ═════════════════════════════════════════════ */
+    .hlm-local-sidebar { position: sticky; top: 32px; display: flex; flex-direction: column; gap: 24px; }
+    .hlm-local-nav { display: flex; flex-direction: column; gap: 8px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 12px; box-shadow: var(--sh-sm); }
+    .hlm-nav-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--ink4); padding: 12px 16px 4px; letter-spacing: 0.08em; }
+    .hlm-nav-item {
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r);
+        font-size: 14px; font-weight: 700; color: var(--ink2); cursor: pointer; border: none; background: transparent; 
+        font-family: 'DM Sans', sans-serif; transition: all .2s; text-align: left; width: 100%;
+    }
+    .hlm-nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; opacity: 0.6; }
+    .hlm-nav-item:hover { background: var(--blue-lt); color: var(--blue); }
+    .hlm-nav-item.active { background: var(--blue); color: #fff; box-shadow: 0 8px 20px rgba(59, 111, 232, 0.25); }
+    .hlm-nav-item.active svg { opacity: 1; stroke: #fff; }
+
+    /* Main Content */
+    .hlm-local-main { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+    .hlm-header { display: flex; justify-content: space-between; align-items: center; }
+    .hlm-title { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; }
+
+    /* Card */
+    .hlm-card { background: var(--white); border-radius: var(--r); border: 1px solid var(--border); box-shadow: var(--sh-sm); overflow: hidden; }
+    .hlm-card-hd { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    
+    .hlm-filters { padding: 24px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; background: var(--white); border-radius: var(--r); border: 1px solid var(--border); }
+    .hlm-filter-field { display: flex; flex-direction: column; gap: 8px; }
+    .hlm-filter-field label { font-size: 12px; font-weight: 700; color: var(--ink4); text-transform: uppercase; letter-spacing: 0.05em; }
+    .hlm-input { padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); font-family: inherit; font-size: 14px; color: var(--ink); outline: none; transition: all .15s; }
+    .hlm-input:focus { border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-lt); }
+
+    .hlm-table { width: 100%; border-collapse: collapse; }
+    .hlm-table th { text-align: left; padding: 16px 32px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--ink4); letter-spacing: 0.08em; border-bottom: 2px solid var(--border); }
+    .hlm-table td { padding: 20px 32px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--ink2); }
+
+    .badge { padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .badge-green { background: #E6F7F0; color: #12B76A; }
+    .badge-amber { background: #FFF4ED; color: #F79009; }
+    .badge-red { background: #FEECEB; color: #F04438; }
+
+    .hlm-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; font-family: 'Sora', sans-serif; }
+    .hlm-btn-primary { background: var(--blue); color: #fff; }
+    .hlm-btn-ghost { background: var(--blue-lt); color: var(--blue); }
+</style>
 .hlm-empty { text-align:center; padding:52px 24px; }
 .hlm-empty-icon { width:52px; height:52px; background:rgba(0,0,0,0.05); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
 .hlm-empty-icon svg { width:26px; height:26px; stroke:var(--text-tertiary); }
@@ -104,48 +115,69 @@ table.hlm-table { width:100%; border-collapse:collapse; }
 
 <div class="hlm-root">
 
-    {{-- ── Header ────────────────────────────────────── --}}
-    <div class="g-card anim-1">
+    <aside class="hlm-local-sidebar">
+        <nav class="hlm-local-nav">
+            <div class="hlm-nav-label">Leave & Attendance</div>
+            <a href="{{ route('leave-attendance.dashboard') }}" class="hlm-nav-item">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('leave-attendance.requests') }}" class="hlm-nav-item">
+                <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span>My Requests</span>
+            </a>
+            <a href="{{ route('leave-attendance.hr-leave-management') }}" class="hlm-nav-item active">
+                <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Manage Leaves</span>
+            </a>
+            <a href="{{ route('leave-attendance.hr-calendar') }}" class="hlm-nav-item">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <span>Team Calendar</span>
+            </a>
+            <div class="hlm-nav-label">Team</div>
+            <a href="{{ route('employee-management') }}" class="hlm-nav-item">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                <span>Employees</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="hlm-local-main">
         <div class="hlm-header">
             <div>
-                <h1>HR Leave Management</h1>
-                <p>Approve or reject employee leave requests</p>
+                <h1 class="hlm-title">Leave Management</h1>
+                <p style="color:var(--ink4); font-size:14px; font-weight:500;">Review and process employee leave applications</p>
+            </div>
+            <div class="hlm-header-actions">
+                <button class="hlm-btn hlm-btn-ghost" wire:click="$refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
         </div>
-    </div>
 
-    {{-- ── Filters ───────────────────────────────────── --}}
-    <div class="g-card anim-2">
         <div class="hlm-filters">
             <div class="hlm-filter-field">
                 <label>Filter by Status</label>
-                <select wire:model.live="filterStatus">
+                <select wire:model.live="filterStatus" class="hlm-input">
                     <option value="all">All Requests</option>
-                    <option value="pending">Pending</option>
+                    <option value="pending">Pending Only</option>
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
                 </select>
             </div>
             <div class="hlm-filter-field">
-                <label>Search</label>
-                <input wire:model.live="searchTerm" type="text" placeholder="Search by employee name or leave type"/>
+                <label>Search Employee</label>
+                <input wire:model.live="searchTerm" type="text" class="hlm-input" placeholder="Search by name or ID..."/>
             </div>
         </div>
-    </div>
 
-    {{-- ── Table ─────────────────────────────────────── --}}
-    <div class="g-card anim-3">
+        <div class="hlm-card">
+            @if(session()->has('success') || session()->has('error'))
+                <div style="padding: 16px 32px;">
+                    @if(session()->has('success')) <div class="badge-green" style="padding:10px; border-radius:8px;">{{ session('success') }}</div> @endif
+                    @if(session()->has('error')) <div class="badge-red" style="padding:10px; border-radius:8px;">{{ session('error') }}</div> @endif
+                </div>
+            @endif
 
-        @if(session()->has('test') || session()->has('success') || session()->has('error'))
-            <div class="hlm-flash" style="padding-top:16px;">
-                @if(session()->has('test'))    <div class="flash-info">{{ session('test') }}</div> @endif
-                @if(session()->has('success')) <div class="flash-ok">{{ session('success') }}</div> @endif
-                @if(session()->has('error'))   <div class="flash-err">{{ session('error') }}</div> @endif
-            </div>
-        @endif
-
-        @if($leaveRequests->count() > 0)
-            <div class="hlm-table-wrap">
+            @if($leaveRequests->count() > 0)
                 <table class="hlm-table">
                     <thead>
                         <tr>
@@ -154,145 +186,105 @@ table.hlm-table { width:100%; border-collapse:collapse; }
                             <th>Duration</th>
                             <th>Days</th>
                             <th>Status</th>
-                            <th>Applied</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($leaveRequests as $request)
                             @php
-                                $s  = $request->status->value;
+                                $s = $request->status->value;
                                 $bc = match($s) { 'approved' => 'badge-green', 'pending' => 'badge-amber', 'rejected' => 'badge-red', default => 'badge-gray' };
                             @endphp
-                            <tr>
+                            <tr wire:key="req-{{ $request->id }}">
                                 <td>
-                                    <div class="hlm-emp-name">{{ $request->employee->first_name }} {{ $request->employee->last_name }}</div>
-                                    <div class="hlm-emp-code">{{ $request->employee->code }}</div>
+                                    <div style="font-weight:700; color:var(--ink);">{{ $request->employee->full_name }}</div>
+                                    <div style="font-size:11px; color:var(--ink4);">{{ $request->employee->code }}</div>
                                 </td>
                                 <td>{{ $request->leaveType->name }}</td>
-                                <td class="muted">{{ $request->start_date->format('M d, Y') }} — {{ $request->end_date->format('M d, Y') }}</td>
-                                <td>{{ $request->total_days }}d</td>
+                                <td style="font-size:13px; color:var(--ink3);">{{ $request->start_date->format('M d') }} — {{ $request->end_date->format('M d, Y') }}</td>
+                                <td><span style="font-weight:700;">{{ $request->total_days }}</span> <span style="font-size:11px; color:var(--ink4);">DAYS</span></td>
                                 <td><span class="badge {{ $bc }}">{{ ucfirst($s) }}</span></td>
-                                <td class="muted">{{ $request->created_at->format('M d, Y') }}</td>
                                 <td>
-                                    <button type="button" class="btn-view" wire:click="setViewRequest('{{ $request->id }}')">View</button>
-                                    @if($s === 'pending')
-                                        <button type="button" class="btn-approve" wire:click="setSelectedRequest('{{ $request->id }}')">Approve</button>
-                                        <button type="button" class="btn-reject" wire:click="openRejectModal('{{ $request->id }}')">Reject</button>
-                                    @endif
+                                    <div style="display:flex; gap:8px;">
+                                        <button class="hlm-btn hlm-btn-ghost" style="padding:6px 12px; font-size:12px;" wire:click="setViewRequest('{{ $request->id }}')">View</button>
+                                        @if($s === 'pending')
+                                            <button class="hlm-btn hlm-btn-primary" style="padding:6px 12px; font-size:12px; background:#12B76A;" wire:click="setSelectedRequest('{{ $request->id }}')">Approve</button>
+                                            <button class="hlm-btn hlm-btn-primary" style="padding:6px 12px; font-size:12px; background:#F04438;" wire:click="openRejectModal('{{ $request->id }}')">Reject</button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
-            </div>
-        @else
-            <div class="hlm-empty">
-                <div class="hlm-empty-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            @else
+                <div class="hlm-empty">
+                    <p class="hlm-empty-title">No leave requests found</p>
+                    <p class="hlm-empty-sub">No applications match your current filters.</p>
                 </div>
-                <p class="hlm-empty-title">No leave requests found</p>
-                <p class="hlm-empty-sub">Try adjusting your filters or search term.</p>
-            </div>
-        @endif
-    </div>
+            @endif
+        </div>
+    </main>
 
-    {{-- ── Details modal ─────────────────────────────── --}}
+    {{-- Modals --}}
     @if($selectedRequest)
         @php $req = $leaveRequests->where('id', $selectedRequest)->first(); @endphp
         @if($req)
-            <div class="hlm-modal-bg" wire:click="closeModal">
-                <div class="hlm-modal" wire:click.stop>
-                    <div class="hlm-modal-head">
-                        <h3 class="hlm-modal-title">Leave Request Details</h3>
-                        <button class="hlm-modal-close" wire:click="closeModal">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
+            <div style="position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(4px); z-index:1000; display:flex; align-items:center; justify-content:center;">
+                <div class="hlm-card" style="width:480px; max-height:90vh; overflow-y:auto; padding:0;">
+                    <div class="hlm-card-hd">
+                        <h3 class="hlm-card-title">Request Details</h3>
+                        <button wire:click="closeModal" style="background:none; border:none; cursor:pointer;"><i class="fas fa-times"></i></button>
                     </div>
-                    <div class="hlm-modal-body">
-                        <div class="hlm-detail-row"><span class="hlm-detail-label">Employee</span><span class="hlm-detail-value">{{ $req->employee->first_name }} {{ $req->employee->last_name }} · {{ $req->employee->code }}</span></div>
-                        <div class="hlm-detail-row"><span class="hlm-detail-label">Leave Type</span><span class="hlm-detail-value">{{ $req->leaveType->name }}</span></div>
-                        <div class="hlm-detail-row"><span class="hlm-detail-label">Duration</span><span class="hlm-detail-value">{{ $req->start_date->format('M d, Y') }} — {{ $req->end_date->format('M d, Y') }}</span></div>
-                        <div class="hlm-detail-row"><span class="hlm-detail-label">Total Days</span><span class="hlm-detail-value">{{ $req->total_days }} days</span></div>
-                        <div class="hlm-detail-row"><span class="hlm-detail-label">Reason</span><p class="hlm-detail-prose">{{ $req->reason }}</p></div>
-                        <div class="hlm-detail-row">
-                            <span class="hlm-detail-label">Status</span>
-                            @php $ms = $req->status->value; $mc = match($ms) { 'approved' => 'badge-green', 'pending' => 'badge-amber', 'rejected' => 'badge-red', default => 'badge-gray' }; @endphp
-                            <span class="badge {{ $mc }}" style="margin-top:4px;">{{ ucfirst($ms) }}</span>
+                    <div style="padding:24px 32px; display:flex; flex-direction:column; gap:16px;">
+                        <div>
+                            <label style="font-size:11px; font-weight:800; color:var(--ink4); text-transform:uppercase;">Employee</label>
+                            <div style="font-weight:700;">{{ $req->employee->full_name }}</div>
                         </div>
-                        @if($ms === 'pending')
-                            <div class="hlm-reject-field" style="margin-top:12px;">
-                                <label>Rejection Reason</label>
-                                <textarea wire:model="rejectionReason" placeholder="Enter reason for rejection..."></textarea>
-                                @error('rejectionReason') <span class="hlm-field-error">{{ $message }}</span> @enderror
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                            <div>
+                                <label style="font-size:11px; font-weight:800; color:var(--ink4); text-transform:uppercase;">Type</label>
+                                <div style="font-weight:600;">{{ $req->leaveType->name }}</div>
                             </div>
-                        @endif
+                            <div>
+                                <label style="font-size:11px; font-weight:800; color:var(--ink4); text-transform:uppercase;">Duration</label>
+                                <div style="font-weight:600;">{{ $req->total_days }} Days</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:800; color:var(--ink4); text-transform:uppercase;">Dates</label>
+                            <div style="font-weight:600;">{{ $req->start_date->format('M d, Y') }} — {{ $req->end_date->format('M d, Y') }}</div>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:800; color:var(--ink4); text-transform:uppercase;">Reason</label>
+                            <div style="font-size:14px; color:var(--ink2); line-height:1.5;">{{ $req->reason }}</div>
+                        </div>
                     </div>
-                    <div class="hlm-modal-actions">
-                        @if($ms === 'pending')
-                            <button class="btn-modal-approve" wire:click="approveRequest({{ $req->id }})">✓ Approve Request</button>
-                            <button class="btn-modal-reject" wire:click="rejectRequest">✕ Reject Request</button>
+                    <div style="padding:16px 32px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+                        <button class="hlm-btn hlm-btn-ghost" wire:click="closeModal">Close</button>
+                        @if($req->status->value === 'pending')
+                            <button class="hlm-btn hlm-btn-primary" style="background:#12B76A;" wire:click="approveRequest({{ $req->id }})">Approve</button>
                         @endif
-                        <button class="btn-modal-close" wire:click="closeModal">Close</button>
                     </div>
                 </div>
             </div>
         @endif
     @endif
 
-    {{-- ── Reject modal ───────────────────────────────── --}}
     @if($rejectModalOpen)
-        <div class="hlm-modal-bg" wire:click="closeRejectModal">
-            <div class="hlm-modal" wire:click.stop>
-                <div class="hlm-modal-head">
-                    <h3 class="hlm-modal-title">Reject Leave Request</h3>
-                    <button class="hlm-modal-close" wire:click="closeRejectModal">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
+        <div style="position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(4px); z-index:1000; display:flex; align-items:center; justify-content:center;">
+            <div class="hlm-card" style="width:400px; padding:0;">
+                <div class="hlm-card-hd"><h3 class="hlm-card-title">Reject Request</h3></div>
+                <div style="padding:24px 32px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--ink3); margin-bottom:8px; display:block;">Reason for Rejection</label>
+                    <textarea wire:model="rejectionReason" class="hlm-input" style="width:100%; height:100px; resize:none;" placeholder="Optional..."></textarea>
                 </div>
-                <div class="hlm-modal-body">
-                    <div class="hlm-reject-field">
-                        <label>Rejection Reason</label>
-                        <textarea wire:model="rejectionReason" placeholder="Enter reason for rejection..."></textarea>
-                        @error('rejectionReason') <span class="hlm-field-error">{{ $message }}</span> @enderror
-                    </div>
-                </div>
-                <div class="hlm-modal-actions">
-                    <button class="btn-modal-reject" wire:click="confirmReject">✕ Confirm Rejection</button>
-                    <button class="btn-modal-close" wire:click="closeRejectModal">Cancel</button>
+                <div style="padding:16px 32px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+                    <button class="hlm-btn hlm-btn-ghost" wire:click="closeRejectModal">Cancel</button>
+                    <button class="hlm-btn hlm-btn-primary" style="background:#F04438;" wire:click="confirmReject">Confirm Reject</button>
                 </div>
             </div>
         </div>
     @endif
-
-    {{-- ── Floating nav ──────────────────────────────── --}}
-    <nav class="ios-nav">
-        <a href="{{ route('leave-attendance.dashboard') }}" class="ios-nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-            Dashboard
-        </a>
-        <a href="{{ route('leave-attendance.requests') }}" class="ios-nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            Leave
-        </a>
-        <a href="{{ route('leave-attendance.hr-leave-management') }}" class="ios-nav-item active">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Manage
-            <span class="ios-nav-active-dot"></span>
-        </a>
-        <a href="{{ route('leave-attendance.hr-calendar') }}" class="ios-nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            Calendar
-        </a>
-        <a href="{{ route('employees') }}" class="ios-nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-            Employees
-        </a>
-        <a href="{{ route('leave-attendance.hr-communication') }}" class="ios-nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            Messages
-        </a>
-    </nav>
-
 </div>
 </div>

@@ -3,12 +3,12 @@
     Sections: overview | leaves | communication | calendar | attendance
 --}}
 
-<div class="la-shell">
+<div class="la-local-shell">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Sora:wght@700;800;900&display=swap');
 
 /* ══ TOKENS ══════════════════════════════════════════════ */
-.la-shell {
+.la-local-shell {
     --blue:    #3B6FE8; --blue-2:  #2755CC; --blue-3:  #1A3FA8;
     --blue-lt: rgba(59,111,232,0.09); --blue-mid: rgba(59,111,232,0.18);
     --blue-brd:rgba(59,111,232,0.22); --indigo:   #6B4FDB;
@@ -25,70 +25,37 @@
     --sh-lg: 0 16px 48px rgba(59,111,232,0.14);
     --r:12px; --r-lg:20px;
     font-family:'DM Sans',-apple-system,sans-serif;
-    background:var(--bg); min-height:100vh; color:var(--ink);
-    display:flex;
+    color:var(--ink);
+    
+    display: grid; 
+    grid-template-columns: 240px 1fr; 
+    gap: 32px; 
+    align-items: flex-start;
+    padding: 32px 36px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--bg);
+    min-height: 100vh;
 }
 
 /* ══ SIDE NAV ═════════════════════════════════════════════ */
-.la-nav {
-    width:240px; min-width:240px; background:var(--white);
-    border-right:1px solid var(--border);
-    display:flex; flex-direction:column;
-    position:sticky; top:0; height:100vh; overflow-y:auto;
-    z-index:100; box-shadow:2px 0 20px rgba(59,111,232,0.06); flex-shrink:0;
-}
-.la-nav-logo {
-    padding:20px 20px 16px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:11px; flex-shrink:0;
-}
-.la-nav-logo-mark {
-    width:36px; height:36px; border-radius:10px;
-    background:linear-gradient(135deg,var(--blue),var(--indigo));
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0; box-shadow:0 3px 10px rgba(59,111,232,0.28);
-}
-.la-nav-logo-mark svg { width:18px; height:18px; stroke:#fff; fill:none; stroke-width:2; }
-.la-nav-brand { font-family:'Sora',sans-serif; font-size:14px; font-weight:900; color:var(--ink); letter-spacing:-0.2px; }
-.la-nav-brand span { color:var(--blue); }
-.la-nav-section { font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.10em; color:var(--ink4); padding:16px 20px 6px; }
-.la-nav-items-wrap { display:flex; flex-direction:column; flex:1; overflow-y:auto; padding:8px 0; }
-.la-nav-item {
-    display:flex; align-items:center; gap:10px;
-    padding:9px 16px; margin:1px 8px; border-radius:10px;
-    cursor:pointer; font-size:13.5px; font-weight:600;
-    color:var(--ink3); border:none; background:none;
-    text-align:left; width:calc(100% - 16px);
-    font-family:'DM Sans',sans-serif; transition:background 0.15s,color 0.15s;
-    position:relative;
-}
-.la-nav-item svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; flex-shrink:0; }
-.la-nav-item:hover { background:var(--bg); color:var(--ink2); }
-.la-nav-item.active { background:var(--blue-lt); color:var(--blue-2); font-weight:700; }
-.la-nav-item.active svg { stroke:var(--blue); }
-.la-nav-item.active::before {
-    content:''; position:absolute; left:-8px; top:50%; transform:translateY(-50%);
-    width:3px; height:22px; border-radius:0 3px 3px 0; background:var(--blue);
-}
-.la-nav-badge {
-    margin-left:auto; background:var(--blue-lt); color:var(--blue-2);
-    font-size:10px; font-weight:800; padding:2px 7px;
-    border-radius:100px; border:1px solid var(--blue-brd);
-}
-.la-nav-badge.amber { background:var(--amber-lt); color:#92400E; border-color:rgba(245,158,11,0.22); }
-.la-nav-bottom { margin-top:auto; padding:16px 8px; border-top:1px solid var(--border); flex-shrink:0; }
-.la-nav-back {
-    display:flex; align-items:center; gap:10px;
-    padding:9px 16px; border-radius:10px; font-size:13px;
-    font-weight:600; color:var(--ink3); text-decoration:none; transition:all 0.15s;
-}
-.la-nav-back:hover { background:var(--bg); color:var(--ink2); }
-.la-nav-back svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; }
+.la-local-sidebar { position: sticky; top: 28px; display: flex; flex-direction: column; gap: 20px; }
+.la-local-nav { display: flex; flex-direction: column; gap: 6px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 10px; box-shadow: var(--sh-sm); }
+.la-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r); font-size: 14px; font-weight: 700; color: var(--ink2); cursor: pointer; border: none; background: transparent; font-family: 'DM Sans', sans-serif; transition: all .2s; text-align: left; width: 100%; margin: 0; }
+.la-nav-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; opacity: 0.6; transition: opacity .2s; flex-shrink:0; }
+.la-nav-item:hover { background: rgba(59,111,232,0.09); color: var(--blue-2); }
+.la-nav-item:hover svg { opacity: 1; }
+.la-nav-item.active { background: #3b59e0ff; color: #fff; box-shadow: 0 4px 12px rgba(59,111,232,0.25); }
+.la-nav-item.active svg { opacity: 1; stroke: #fff; }
+
+.la-nav-badge { margin-left:auto; background:rgba(255,255,255,0.2); color:#fff; font-size:10px; font-weight:800; padding:2px 7px; border-radius:100px; }
+.la-nav-item:not(.active) .la-nav-badge.amber { background:var(--amber-lt); color:#92400E; border:1px solid rgba(245,158,11,0.22); }
 
 /* ══ CONTENT ══════════════════════════════════════════════ */
-.la-content { flex:1; min-width:0; overflow-y:auto; }
+.la-local-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 .la-section  { display:none; }
 .la-section.active { display:block; }
-.la-wrap { padding:28px 30px; max-width:1400px; display:flex; flex-direction:column; gap:20px; }
+.la-wrap { display:flex; flex-direction:column; gap:20px; }
 
 /* ══ HERO ══════════════════════════════════════════════════ */
 .la-hero {
@@ -336,25 +303,17 @@ table.la-table { width:100%; border-collapse:collapse; }
     .la-cal-grid   { grid-template-columns:1fr; }
 }
 @media (max-width:900px) {
-    .la-nav { width:64px; min-width:64px; }
-    .la-nav-brand,.la-nav-section,.la-nav-item span,.la-nav-badge,.la-nav-back span { display:none; }
-    .la-nav-item { justify-content:center; padding:10px; margin:2px 4px; width:calc(100% - 8px); }
-    .la-nav-item.active::before { display:none; }
-    .la-nav-logo { justify-content:center; padding:16px 8px; }
-    .la-nav-back { justify-content:center; padding:10px; }
+    .la-local-shell { grid-template-columns: 1fr; padding: 20px; }
+    .la-local-sidebar { position: static; top: auto; flex-direction: row; align-items: center; justify-content: space-between; }
+    .la-local-nav { flex-direction: row; overflow-x: auto; padding: 6px; flex: 1; }
+    .la-nav-item { min-width: max-content; padding: 8px 12px; font-size: 12px; width: auto; border-radius: 8px; }
+    .la-nav-item span { display: inline-block; }
+    .la-tiles { grid-template-columns: 1fr 1fr; }
+    .la-grid2 { grid-template-columns: 1fr; }
 }
 @media (max-width:640px) {
-    .la-shell { flex-direction:column; }
-    .la-nav { width:100%; min-width:100%; height:auto; flex-direction:row; border-right:none; border-bottom:1px solid var(--border); position:sticky; overflow-x:auto; overflow-y:hidden; }
-    .la-nav-logo,.la-nav-section,.la-nav-bottom { display:none; }
-    .la-nav-items-wrap { flex-direction:row; padding:6px 8px; gap:2px; width:100%; overflow-x:auto; }
-    .la-nav-item { flex-direction:column; gap:3px; padding:8px 10px; font-size:9px; min-width:56px; flex-shrink:0; }
-    .la-nav-item span { display:flex; }
-    .la-nav-item svg { width:18px; height:18px; }
-    .la-tiles { grid-template-columns:1fr 1fr; }
-    .la-wrap  { padding:16px 14px; }
-    .la-grid2 { grid-template-columns:1fr; }
-    .la-hero  { padding:18px 16px; flex-direction:column; gap:12px; }
+    .la-local-shell { padding: 14px; gap: 16px; }
+    .la-hero  { padding:18px 16px; flex-direction:column; gap:12px; align-items:flex-start; }
     .la-hero-right { gap:16px; }
 }
 /* ══ EMPTY STATE ════════════════════════════════════════════ */
@@ -411,7 +370,7 @@ table.la-table { width:100%; border-collapse:collapse; }
 .la-modal-footer { padding:14px 22px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; align-items:center; flex-shrink:0; }
 
 /* ══ CHAT (Communication section) ═══════════════════════ */
-.la-chat-topbar { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); padding:15px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.la-chat-topbar { background:var(--blue2); border:1px solid var(--border); border-radius:var(--r-lg); padding:15px 22px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .la-chat-topbar-icon { width:38px; height:38px; background:var(--blue); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .la-chat-topbar-icon svg { width:18px; height:18px; stroke:#fff; fill:none; stroke-width:2; }
 .la-chat-topbar-title { font-size:17px; font-weight:800; color:var(--ink); font-family:'Sora',sans-serif; }
@@ -565,23 +524,14 @@ table.la-table { width:100%; border-collapse:collapse; }
     $pendingLeaveCount = 0;
     try { $pendingLeaveCount = \App\Models\LeaveRequest::where('status','pending')->count(); } catch(\Exception $e){}
 @endphp
-<nav class="la-nav">
-    <div class="la-nav-logo">
-        <div class="la-nav-logo-mark">
-            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        </div>
-        <div class="la-nav-brand">Talent<span>Flow</span></div>
-    </div>
-
-    <div class="la-nav-items-wrap">
-        <div class="la-nav-section">Workforce</div>
-
-        <button class="la-nav-item active" data-section="overview" onclick="laSwitch('overview',this)">
+<aside class="la-local-sidebar">
+    <nav class="la-local-nav">
+        <button class="la-nav-item {{ $activeSection==='overview'?'active':'' }}" data-section="overview" onclick="laSwitch('overview',this)">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
             <span>Overview</span>
         </button>
 
-        <button class="la-nav-item" data-section="leaves" onclick="laSwitch('leaves',this)">
+        <button class="la-nav-item {{ $activeSection==='leaves'?'active':'' }}" data-section="leaves" onclick="laSwitch('leaves',this)">
             <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span>Leave Management</span>
             @if($pendingLeaveCount > 0)
@@ -589,38 +539,32 @@ table.la-table { width:100%; border-collapse:collapse; }
             @endif
         </button>
 
-        <button class="la-nav-item" data-section="communication" onclick="laSwitch('communication',this)">
+        <button class="la-nav-item {{ $activeSection==='communication'?'active':'' }}" data-section="communication" onclick="laSwitch('communication',this)">
             <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span>Communication</span>
+            @if(($msgUnread??0) > 0)<span class="la-nav-badge amber">{{ $msgUnread }}</span>@endif
         </button>
 
-        <button class="la-nav-item" data-section="calendar" onclick="laSwitch('calendar',this)">
+        <button class="la-nav-item {{ $activeSection==='calendar'?'active':'' }}" data-section="calendar" onclick="laSwitch('calendar',this)">
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <span>Calendar</span>
         </button>
 
-        <button class="la-nav-item" data-section="attendance" onclick="laSwitch('attendance',this)">
+        <button class="la-nav-item {{ $activeSection==='attendance'?'active':'' }}" data-section="attendance" onclick="laSwitch('attendance',this)">
             <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             <span>Attendance</span>
         </button>
-    </div>
-
-    <div class="la-nav-bottom">
-        <a href="{{ url()->previous() }}" class="la-nav-back">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            <span>Back</span>
-        </a>
-    </div>
-</nav>
+    </nav>
+</aside>
 
 {{-- ══ CONTENT ════════════════════════════════════════════════ --}}
-<div class="la-content">
+<main class="la-local-main">
 
 
 {{-- ════════════════════════════════════════════════════════
      SECTION 1 — OVERVIEW
 ════════════════════════════════════════════════════════ --}}
-<div class="la-section active" id="section-overview">
+<div class="la-section {{ $activeSection==='overview'?'active':'' }}" id="section-overview">
 @php
     $empTotal=0; $empPresent=0; $leavePending=0; $leaveApproved=0; $leaveTaken=0;
     $recentLeaves=collect(); $todayAtt=collect(); $attRate=0;
@@ -835,31 +779,117 @@ table.la-table { width:100%; border-collapse:collapse; }
 </div>{{-- /section-overview --}}
 
 
+{{--
+    SECTION 2 — LEAVE MANAGEMENT  (drop-in replacement for the existing section-leaves block)
+
+    Key fixes:
+    • Total leave entitlement is capped at 30 days per year regardless of leave type
+    • Leave types share the same 30-day annual pool — used days are summed across ALL types
+    • A dedicated "Leave Balance" tab is added inside the section so it has its own clear view
+    • Logic no longer reads max_days/days_allowed from individual leave types for the total
+--}}
+
 {{-- ════════════════════════════════════════════════════════
      SECTION 2 — LEAVE MANAGEMENT
 ════════════════════════════════════════════════════════ --}}
-<div class="la-section" id="section-leaves">
+<div class="la-section {{ $activeSection==='leaves'?'active':'' }}" id="section-leaves">
 @php
-    $leaveRequests=collect(); $leaveTypes=collect(); $allEmployees=collect();
-    $pendingAll=0; $approvedAll=0; $rejectedAll=0;
+    /* ── Constants ─────────────────────────────────────── */
+    const ANNUAL_LEAVE_CAP = 30;          // Rwanda Labour Law: 30 days/year max
+
+    $leaveRequests = collect();
+    $leaveTypes    = collect();
+    $allEmployees  = collect();
+    $pendingAll = $approvedAll = $rejectedAll = 0;
+    $pendingLeaves = collect();
+
     try {
-        $leaveRequests = \App\Models\LeaveRequest::with(['employee','leaveType'])->orderBy('created_at','desc')->paginate(20,['*'],'leavePage');
+        $leaveRequests = \App\Models\LeaveRequest::with(['employee','leaveType'])
+            ->orderBy('created_at','desc')
+            ->paginate(20, ['*'], 'leavePage');
         $leaveTypes    = \App\Models\LeaveType::all();
         $allEmployees  = \App\Models\Employee::orderBy('first_name')->get(['id','first_name','last_name']);
         $pendingAll    = \App\Models\LeaveRequest::where('status','pending')->count();
         $approvedAll   = \App\Models\LeaveRequest::where('status','approved')->count();
         $rejectedAll   = \App\Models\LeaveRequest::where('status','rejected')->count();
-        $pendingLeaves = \App\Models\LeaveRequest::with(['employee','leaveType'])->where('status','pending')->orderBy('created_at','asc')->get();
-    } catch(\Exception $e){ $pendingLeaves=collect(); }
+        $pendingLeaves = \App\Models\LeaveRequest::with(['employee','leaveType'])
+            ->where('status','pending')
+            ->orderBy('created_at','asc')
+            ->get();
+    } catch(\Exception $e) {}
+
+    /* ── Leave balance query for the selected employee ── */
+    $balYear      = (int) request('bal_year', now()->year);
+    $balEmpId     = request('bal_emp', '');
+    $balEmployee  = null;
+    $empLeaveData = collect();        // per-type breakdown
+    $totalUsedAll = $totalRemAll = 0; // across ALL types (capped pool)
+
+    if ($balEmpId) {
+        try {
+            $balEmployee = \App\Models\Employee::with('department')->find($balEmpId);
+
+            if ($balEmployee && $leaveTypes->count()) {
+
+                /* Sum every approved request across ALL leave types for this year */
+                $allApprovedDays = \App\Models\LeaveRequest::where('employee_id', $balEmpId)
+                    ->where('status', 'approved')
+                    ->whereYear('start_date', $balYear)
+                    ->get()
+                    ->sum(function ($r) {
+                        // prefer the stored total_days field; fall back to date diff
+                        if (!empty($r->total_days) && $r->total_days > 0) {
+                            return (int) $r->total_days;
+                        }
+                        return \Carbon\Carbon::parse($r->start_date)
+                            ->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1;
+                    });
+
+                /* Pool is 30 days; can never go negative */
+                $totalUsedAll = min($allApprovedDays, ANNUAL_LEAVE_CAP);
+                $totalRemAll  = max(0, ANNUAL_LEAVE_CAP - $totalUsedAll);
+
+                /* Per-type breakdown (used only for the detail table rows) */
+                $empLeaveData = $leaveTypes->map(function ($lt) use ($balEmpId, $balYear) {
+                    $reqs = \App\Models\LeaveRequest::with('leaveType')
+                        ->where('employee_id', $balEmpId)
+                        ->where('leave_type_id', $lt->id)
+                        ->whereYear('start_date', $balYear)
+                        ->orderBy('start_date', 'desc')
+                        ->get();
+
+                    $used = $reqs->where('status', 'approved')
+                        ->sum(function ($r) {
+                            if (!empty($r->total_days) && $r->total_days > 0) return (int) $r->total_days;
+                            return \Carbon\Carbon::parse($r->start_date)
+                                ->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1;
+                        });
+
+                    return [
+                        'type'     => $lt,
+                        'requests' => $reqs,
+                        'used'     => $used,
+                    ];
+                });
+            }
+        } catch(\Exception $e) {}
+    }
+
+    /* ── Active leave sub-tab (requests | balance | submit) ── */
+    $leaveTab = request('leave_tab', 'requests');
 @endphp
+
 <div class="la-wrap">
 
+    {{-- ── Hero ── --}}
     <div class="la-hero">
         <div class="la-hero-left">
-            <div class="la-hero-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div class="la-hero-icon">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
             <div>
                 <div class="la-hero-title">Leave Management</div>
-                <div class="la-hero-sub">Review requests, manage balances and track approvals</div>
+                <div class="la-hero-sub">30-day annual entitlement · Rwanda Labour Law</div>
                 <div class="la-hero-chips">
                     <span class="la-hero-chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>{{ $pendingAll }} Pending</span>
                     <span class="la-hero-chip"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{{ $approvedAll }} Approved</span>
@@ -870,43 +900,295 @@ table.la-table { width:100%; border-collapse:collapse; }
         <div class="la-hero-right">
             <div class="la-hero-stat"><div class="la-hero-sv">{{ $pendingAll }}</div><div class="la-hero-sl">Pending</div></div>
             <div class="la-hero-stat"><div class="la-hero-sv">{{ $approvedAll }}</div><div class="la-hero-sl">Approved</div></div>
-            <div class="la-hero-stat"><div class="la-hero-sv">{{ $rejectedAll }}</div><div class="la-hero-sl">Rejected</div></div>
+            <div class="la-hero-stat"><div class="la-hero-sv">{{ ANNUAL_LEAVE_CAP }}</div><div class="la-hero-sl">Days/Year</div></div>
         </div>
     </div>
 
-    {{-- Leave type balances --}}
-    @if($leaveTypes->count())
-    <div>
-        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--ink4);margin-bottom:12px;">Leave Type Overview</div>
-        <div class="la-balance-strip">
-            @foreach($leaveTypes as $lt)
-                @php
-                    $used  = \App\Models\LeaveRequest::where('leave_type_id',$lt->id)->where('status','approved')->sum('total_days') ?? 0;
-                    $total = $lt->max_days ?? $lt->days_allowed ?? 30;
-                    $pct   = $total > 0 ? min(100, round(($used/$total)*100)) : 0;
-                    $fillCls = $pct>=80?'amber':($pct>=50?'':'green');
-                @endphp
-                <div class="la-balance-card">
-                    <div class="la-balance-top">
-                        <div class="la-balance-lbl">{{ $lt->name }}</div>
-                        <span class="la-badge lb-blue">{{ $lt->is_paid ? 'Paid' : 'Unpaid' }}</span>
-                    </div>
-                    <div class="la-balance-val">{{ $total - $used }}</div>
-                    <div class="la-balance-sub">days remaining of {{ $total }}</div>
-                    <div class="la-balance-bar"><div class="la-balance-fill {{ $fillCls }}" style="width:{{ $pct }}%"></div></div>
+    {{-- ══ INNER TABS ═══════════════════════════════════════════════════════════ --}}
+    <div style="display:flex;gap:6px;background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm);padding:10px 14px;flex-wrap:wrap;">
+        @foreach([
+            ['requests', 'Requests', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>'],
+            ['balance',  'Leave Balance', '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'],
+            ['pending',  'Pending Approvals', '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'],
+            ['submit',   'Submit Request', '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'],
+        ] as [$tab, $label, $icon])
+            <a href="?leave_tab={{ $tab }}#section-leaves"
+               style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;text-decoration:none;
+                      {{ $leaveTab===$tab ? 'background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(59,111,232,0.28);' : 'background:var(--bg);color:var(--ink3);' }}">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;">{!! $icon !!}</svg>
+                {{ $label }}
+                @if($tab==='pending' && $pendingAll>0)
+                    <span style="background:{{ $leaveTab==='pending'?'rgba(255,255,255,0.25)':'var(--amber-lt)' }};color:{{ $leaveTab==='pending'?'#fff':'#92400E' }};font-size:10px;font-weight:800;padding:1px 7px;border-radius:100px;">{{ $pendingAll }}</span>
+                @endif
+            </a>
+        @endforeach
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════
+         TAB 1 — ALL REQUESTS
+    ══════════════════════════════════════════════════════ --}}
+    @if($leaveTab === 'requests')
+    <div class="la-card">
+        <div class="la-card-hd">
+            <div class="la-card-hdl">
+                <div class="la-card-ico" style="background:var(--blue-lt);"><svg style="stroke:var(--blue)" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                <div><div class="la-card-ttl">All Leave Requests</div><div class="la-card-sub">Full history · paginated</div></div>
+            </div>
+        </div>
+        <div class="la-table-wrap">
+            <table class="la-table">
+                <thead><tr><th>Employee</th><th>Type</th><th>Period</th><th>Days</th><th>Applied</th><th>Status</th></tr></thead>
+                <tbody>
+                    @forelse($leaveRequests as $lr)
+                        @php
+                            $lre    = $lr->employee;
+                            $lrInit = $lre ? strtoupper(substr($lre->first_name??'',0,1).substr($lre->last_name??'',0,1)) : '??';
+                            $lrStat = $lr->status instanceof \BackedEnum ? $lr->status->value : ($lr->status ?? '');
+                            $lrCls  = match($lrStat){ 'approved'=>'lb-green','pending'=>'lb-amber','rejected'=>'lb-red', default=>'lb-gray' };
+                            $lrDays = !empty($lr->total_days) && $lr->total_days > 0
+                                ? (int)$lr->total_days
+                                : \Carbon\Carbon::parse($lr->start_date)->diffInDays(\Carbon\Carbon::parse($lr->end_date)) + 1;
+                        @endphp
+                        <tr>
+                            <td>
+                                <div class="la-emp-cell">
+                                    <div class="la-emp-av">{{ $lrInit }}</div>
+                                    <div>
+                                        <div class="la-emp-name">{{ $lre ? $lre->first_name.' '.$lre->last_name : '—' }}</div>
+                                        <div class="la-emp-role">{{ $lre?->department?->name ?? '' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ $lr->leaveType?->name ?? $lr->leave_type ?? '—' }}</td>
+                            <td style="font-size:12.5px;color:var(--ink3);">
+                                {{ \Carbon\Carbon::parse($lr->start_date)->format('M d') }} – {{ \Carbon\Carbon::parse($lr->end_date)->format('M d, Y') }}
+                            </td>
+                            <td><span class="la-badge lb-blue">{{ $lrDays }}d</span></td>
+                            <td style="color:var(--ink4);font-size:12px;">{{ \Carbon\Carbon::parse($lr->created_at)->format('M d, Y') }}</td>
+                            <td><span class="la-badge {{ $lrCls }}">{{ ucfirst($lrStat) }}</span></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6">
+                            <div class="la-empty">
+                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                                <div class="la-empty-ttl">No leave requests</div>
+                            </div>
+                        </td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($leaveRequests,'hasPages') && $leaveRequests->hasPages())
+            <div style="padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <span style="font-size:12.5px;color:var(--ink4);">Showing {{ $leaveRequests->firstItem() }}–{{ $leaveRequests->lastItem() }} of {{ $leaveRequests->total() }}</span>
+                {{ $leaveRequests->links() }}
+            </div>
+        @endif
+    </div>
+    @endif
+
+    {{-- ══════════════════════════════════════════════════════
+         TAB 2 — LEAVE BALANCE (per employee, 30-day pool)
+    ══════════════════════════════════════════════════════ --}}
+    @if($leaveTab === 'balance')
+    <div class="la-card" id="la-emp-balance-card">
+        <div class="la-card-hd">
+            <div class="la-card-hdl">
+                <div class="la-card-ico" style="background:var(--purple-lt);border:1px solid rgba(124,58,237,0.22);">
+                    <svg style="stroke:var(--purple)" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
-            @endforeach
+                <div>
+                    <div class="la-card-ttl">Employee Leave Balance</div>
+                    <div class="la-card-sub">30-day annual pool · all leave types combined</div>
+                </div>
+            </div>
+        </div>
+        <div class="la-card-bd">
+
+            {{-- ── Selector ── --}}
+            <form method="GET" action="" id="la-bal-form"
+                  style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;"
+                  onsubmit="this.action=window.location.pathname+'?leave_tab=balance#section-leaves';">
+                <input type="hidden" name="leave_tab" value="balance">
+                <div class="la-field" style="flex:1;min-width:200px;">
+                    <label>Employee</label>
+                    <select name="bal_emp" onchange="document.getElementById('la-bal-form').submit()">
+                        <option value="">— Select employee —</option>
+                        @foreach($allEmployees as $emp)
+                            <option value="{{ $emp->id }}" {{ $balEmpId == $emp->id ? 'selected' : '' }}>
+                                {{ $emp->first_name }} {{ $emp->last_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="la-field" style="min-width:120px;">
+                    <label>Year</label>
+                    <select name="bal_year" onchange="document.getElementById('la-bal-form').submit()">
+                        @for($y = now()->year; $y >= now()->year - 4; $y--)
+                            <option value="{{ $y }}" {{ $balYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+            </form>
+
+            @if($balEmployee && $empLeaveData->count())
+
+                {{-- ── Employee header + 30-day summary ── --}}
+                <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg);border-radius:var(--r);margin-bottom:18px;flex-wrap:wrap;">
+                    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;">
+                        {{ strtoupper(substr($balEmployee->first_name,0,1).substr($balEmployee->last_name,0,1)) }}
+                    </div>
+                    <div>
+                        <div style="font-family:'Sora',sans-serif;font-size:15px;font-weight:800;color:var(--ink);">
+                            {{ $balEmployee->first_name }} {{ $balEmployee->last_name }}
+                        </div>
+                        <div style="font-size:12px;color:var(--ink3);font-weight:500;">
+                            {{ $balEmployee->department?->name ?? '—' }} · {{ $balYear }} Leave Summary
+                        </div>
+                    </div>
+                    <div style="margin-left:auto;display:flex;gap:20px;flex-wrap:wrap;">
+                        <div style="text-align:center;">
+                            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--red);">{{ $totalUsedAll }}</div>
+                            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Days Used</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--green);">{{ $totalRemAll }}</div>
+                            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Remaining</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--blue-2);">{{ ANNUAL_LEAVE_CAP }}</div>
+                            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Annual Cap</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── Master progress bar (30-day pool) ── --}}
+                @php
+                    $masterPct  = min(100, round(($totalUsedAll / ANNUAL_LEAVE_CAP) * 100));
+                    $masterColor= $masterPct >= 90 ? 'var(--red)' : ($masterPct >= 60 ? 'var(--amber)' : 'var(--green)');
+                @endphp
+                <div style="margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--ink3);margin-bottom:7px;">
+                        <span>Annual Leave Pool Usage</span>
+                        <span style="color:{{ $masterColor }};">{{ $totalUsedAll }} of {{ ANNUAL_LEAVE_CAP }} days used ({{ $masterPct }}%)</span>
+                    </div>
+                    <div style="height:12px;background:var(--bg);border-radius:100px;border:1px solid var(--border);overflow:hidden;">
+                        <div style="height:100%;border-radius:100px;background:{{ $masterColor }};width:{{ $masterPct }}%;transition:width .5s;"></div>
+                    </div>
+                    @if($totalUsedAll >= ANNUAL_LEAVE_CAP)
+                        <div style="margin-top:8px;padding:8px 13px;background:var(--red-lt);border:1px solid rgba(239,68,68,0.22);border-radius:var(--r);font-size:12.5px;font-weight:600;color:#991B1B;display:flex;align-items:center;gap:7px;">
+                            <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Annual entitlement fully used — no more leave days available for {{ $balYear }}.
+                        </div>
+                    @elseif($totalRemAll <= 5)
+                        <div style="margin-top:8px;padding:8px 13px;background:var(--amber-lt);border:1px solid rgba(245,158,11,0.22);border-radius:var(--r);font-size:12.5px;font-weight:600;color:#92400E;display:flex;align-items:center;gap:7px;">
+                            <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+                            Only {{ $totalRemAll }} day{{ $totalRemAll != 1 ? 's' : '' }} remaining for {{ $balYear }}.
+                        </div>
+                    @endif
+                </div>
+
+                {{-- ── Per-type breakdown cards ── --}}
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--ink4);margin-bottom:10px;">
+                    Breakdown by Leave Type
+                </div>
+                @foreach($empLeaveData as $ld)
+                    @if($ld['requests']->count() === 0) @continue @endif
+                    @php
+                        $ldPct   = ANNUAL_LEAVE_CAP > 0 ? min(100, round(($ld['used'] / ANNUAL_LEAVE_CAP) * 100)) : 0;
+                        $ldColor = $ldPct >= 90 ? 'var(--red)' : ($ldPct >= 60 ? 'var(--amber)' : 'var(--blue)');
+                    @endphp
+                    <div style="border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;">
+                        {{-- Type header --}}
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--white);">
+                            <div style="display:flex;align-items:center;gap:9px;">
+                                <div style="width:9px;height:9px;border-radius:50%;background:{{ $ldColor }};flex-shrink:0;"></div>
+                                <div>
+                                    <div style="font-size:13.5px;font-weight:700;color:var(--ink);">{{ $ld['type']->name }}</div>
+                                    <div style="font-size:11px;color:var(--ink4);">{{ $ld['type']->is_paid ? 'Paid leave' : 'Unpaid leave' }} · {{ $ld['used'] }}d drawn from 30-day pool</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span class="la-badge {{ $ld['used'] > 0 ? 'lb-blue' : 'lb-gray' }}">{{ $ld['used'] }} day{{ $ld['used'] != 1 ? 's' : '' }} used</span>
+                            </div>
+                        </div>
+                        {{-- Thin progress strip --}}
+                        <div style="height:4px;background:var(--bg);">
+                            <div style="height:100%;background:{{ $ldColor }};width:{{ $ldPct }}%;transition:width .5s;"></div>
+                        </div>
+                        {{-- Individual request rows --}}
+                        <div style="background:#FAFBFF;">
+                            <table class="la-table" style="font-size:12.5px;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding:8px 18px;font-size:10px;">From</th>
+                                        <th style="padding:8px 16px;font-size:10px;">To</th>
+                                        <th style="padding:8px 16px;font-size:10px;">Days</th>
+                                        <th style="padding:8px 16px;font-size:10px;">Reason</th>
+                                        <th style="padding:8px 16px;font-size:10px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($ld['requests'] as $req)
+                                        @php
+                                            $reqStat = $req->status instanceof \BackedEnum ? $req->status->value : ($req->status ?? '');
+                                            $reqCls  = match($reqStat){ 'approved'=>'lb-green','pending'=>'lb-amber','rejected'=>'lb-red', default=>'lb-gray' };
+                                            $reqDays = !empty($req->total_days) && $req->total_days > 0
+                                                ? (int)$req->total_days
+                                                : \Carbon\Carbon::parse($req->start_date)->diffInDays(\Carbon\Carbon::parse($req->end_date)) + 1;
+                                        @endphp
+                                        <tr>
+                                            <td style="padding:9px 18px;font-weight:600;color:var(--ink2);">{{ \Carbon\Carbon::parse($req->start_date)->format('M d, Y') }}</td>
+                                            <td style="padding:9px 16px;color:var(--ink3);">{{ \Carbon\Carbon::parse($req->end_date)->format('M d, Y') }}</td>
+                                            <td style="padding:9px 16px;"><span class="la-badge lb-blue">{{ $reqDays }}d</span></td>
+                                            <td style="padding:9px 16px;color:var(--ink3);max-width:220px;">{{ \Illuminate\Support\Str::limit($req->reason ?? $req->notes ?? '—', 55) }}</td>
+                                            <td style="padding:9px 16px;"><span class="la-badge {{ $reqCls }}">{{ ucfirst($reqStat) }}</span></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endforeach
+
+                {{-- If all leave types have 0 requests but we still have data --}}
+                @if($empLeaveData->sum(fn($l) => $l['requests']->count()) === 0)
+                    <div class="la-empty" style="padding:28px 0;">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                        <div class="la-empty-ttl">No leave requests in {{ $balYear }}</div>
+                        <div class="la-empty-sub">All {{ ANNUAL_LEAVE_CAP }} days are available</div>
+                    </div>
+                @endif
+
+            @elseif($balEmpId && !$balEmployee)
+                <div class="la-empty">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <div class="la-empty-ttl">Employee not found</div>
+                </div>
+            @else
+                <div class="la-empty" style="padding:36px;">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <div class="la-empty-ttl">Select an employee above</div>
+                    <div class="la-empty-sub">Choose an employee and year to view their 30-day leave balance and full request history</div>
+                </div>
+            @endif
         </div>
     </div>
     @endif
 
-    {{-- Pending approvals --}}
-    @if(isset($pendingLeaves) && $pendingLeaves->count())
+    {{-- ══════════════════════════════════════════════════════
+         TAB 3 — PENDING APPROVALS
+    ══════════════════════════════════════════════════════ --}}
+    @if($leaveTab === 'pending')
+    @if($pendingLeaves->count())
     <div class="la-card">
         <div class="la-card-hd">
             <div class="la-card-hdl">
                 <div class="la-card-ico" style="background:var(--amber-lt);"><svg style="stroke:var(--amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-                <div><div class="la-card-ttl">Pending Approvals</div><div class="la-card-sub">{{ $pendingLeaves->count() }} request{{ $pendingLeaves->count()!=1?'s':'' }} awaiting decision</div></div>
+                <div>
+                    <div class="la-card-ttl">Pending Approvals</div>
+                    <div class="la-card-sub">{{ $pendingLeaves->count() }} request{{ $pendingLeaves->count() != 1 ? 's' : '' }} awaiting decision</div>
+                </div>
             </div>
             <span class="la-badge lb-amber">{{ $pendingLeaves->count() }} pending</span>
         </div>
@@ -916,24 +1198,58 @@ table.la-table { width:100%; border-collapse:collapse; }
                 <tbody>
                     @foreach($pendingLeaves as $pl)
                         @php
-                            $plEmp = $pl->employee;
+                            $plEmp  = $pl->employee;
                             $plInit = $plEmp ? strtoupper(substr($plEmp->first_name??'',0,1).substr($plEmp->last_name??'',0,1)) : '??';
-                            $plDays = \Carbon\Carbon::parse($pl->start_date)->diffInDays(\Carbon\Carbon::parse($pl->end_date))+1;
+                            $plDays = !empty($pl->total_days) && $pl->total_days > 0
+                                ? (int)$pl->total_days
+                                : \Carbon\Carbon::parse($pl->start_date)->diffInDays(\Carbon\Carbon::parse($pl->end_date)) + 1;
+
+                            /* Check how many days this employee has already used this year */
+                            $plUsed = 0;
+                            try {
+                                $plUsed = \App\Models\LeaveRequest::where('employee_id', $plEmp?->id)
+                                    ->where('status','approved')
+                                    ->whereYear('start_date', now()->year)
+                                    ->get()
+                                    ->sum(fn($r) => !empty($r->total_days) && $r->total_days > 0
+                                        ? (int)$r->total_days
+                                        : \Carbon\Carbon::parse($r->start_date)->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1
+                                    );
+                            } catch(\Exception $e) {}
+                            $plRemaining = max(0, ANNUAL_LEAVE_CAP - $plUsed);
+                            $plExceeds   = $plDays > $plRemaining;
                         @endphp
                         <tr>
-                            <td><div class="la-emp-cell"><div class="la-emp-av">{{ $plInit }}</div><div><div class="la-emp-name">{{ $plEmp ? $plEmp->first_name.' '.$plEmp->last_name : '—' }}</div><div class="la-emp-role">{{ $plEmp?->department?->name??'' }}</div></div></div></td>
+                            <td>
+                                <div class="la-emp-cell">
+                                    <div class="la-emp-av">{{ $plInit }}</div>
+                                    <div>
+                                        <div class="la-emp-name">{{ $plEmp ? $plEmp->first_name.' '.$plEmp->last_name : '—' }}</div>
+                                        <div class="la-emp-role">{{ $plEmp?->department?->name ?? '' }} · {{ $plRemaining }}d remaining</div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ $pl->leaveType?->name ?? $pl->leave_type ?? '—' }}</td>
                             <td style="font-weight:600;">{{ \Carbon\Carbon::parse($pl->start_date)->format('M d, Y') }}</td>
                             <td style="font-weight:600;">{{ \Carbon\Carbon::parse($pl->end_date)->format('M d, Y') }}</td>
-                            <td><span class="la-badge lb-blue">{{ $plDays }}d</span></td>
-                            <td style="max-width:180px;color:var(--ink3);font-size:12.5px;">{{ \Illuminate\Support\Str::limit($pl->reason??$pl->notes??'—',50) }}</td>
                             <td>
-                                <div style="display:flex;gap:5px;">
+                                <span class="la-badge {{ $plExceeds ? 'lb-red' : 'lb-blue' }}">{{ $plDays }}d</span>
+                                @if($plExceeds)
+                                    <div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px;">Exceeds balance!</div>
+                                @endif
+                            </td>
+                            <td style="max-width:180px;color:var(--ink3);font-size:12.5px;">{{ \Illuminate\Support\Str::limit($pl->reason ?? $pl->notes ?? '—', 50) }}</td>
+                            <td>
+                                <div style="display:flex;gap:5px;flex-wrap:wrap;">
                                     @if(\Illuminate\Support\Facades\Route::has('hr.leaves.approve'))
-                                        <a href="{{ route('hr.leaves.approve',$pl->id) }}" class="la-btn la-btn-green la-btn-sm" onclick="return confirm('Approve this leave request?')">
+                                        <a href="{{ route('hr.leaves.approve', $pl->id) }}"
+                                           class="la-btn la-btn-green la-btn-sm"
+                                           onclick="return confirm('Approve this leave request?')">
                                             <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Approve
                                         </a>
-                                        <a href="{{ route('hr.leaves.reject',$pl->id) }}" class="la-btn la-btn-danger la-btn-sm" onclick="return confirm('Reject this leave request?')">Reject</a>
+                                        <a href="{{ route('hr.leaves.reject', $pl->id) }}"
+                                           class="la-btn la-btn-danger la-btn-sm"
+                                           onclick="return confirm('Reject this leave request?')">Reject</a>
                                     @else
                                         <span class="la-badge lb-amber">Pending</span>
                                     @endif
@@ -945,318 +1261,81 @@ table.la-table { width:100%; border-collapse:collapse; }
             </table>
         </div>
     </div>
+    @else
+        <div class="la-card">
+            <div class="la-empty" style="padding:48px;">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <div class="la-empty-ttl">All clear — no pending requests</div>
+                <div class="la-empty-sub">Every leave request has been actioned</div>
+            </div>
+        </div>
+    @endif
     @endif
 
-    {{-- All leave requests --}}
-    <div class="la-card">
-        <div class="la-card-hd">
-            <div class="la-card-hdl">
-                <div class="la-card-ico" style="background:var(--blue-lt);"><svg style="stroke:var(--blue)" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-                <div><div class="la-card-ttl">All Leave Requests</div><div class="la-card-sub">Full history</div></div>
-            </div>
-        </div>
-        <div class="la-table-wrap">
-            <table class="la-table">
-                <thead><tr><th>Employee</th><th>Type</th><th>Period</th><th>Days</th><th>Applied</th><th>Status</th></tr></thead>
-                <tbody>
-                    @forelse($leaveRequests as $lr)
-                        @php
-                            $lre = $lr->employee;
-                            $lrInit = $lre ? strtoupper(substr($lre->first_name??'',0,1).substr($lre->last_name??'',0,1)) : '??';
-                            $lrStat = $lr->status instanceof \BackedEnum ? $lr->status->value : ($lr->status??'');
-                            $lrCls  = match($lrStat){'approved'=>'lb-green','pending'=>'lb-amber','rejected'=>'lb-red',default=>'lb-gray'};
-                            $lrDays = \Carbon\Carbon::parse($lr->start_date)->diffInDays(\Carbon\Carbon::parse($lr->end_date))+1;
-                        @endphp
-                        <tr>
-                            <td><div class="la-emp-cell"><div class="la-emp-av">{{ $lrInit }}</div><div><div class="la-emp-name">{{ $lre ? $lre->first_name.' '.$lre->last_name : '—' }}</div></div></div></td>
-                            <td>{{ $lr->leaveType?->name??$lr->leave_type??'—' }}</td>
-                            <td style="font-size:12.5px;color:var(--ink3);">{{ \Carbon\Carbon::parse($lr->start_date)->format('M d') }} – {{ \Carbon\Carbon::parse($lr->end_date)->format('M d, Y') }}</td>
-                            <td><span class="la-badge lb-blue">{{ $lrDays }}d</span></td>
-                            <td style="color:var(--ink4);font-size:12px;">{{ \Carbon\Carbon::parse($lr->created_at)->format('M d, Y') }}</td>
-                            <td><span class="la-badge {{ $lrCls }}">{{ ucfirst($lrStat) }}</span></td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6"><div class="la-empty"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg><div class="la-empty-ttl">No leave requests</div></div></td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if(method_exists($leaveRequests,'hasPages') && $leaveRequests->hasPages())
-            <div style="padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12.5px;color:var(--ink4);">Showing {{ $leaveRequests->firstItem() }}–{{ $leaveRequests->lastItem() }} of {{ $leaveRequests->total() }}</span>
-                {{ $leaveRequests->links() }}
-            </div>
-        @endif
-    </div>
-
-    {{-- ── Per-Employee Leave Balance ─────────────────────── --}}
-    @php
-        $balYear      = (int)request('bal_year', now()->year);
-        $balEmpId     = request('bal_emp', '');
-        $balEmployee  = null;
-        $empLeaveData = collect();
-        if ($balEmpId) {
-            try {
-                $balEmployee = \App\Models\Employee::with('department')->find($balEmpId);
-                if ($balEmployee && $leaveTypes->count()) {
-                    $empLeaveData = $leaveTypes->map(function($lt) use ($balEmpId, $balYear) {
-                        $reqs = \App\Models\LeaveRequest::with('leaveType')
-                            ->where('employee_id', $balEmpId)
-                            ->where('leave_type_id', $lt->id)
-                            ->whereYear('start_date', $balYear)
-                            ->orderBy('start_date', 'desc')
-                            ->get();
-                        $usedApproved = $reqs->where('status', function($s){ return ($s instanceof \BackedEnum ? $s->value : $s) === 'approved'; })->sum(function($r){
-                            return \Carbon\Carbon::parse($r->start_date)->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1;
-                        });
-                        // Fallback: use total_days field if exists
-                        if ($usedApproved == 0) {
-                            $usedApproved = $reqs->whereIn('status', ['approved'])->sum('total_days') ?? 0;
-                            if ($usedApproved == 0) {
-                                $usedApproved = \App\Models\LeaveRequest::where('employee_id',$balEmpId)
-                                    ->where('leave_type_id',$lt->id)
-                                    ->whereYear('start_date',$balYear)
-                                    ->where('status','approved')
-                                    ->sum('total_days') ?? 0;
-                                if ($usedApproved == 0) {
-                                    // Calculate from date diff
-                                    $usedApproved = \App\Models\LeaveRequest::where('employee_id',$balEmpId)
-                                        ->where('leave_type_id',$lt->id)
-                                        ->whereYear('start_date',$balYear)
-                                        ->where('status','approved')
-                                        ->get()
-                                        ->sum(fn($r) => \Carbon\Carbon::parse($r->start_date)->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1);
-                                }
-                            }
-                        }
-                        $total    = $lt->max_days ?? $lt->days_allowed ?? 30;
-                        $remaining= max(0, $total - $usedApproved);
-                        $pct      = $total > 0 ? min(100, round(($usedApproved/$total)*100)) : 0;
-                        return [
-                            'type'      => $lt,
-                            'requests'  => $reqs,
-                            'used'      => $usedApproved,
-                            'total'     => $total,
-                            'remaining' => $remaining,
-                            'pct'       => $pct,
-                        ];
-                    });
-                }
-            } catch(\Exception $e){}
-        }
-    @endphp
-
-    <div class="la-card" id="la-emp-balance-card">
-        <div class="la-card-hd">
-            <div class="la-card-hdl">
-                <div class="la-card-ico" style="background:var(--purple-lt);border-color:rgba(124,58,237,0.22);">
-                    <svg style="stroke:var(--purple)" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <div>
-                    <div class="la-card-ttl">Employee Leave Balance</div>
-                    <div class="la-card-sub">Select an employee to see their full leave history &amp; balances for the year</div>
-                </div>
-            </div>
-        </div>
-        <div class="la-card-bd">
-            {{-- Filter row --}}
-            <form method="GET" action="" id="la-bal-form" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;" onsubmit="this.action=window.location.pathname+'#section-leaves';">
-                @foreach(request()->except(['bal_emp','bal_year']) as $k => $v)
-                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-                @endforeach
-                <input type="hidden" name="section" value="leaves">
-                <div class="la-field" style="flex:1;min-width:200px;">
-                    <label>Employee</label>
-                    <select name="bal_emp" onchange="document.getElementById('la-bal-form').submit()">
-                        <option value="">— Select employee —</option>
-                        @foreach($allEmployees as $emp)
-                            <option value="{{ $emp->id }}" {{ $balEmpId==$emp->id?'selected':'' }}>
-                                {{ $emp->first_name }} {{ $emp->last_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="la-field" style="min-width:120px;">
-                    <label>Year</label>
-                    <select name="bal_year" onchange="document.getElementById('la-bal-form').submit()">
-                        @for($y=now()->year; $y>=now()->year-4; $y--)
-                            <option value="{{ $y }}" {{ $balYear==$y?'selected':'' }}>{{ $y }}</option>
-                        @endfor
-                    </select>
-                </div>
-            </form>
-
-            @if($balEmployee && $empLeaveData->count())
-                {{-- Employee header --}}
-                <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg);border-radius:var(--r);margin-bottom:18px;">
-                    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;">
-                        {{ strtoupper(substr($balEmployee->first_name,0,1).substr($balEmployee->last_name,0,1)) }}
-                    </div>
-                    <div>
-                        <div style="font-family:'Sora',sans-serif;font-size:15px;font-weight:800;color:var(--ink);">{{ $balEmployee->first_name }} {{ $balEmployee->last_name }}</div>
-                        <div style="font-size:12px;color:var(--ink3);font-weight:500;">{{ $balEmployee->department?->name ?? '' }} · {{ $balYear }} Leave Summary</div>
-                    </div>
-                    @php
-                        $totalUsedAll  = $empLeaveData->sum('used');
-                        $totalAllowAll = $empLeaveData->sum('total');
-                        $totalRemAll   = $empLeaveData->sum('remaining');
-                    @endphp
-                    <div style="margin-left:auto;display:flex;gap:20px;">
-                        <div style="text-align:center;">
-                            <div style="font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--red);">{{ $totalUsedAll }}</div>
-                            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Days Used</div>
-                        </div>
-                        <div style="text-align:center;">
-                            <div style="font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--green);">{{ $totalRemAll }}</div>
-                            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Remaining</div>
-                        </div>
-                        <div style="text-align:center;">
-                            <div style="font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--blue-2);">{{ $totalAllowAll }}</div>
-                            <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Entitlement</div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Balance cards per leave type --}}
-                @foreach($empLeaveData as $ld)
-                    @php
-                        $barColor = $ld['pct']>=90?'var(--red)':($ld['pct']>=60?'var(--amber)':'var(--green)');
-                    @endphp
-                    <div style="border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;">
-                        {{-- Leave type header --}}
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--white);">
-                            <div style="display:flex;align-items:center;gap:10px;">
-                                <div style="width:10px;height:10px;border-radius:50%;background:{{ $barColor }};flex-shrink:0;"></div>
-                                <div>
-                                    <div style="font-size:13.5px;font-weight:700;color:var(--ink);">{{ $ld['type']->name }}</div>
-                                    <div style="font-size:11px;color:var(--ink4);">{{ $ld['type']->is_paid ? 'Paid leave' : 'Unpaid leave' }}</div>
-                                </div>
-                            </div>
-                            <div style="display:flex;align-items:center;gap:20px;">
-                                <div style="text-align:right;">
-                                    <div style="font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:{{ $barColor }};">{{ $ld['used'] }}</div>
-                                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Used</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <div style="font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:var(--green);">{{ $ld['remaining'] }}</div>
-                                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Remaining</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <div style="font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:var(--ink3);">{{ $ld['total'] }}</div>
-                                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Allowed</div>
-                                </div>
-                            </div>
-                        </div>
-                        {{-- Progress bar --}}
-                        <div style="height:6px;background:var(--bg);">
-                            <div style="height:100%;background:{{ $barColor }};width:{{ $ld['pct'] }}%;transition:width .5s;"></div>
-                        </div>
-                        {{-- Individual requests --}}
-                        @if($ld['requests']->count())
-                            <div style="background:#FAFBFF;">
-                                <table class="la-table" style="font-size:12.5px;">
-                                    <thead>
-                                        <tr>
-                                            <th style="padding:8px 18px;font-size:10px;">From</th>
-                                            <th style="padding:8px 16px;font-size:10px;">To</th>
-                                            <th style="padding:8px 16px;font-size:10px;">Days</th>
-                                            <th style="padding:8px 16px;font-size:10px;">Reason</th>
-                                            <th style="padding:8px 16px;font-size:10px;">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($ld['requests'] as $req)
-                                            @php
-                                                $reqStat = $req->status instanceof \BackedEnum ? $req->status->value : ($req->status??'');
-                                                $reqCls  = match($reqStat){'approved'=>'lb-green','pending'=>'lb-amber','rejected'=>'lb-red',default=>'lb-gray'};
-                                                $reqDays = \Carbon\Carbon::parse($req->start_date)->diffInDays(\Carbon\Carbon::parse($req->end_date)) + 1;
-                                                if ($req->total_days ?? false) $reqDays = $req->total_days;
-                                            @endphp
-                                            <tr>
-                                                <td style="padding:9px 18px;font-weight:600;color:var(--ink2);">{{ \Carbon\Carbon::parse($req->start_date)->format('M d, Y') }}</td>
-                                                <td style="padding:9px 16px;color:var(--ink3);">{{ \Carbon\Carbon::parse($req->end_date)->format('M d, Y') }}</td>
-                                                <td style="padding:9px 16px;"><span class="la-badge lb-blue">{{ $reqDays }}d</span></td>
-                                                <td style="padding:9px 16px;color:var(--ink3);max-width:200px;">{{ \Illuminate\Support\Str::limit($req->reason??$req->notes??'—',50) }}</td>
-                                                <td style="padding:9px 16px;"><span class="la-badge {{ $reqCls }}">{{ ucfirst($reqStat) }}</span></td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div style="padding:12px 18px;background:#FAFBFF;font-size:12.5px;color:var(--ink4);font-weight:500;font-style:italic;">No {{ $ld['type']->name }} requests in {{ $balYear }}</div>
-                        @endif
-                    </div>
-                @endforeach
-
-            @elseif($balEmpId && !$balEmployee)
-                <div class="la-empty"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div class="la-empty-ttl">Employee not found</div></div>
-            @else
-                <div class="la-empty" style="padding:32px;">
-                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <div class="la-empty-ttl">Select an employee above</div>
-                    <div class="la-empty-sub">Choose an employee and year to see their complete leave balance and history</div>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    {{-- Leave request form --}}
+    {{-- ══════════════════════════════════════════════════════
+         TAB 4 — SUBMIT REQUEST
+    ══════════════════════════════════════════════════════ --}}
+    @if($leaveTab === 'submit')
     <div class="la-card">
         <div class="la-card-hd">
             <div class="la-card-hdl">
                 <div class="la-card-ico" style="background:var(--green-lt);"><svg style="stroke:var(--green)" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-                <div><div class="la-card-ttl">Submit Leave Request</div><div class="la-card-sub">File a new leave application</div></div>
+                <div><div class="la-card-ttl">Submit Leave Request</div><div class="la-card-sub">Max 30 days per year across all leave types</div></div>
             </div>
         </div>
         <div class="la-card-bd">
             @if(\Illuminate\Support\Facades\Route::has('employee.leave.store'))
-            <form action="{{ route('employee.leave.store') }}" method="POST">
-                @csrf
-                <div class="la-grid2" style="margin-bottom:14px;">
-                    <div class="la-field">
-                        <label>Employee <span class="req">*</span></label>
-                        <select name="employee_id" required>
-                            <option value="">Select employee…</option>
-                            @foreach($allEmployees as $emp)
-                                <option value="{{ $emp->id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
-                            @endforeach
-                        </select>
+                <form action="{{ route('employee.leave.store') }}" method="POST">
+                    @csrf
+                    <div class="la-grid2" style="margin-bottom:14px;">
+                        <div class="la-field">
+                            <label>Employee <span class="req">*</span></label>
+                            <select name="employee_id" required>
+                                <option value="">Select employee…</option>
+                                @foreach($allEmployees as $emp)
+                                    <option value="{{ $emp->id }}">{{ $emp->first_name }} {{ $emp->last_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="la-field">
+                            <label>Leave Type <span class="req">*</span></label>
+                            <select name="leave_type_id" required>
+                                <option value="">Select type…</option>
+                                @foreach($leaveTypes as $lt)
+                                    <option value="{{ $lt->id }}">{{ $lt->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="la-field">
+                            <label>Start Date <span class="req">*</span></label>
+                            <input type="date" name="start_date" required>
+                        </div>
+                        <div class="la-field">
+                            <label>End Date <span class="req">*</span></label>
+                            <input type="date" name="end_date" required>
+                        </div>
                     </div>
-                    <div class="la-field">
-                        <label>Leave Type <span class="req">*</span></label>
-                        <select name="leave_type_id" required>
-                            <option value="">Select type…</option>
-                            @foreach($leaveTypes as $lt)
-                                <option value="{{ $lt->id }}">{{ $lt->name }}</option>
-                            @endforeach
-                        </select>
+                    <div class="la-field" style="margin-bottom:16px;">
+                        <label>Reason / Notes</label>
+                        <textarea name="reason" placeholder="Briefly explain the reason for your leave…"></textarea>
                     </div>
-                    <div class="la-field">
-                        <label>Start Date <span class="req">*</span></label>
-                        <input type="date" name="start_date" required>
+                    <div style="background:var(--blue-lt);border:1px solid var(--blue-brd);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:12.5px;color:var(--blue-2);font-weight:600;display:flex;align-items:center;gap:8px;">
+                        <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Employees are entitled to a maximum of <strong>30 days</strong> of leave per year across all leave types combined (Rwanda Labour Law).
                     </div>
-                    <div class="la-field">
-                        <label>End Date <span class="req">*</span></label>
-                        <input type="date" name="end_date" required>
+                    <div style="display:flex;justify-content:flex-end;">
+                        <button type="submit" class="la-btn la-btn-primary">
+                            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                            Submit Request
+                        </button>
                     </div>
-                </div>
-                <div class="la-field" style="margin-bottom:16px;">
-                    <label>Reason / Notes</label>
-                    <textarea name="reason" placeholder="Briefly explain the reason for your leave…"></textarea>
-                </div>
-                <div style="display:flex;justify-content:flex-end;">
-                    <button type="submit" class="la-btn la-btn-primary">
-                        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-                        Submit Request
-                    </button>
-                </div>
-            </form>
+                </form>
             @else
                 <p style="color:var(--ink4);font-size:13px;">Leave submission form not available — route not configured.</p>
             @endif
         </div>
     </div>
+    @endif
 
 </div>
 </div>{{-- /section-leaves --}}
@@ -1265,36 +1344,33 @@ table.la-table { width:100%; border-collapse:collapse; }
 {{-- ════════════════════════════════════════════════════════
      SECTION 3 — COMMUNICATION  (chat-style, HR version)
 ════════════════════════════════════════════════════════ --}}
-<div class="la-section" id="section-communication">
-@php
-    $msgUnread = 0; $msgList = collect(); $hrUsers = collect();
-    try {
-        $msgList   = \App\Models\Message::with(['sender','receiver'])
-            ->where(fn($q)=>$q->where('sender_id',auth()->id())->orWhere('receiver_id',auth()->id()))
-            ->orderBy('created_at','desc')->get();
-        $msgUnread = $msgList->where('receiver_id',auth()->id())->where('is_read',false)->count();
-        $hrUsers   = \App\Models\Employee::orderBy('first_name')->get();
-    } catch(\Exception){}
-@endphp
+<div class="la-section {{ $activeSection==='communication'?'active':'' }}" id="section-communication">
 <div class="la-wrap" style="gap:14px;">
 
-    {{-- Top bar --}}
-    <div class="la-chat-topbar">
-        <div style="display:flex;align-items:center;gap:12px;">
-            <div class="la-chat-topbar-icon">
-                <svg viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+    {{-- Standardized Hero (Deep Ocean) --}}
+    <div class="la-hero">
+        <div class="la-hero-left">
+            <div class="la-hero-icon">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div>
-                <div class="la-chat-topbar-title">HR Messages</div>
-                <div class="la-chat-topbar-sub">Communicate with the team</div>
+                <div class="la-hero-title">HR Communications</div>
+                <div class="la-hero-sub">Direct messaging and team announcements · High-Fidelity Design</div>
+                <div class="la-hero-chips">
+                    <span class="la-hero-chip"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>{{ $msgList->count() }} Total Messages</span>
+                    @if($msgUnread > 0)
+                        <span class="la-hero-chip" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.3);color:#fff;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                            {{ $msgUnread }} Unread
+                        </span>
+                    @endif
+                </div>
             </div>
         </div>
-        @if($msgUnread > 0)
-            <div class="la-chat-unread-pill">
-                <span class="la-chat-unread-dot"></span>
-                <span class="la-chat-unread-text">{{ $msgUnread }} unread</span>
-            </div>
-        @endif
+        <div class="la-hero-right">
+            <div class="la-hero-stat"><div class="la-hero-sv">{{ $hrUsers->count() }}</div><div class="la-hero-sl">Staff</div></div>
+            <div class="la-hero-stat"><div class="la-hero-sv">{{ $msgUnread }}</div><div class="la-hero-sl">New</div></div>
+        </div>
     </div>
 
     {{-- Chat shell --}}
@@ -1317,7 +1393,8 @@ table.la-table { width:100%; border-collapse:collapse; }
                     @php $uInit = strtoupper(substr($u->first_name??'',0,1).substr($u->last_name??'',0,1)); @endphp
                     <div class="la-chat-user-item"
                          data-name="{{ strtolower(($u->first_name??'').' '.($u->last_name??'')) }}"
-                         onclick="laChatSelectUser('{{ $u->id }}','{{ addslashes($u->first_name.' '.$u->last_name) }}','{{ $uInit }}'); laToggleChatDrawer();">
+                         wire:click="selectConversation('{{ $u->user_id }}')"
+                         onclick="laToggleChatDrawer();">
                         <div class="la-chat-user-av">{{ $uInit }}</div>
                         <div>
                             <div class="la-chat-user-name">{{ $u->first_name }} {{ $u->last_name }}</div>
@@ -1352,14 +1429,14 @@ table.la-table { width:100%; border-collapse:collapse; }
                             $pInit  = strtoupper(substr($person->first_name??'',0,1).substr($person->last_name??'',0,1));
                             $pName  = trim(($person->first_name??'').' '.($person->last_name??''));
                         @endphp
-                        <div class="la-chat-conv-item" onclick="laChatSelectUser('{{ $pid }}','{{ addslashes($pName) }}','{{ $pInit }}')">
+                        <div class="la-chat-conv-item {{ $selectedConversation == $pid ? 'active' : '' }}" wire:click="selectConversation('{{ $pid }}')">
                             <div class="la-chat-conv-av">{{ $pInit }}</div>
                             <div class="la-chat-conv-info">
                                 <div class="la-chat-conv-name">{{ $pName }}</div>
                                 <div class="la-chat-conv-preview">{{ \Illuminate\Support\Str::limit($latest->message??'',32) }}</div>
                             </div>
                             <div class="la-chat-conv-meta">
-                                <span class="la-chat-conv-time">{{ \Carbon\Carbon::parse($latest->created_at)->format('M d') }}</span>
+                                <span class="la-chat-conv-time">{{ $latest->created_at->diffForHumans(null, true) }}</span>
                                 @if($unread > 0)<span class="la-chat-conv-badge">{{ $unread }}</span>@endif
                             </div>
                         </div>
@@ -1376,76 +1453,88 @@ table.la-table { width:100%; border-collapse:collapse; }
 
         {{-- Chat main --}}
         <div class="la-chat-main">
-            <div class="la-chat-hd">
-                <div class="la-chat-hd-left">
-                    <div class="la-chat-hd-av" id="laChatHdAv" style="background:var(--bg);color:var(--ink4);">
-                        <svg style="width:17px;height:17px;stroke:var(--ink4);fill:none;stroke-width:1.75;" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    </div>
-                    <div>
-                        <div class="la-chat-hd-name" id="laChatHdName" style="color:var(--ink3);">No conversation selected</div>
-                        <div class="la-chat-hd-status" id="laChatHdStatus" style="color:var(--ink4);">Click the people icon to browse staff</div>
+            @if($selectedConversation)
+                @php
+                    $peer = \App\Models\User::find($selectedConversation);
+                    $pInit = strtoupper(substr($peer->first_name??'',0,1).substr($peer->last_name??'',0,1));
+                    $pName = trim(($peer->first_name??'').' '.($peer->last_name??''));
+                @endphp
+                <div class="la-chat-hd">
+                    <div class="la-chat-hd-left">
+                        <div class="la-chat-hd-av">{{ $pInit }}</div>
+                        <div>
+                            <div class="la-chat-hd-name">{{ $pName }}</div>
+                            <div class="la-chat-hd-status">Online</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="la-chat-msgs" id="laChatMsgs">
-                @if($msgList->count())
-                    @foreach($msgList->take(60) as $msg)
-                        @php
-                            $isSent  = $msg->sender_id === auth()->id();
-                            $otherId = $isSent ? $msg->receiver_id : $msg->sender_id;
-                            $isUnread= $msg->receiver_id === auth()->id() && !$msg->is_read;
-                        @endphp
-                        <div class="la-chat-msg-row {{ $isSent?'sent':'recv' }}" data-peer="{{ $otherId }}" style="display:none;">
-                            <div class="la-chat-msg-wrap">
-                                @if($msg->subject??false)
-                                    <div style="font-size:11px;font-weight:700;margin-bottom:2px;opacity:.7;color:{{ $isSent?'rgba(255,255,255,0.65)':'var(--ink4)' }}">{{ $msg->subject }}</div>
-                                @endif
-                                <div class="la-chat-bubble {{ $isSent?'sent':'recv' }}">{{ $msg->message }}</div>
-                                <div class="la-chat-bubble-meta">
-                                    <span class="la-chat-bubble-time">{{ \Carbon\Carbon::parse($msg->created_at)->format('M d · H:i') }}</span>
-                                    @if($isUnread)
-                                        <span class="la-chat-badge la-chat-badge-new">New</span>
-                                    @else
-                                        <span class="la-chat-badge la-chat-badge-read">{{ ucfirst($msg->status??'sent') }}</span>
-                                    @endif
+                <div class="la-chat-msgs" id="laChatMsgs">
+                    @if($conversationMessages && $conversationMessages->count())
+                        @foreach($conversationMessages as $msg)
+                            @php
+                                $isSent = $msg->sender_id === auth()->id();
+                                $isUnread = $msg->receiver_id === auth()->id() && !$msg->is_read;
+                            @endphp
+                            <div class="la-chat-msg-row {{ $isSent?'sent':'' }}">
+                                <div class="la-chat-msg-wrap">
+                                    <div class="la-chat-bubble {{ $isSent?'sent':'recv' }}">{{ $msg->message }}</div>
+                                    <div class="la-chat-bubble-meta">
+                                        <span class="la-chat-bubble-time">{{ $msg->created_at->diffForHumans() }}</span>
+                                        @if($isSent)
+                                            <span class="la-chat-badge {{ $msg->is_read ? 'badge-read' : 'badge-new' }}">{{ $msg->is_read ? 'Read' : 'Sent' }}</span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
+                        @endforeach
+                    @else
+                        <div class="la-chat-empty">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <p>No messages yet</p>
+                            <span>Type a message below to start the conversation</span>
                         </div>
-                    @endforeach
-                    <div id="laChatEmptyState" class="la-chat-empty">
-                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <p>Select a conversation</p>
-                        <span>Choose a person to view messages</span>
+                    @endif
+                </div>
+            @else
+                <div class="la-chat-hd">
+                    <div class="la-chat-hd-left">
+                        <div class="la-chat-hd-av" style="background:var(--bg);color:var(--ink4);">
+                            <svg style="width:17px;height:17px;stroke:var(--ink4);fill:none;stroke-width:1.75;" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <div>
+                            <div class="la-chat-hd-name" style="color:var(--ink3);">No conversation selected</div>
+                            <div class="la-chat-hd-status" style="color:var(--ink4);">Select an employee to start chatting</div>
+                        </div>
                     </div>
-                @else
+                </div>
+                <div class="la-chat-msgs">
                     <div class="la-chat-empty">
                         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <p>No messages yet</p>
                         <span>Type a message below to start a conversation</span>
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
 
             <div class="la-chat-compose">
                 @if(session()->has('success'))
                     <div style="background:var(--green-lt);border:1px solid rgba(18,183,106,0.22);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;color:#087A42;margin-bottom:9px;">{{ session('success') }}</div>
                 @endif
-                <form method="POST" action="{{ route('hr.communication.send') }}" id="laMsgForm">
-                    @csrf
-                    <input type="hidden" name="receiver_id" id="laMsgReceiver">
-                    <div class="la-chat-compose-inner">
-                        <textarea class="la-chat-compose-ta" name="message" id="laMsgText"
-                                  placeholder="Type your message… (select a person first)"
-                                  rows="1"
-                                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.getElementById('laMsgForm').submit();}"
-                                  oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-                        <button type="submit" class="la-chat-send-btn">
-                            <svg viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                        </button>
-                    </div>
-                    <div class="la-chat-compose-hint">Enter to send · Shift+Enter for new line</div>
-                </form>
+                <div id="laMsgComposeArea" style="{{ $selectedConversation ? 'display:block;' : 'display:none;' }}">
+                    <form wire:submit.prevent="sendMessage">
+                        <div class="la-chat-compose-inner">
+                            <textarea class="la-chat-compose-ta" wire:model="messageText" id="laMsgText"
+                                      placeholder="Type your message…"
+                                      rows="1"
+                                      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault(); @this.call('sendMessage');}"
+                                      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+                            <button type="submit" class="la-chat-send-btn">
+                                <svg viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            </button>
+                        </div>
+                        <div class="la-chat-compose-hint">Enter to send · Shift+Enter for new line</div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -1486,6 +1575,9 @@ table.la-table { width:100%; border-collapse:collapse; }
         if(!anyVisible&&empty){empty.style.display='flex';var p=empty.querySelector('p');if(p)p.textContent='No messages yet';}
         var r=document.getElementById('laMsgReceiver');
         if(r)r.value=uid;
+        var comp=document.getElementById('laMsgComposeArea');
+        if(comp)comp.style.display='block';
+        @this.call('markAsRead', uid);
         document.querySelectorAll('.la-chat-conv-item').forEach(function(el){el.classList.remove('active');});
         var msgs=document.getElementById('laChatMsgs');
         if(msgs)msgs.scrollTop=msgs.scrollHeight;
@@ -1508,7 +1600,7 @@ table.la-table { width:100%; border-collapse:collapse; }
 {{-- ════════════════════════════════════════════════════════
      SECTION 4 — CALENDAR  (Team | Personal | Weekly)
 ════════════════════════════════════════════════════════ --}}
-<div class="la-section" id="section-calendar">
+<div class="la-section {{ $activeSection==='calendar'?'active':'' }}" id="section-calendar">
 @php
     $calYear  = (int)request('cal_year',  now()->year);
     $calMonth = (int)request('cal_month', now()->month);
@@ -1945,7 +2037,7 @@ table.la-table { width:100%; border-collapse:collapse; }
 {{-- ════════════════════════════════════════════════════════
      SECTION 5 — ATTENDANCE  (with month filter)
 ════════════════════════════════════════════════════════ --}}
-<div class="la-section" id="section-attendance">
+<div class="la-section {{ $activeSection==='attendance'?'active':'' }}" id="section-attendance">
 @php
     $attYear  = (int)request('att_year',  now()->year);
     $attMonth = (int)request('att_month', now()->month);
@@ -2112,7 +2204,7 @@ table.la-table { width:100%; border-collapse:collapse; }
 </script>
 </div>{{-- /section-attendance --}}
 
-</div>{{-- /la-content --}}
+</main>{{-- /la-local-main --}}
 
 <script>
 function laSwitch(name, btnEl) {
@@ -2123,25 +2215,42 @@ function laSwitch(name, btnEl) {
     document.querySelectorAll('.la-nav-item').forEach(function(b){ b.classList.remove('active'); });
     var navBtn = document.querySelector('.la-nav-item[data-section="' + name + '"]');
     if (navBtn) navBtn.classList.add('active');
-    var content = document.querySelector('.la-content');
+    var content = document.querySelector('.la-local-main');
     if (content) content.scrollTop = 0;
-    // Persist active section in URL hash without triggering a reload
     if (history.replaceState) {
         var url = new URL(window.location.href);
         url.hash = 'section-' + name;
         history.replaceState(null, '', url.toString());
     }
+    // Sync Livewire state so re-renders remember the section
+    if (window.Livewire) {
+        var comp = Livewire.find(document.querySelector('[wire\\:id]') && document.querySelector('[wire\\:id]').getAttribute('wire:id'));
+        if (comp) comp.set('activeSection', name);
+    }
 }
 
-// On page load: restore section from URL hash (handles calendar/attendance month nav reloads)
+// After every Livewire re-render, restore the active section
+document.addEventListener('livewire:init', function () {
+    Livewire.on('sectionChanged', function (params) {
+        var section = params.section || params[0] || 'overview';
+        setTimeout(function(){ laSwitch(section, null); }, 10);
+    });
+    Livewire.on('chatUpdated', function () {
+        setTimeout(function(){
+            var msgs = document.getElementById('laChatMsgs');
+            if (msgs) msgs.scrollTop = msgs.scrollHeight;
+        }, 50);
+    });
+});
+
+// On page load: restore section from URL hash
 (function(){
-    var hash = window.location.hash; // e.g. "#section-calendar"
+    var hash = window.location.hash;
     if (hash && hash.startsWith('#section-')) {
         var name = hash.replace('#section-', '');
-        // Use setTimeout to run after all DOM is ready
         setTimeout(function(){ laSwitch(name, null); }, 0);
     }
 })();
 </script>
 
-</div>{{-- /la-shell --}}
+</div>{{-- /la-local-shell --}}

@@ -621,7 +621,7 @@
                         {{-- Header row --}}
                         <div class="ec-tl-corner"></div>
                         @foreach($days as $di => $dname)
-                            @php $isTodayCol = ($todayDow == $di+1); @endphp
+                            @php $isTodayCol = ($todayDow == $di + 1); @endphp
                             <div class="ec-tl-day-hd {{ $isTodayCol ? 'today-col' : '' }}">
                                 {{ $dname }}
                                 @if($isTodayCol)
@@ -636,15 +636,23 @@
                                 {{ str_pad($hour,2,'0',STR_PAD_LEFT) }}:00
                             </div>
                             @foreach(range(1,5) as $dayIdx)
-                                <div class="ec-tl-cell" wire:click="addTask({{ $hour }}, {{ $dayIdx }})">
-                                    @foreach($tasks->where('hour', $hour)->where('day', $dayIdx) as $task)
-                                        <div class="ec-tl-task"
-                                             wire:click.stop="editTask({{ $task->id }})"
-                                             title="{{ $task->title }}{{ $task->description ? ': '.$task->description : '' }}">
-                                            <span style="overflow:hidden;text-overflow:ellipsis;">{{ $task->title }}</span>
-                                            <button class="ec-tl-task-del" wire:click.stop="deleteTask({{ $task->id }})" title="Remove">×</button>
-                                        </div>
-                                    @endforeach
+                                @php
+                                    // Get the calendar day data for this day index
+                                    $dayData = $calendarDays[$dayIdx - 1] ?? [];
+                                    $hasWorkSchedule = $dayData['hasWorkSchedule'] ?? false;
+                                @endphp
+                                <div class="ec-tl-cell {{ $hasWorkSchedule ? '' : 'no-schedule' }}" 
+                                     @if($hasWorkSchedule) wire:click="addTask({{ $hour }}, {{ $dayIdx }})" @endif>
+                                    @if($hasWorkSchedule)
+                                        @foreach($tasks->where('hour', $hour)->where('day', $dayIdx) as $task)
+                                            <div class="ec-tl-task"
+                                                 wire:click.stop="editTask('{{ $task->id }}')"
+                                                 title="{{ $task->title }}{{ $task->description ? ': '.$task->description : '' }}">
+                                                <span style="overflow:hidden;text-overflow:ellipsis;">{{ $task->title }}</span>
+                                                <button class="ec-tl-task-del" wire:click.stop="deleteTask('{{ $task->id }}')" title="Remove">×</button>
+                                            </div>
+                                        @endforeach
+                                    @endif
                                 </div>
                             @endforeach
                         @endforeach
@@ -673,7 +681,7 @@
             </div>
             <div class="ec-mini-grid-wrap">
                 <div class="ec-mini-dow">
-                    @foreach(['S','M','T','W','T','F','S'] as $d)
+                    @foreach(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $d)
                         <span>{{ $d }}</span>
                     @endforeach
                 </div>

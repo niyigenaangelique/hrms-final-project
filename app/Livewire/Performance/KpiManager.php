@@ -28,7 +28,7 @@ class KpiManager extends Component
     public bool    $showDelete = false;
     public ?string $editingId  = null;
     public ?string $deletingId = null;
-    public ?Kpi    $viewRecord = null;
+    public ?string $viewingId = null;
 
     // ══ FORM FIELDS ══════════════════════════════════════════
     public string $code                  = '';
@@ -143,7 +143,8 @@ class KpiManager extends Component
 
     public function openEdit(string $id): void
     {
-        $r = Kpi::findOrFail($id);
+        $this->showView   = false;
+                $r = Kpi::findOrFail($id);
         $this->editingId             = $id;
         $this->code                  = $r->code                ?? '';
         $this->kpiId                 = (string)($r->kpi_id     ?? '');
@@ -163,14 +164,14 @@ class KpiManager extends Component
 
     public function openView(string $id): void
     {
-        $this->viewRecord = Kpi::with(['employee', 'parentKpi', 'targets'])->findOrFail($id);
-        $this->showView   = true;
+        $this->viewingId = $id;
+        $this->showView  = true;
     }
 
     public function closeView(): void
     {
-        $this->showView   = false;
-        $this->viewRecord = null;
+        $this->showView  = false;
+        $this->viewingId = null;
     }
 
     public function closeModal(): void
@@ -216,7 +217,8 @@ class KpiManager extends Component
     // ── Approve / Reject ─────────────────────────────────────
     public function approve(string $id): void
     {
-        try {
+        $this->showView   = false;
+                try {
             Kpi::findOrFail($id)->update(['approval_status' => 'approved']);
             session()->flash('success', 'KPI approved.');
         } catch (\Exception $e) {
@@ -226,7 +228,8 @@ class KpiManager extends Component
 
     public function reject(string $id): void
     {
-        try {
+        $this->showView   = false;
+                try {
             Kpi::findOrFail($id)->update(['approval_status' => 'rejected']);
             session()->flash('success', 'KPI rejected.');
         } catch (\Exception $e) {
@@ -319,8 +322,8 @@ class KpiManager extends Component
         $totalCount    = Kpi::count();
         $approvedCount = Kpi::where('approval_status', 'approved')->count();
         $pendingCount  = Kpi::where('approval_status', 'pending')->count();
-        $avgScore      = round(Kpi::whereNotNull('score')->avg('score') ?? 0, 1);
-        $avgAchievement= round(Kpi::whereNotNull('achievement_percentage')->avg('achievement_percentage') ?? 0, 1);
+        $avgScore      = 0; // Score not available in kpis table
+        $avgAchievement= 0; // Achievement not available in kpis table
 
         $employees = [];
         try {
