@@ -170,10 +170,11 @@
         </div>
 
         <div class="hlm-card">
-            @if(session()->has('success') || session()->has('error'))
+            @if(session()->has('success') || session()->has('error') || session()->has('warning'))
                 <div style="padding: 16px 32px;">
                     @if(session()->has('success')) <div class="badge-green" style="padding:10px; border-radius:8px;">{{ session('success') }}</div> @endif
                     @if(session()->has('error')) <div class="badge-red" style="padding:10px; border-radius:8px;">{{ session('error') }}</div> @endif
+                    @if(session()->has('warning')) <div class="badge-amber" style="padding:10px; border-radius:8px;">{{ session('warning') }}</div> @endif
                 </div>
             @endif
 
@@ -199,6 +200,7 @@
                                 <td>
                                     <div style="font-weight:700; color:var(--ink);">{{ $request->employee->full_name }}</div>
                                     <div style="font-size:11px; color:var(--ink4);">{{ $request->employee->code }}</div>
+                                    <button class="hlm-btn hlm-btn-ghost" style="padding:4px 8px; font-size:10px; margin-top:4px;" wire:click="showEmployeeBalance('{{ $request->employee->id }}')">View Balance</button>
                                 </td>
                                 <td>{{ $request->leaveType->name }}</td>
                                 <td style="font-size:13px; color:var(--ink3);">{{ $request->start_date->format('M d') }} — {{ $request->end_date->format('M d, Y') }}</td>
@@ -282,6 +284,79 @@
                 <div style="padding:16px 32px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
                     <button class="hlm-btn hlm-btn-ghost" wire:click="closeRejectModal">Cancel</button>
                     <button class="hlm-btn hlm-btn-primary" style="background:#F04438;" wire:click="confirmReject">Confirm Reject</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Leave Balance Modal --}}
+    @if($showBalanceInfo && $selectedEmployeeBalance)
+        <div style="position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(4px); z-index:1000; display:flex; align-items:center; justify-content:center;">
+            <div class="hlm-card" style="width:520px; max-height:90vh; overflow-y:auto; padding:0;">
+                <div class="hlm-card-hd">
+                    <h3 class="hlm-card-title">Leave Balance - {{ $selectedEmployeeBalance['employee']->full_name }}</h3>
+                    <button wire:click="closeBalanceInfo" style="background:none; border:none; cursor:pointer;"><i class="fas fa-times"></i></button>
+                </div>
+                <div style="padding:24px 32px;">
+                    @if($selectedEmployeeBalance['balances'])
+                        <table style="width:100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left; padding:8px; font-size:12px; color:var(--ink4); border-bottom:1px solid var(--border);">Leave Type</th>
+                                    <th style="text-align:center; padding:8px; font-size:12px; color:var(--ink4); border-bottom:1px solid var(--border);">Total</th>
+                                    <th style="text-align:center; padding:8px; font-size:12px; color:var(--ink4); border-bottom:1px solid var(--border);">Used</th>
+                                    <th style="text-align:center; padding:8px; font-size:12px; color:var(--ink4); border-bottom:1px solid var(--border);">Balance</th>
+                                    <th style="text-align:center; padding:8px; font-size:12px; color:var(--ink4); border-bottom:1px solid var(--border);">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($selectedEmployeeBalance['balances'] as $balance)
+                                    <tr>
+                                        <td style="padding:12px 8px; font-weight:600; color:var(--ink);">
+                                            {{ $balance['leave_type'] }}
+                                            @if(isset($balance['is_eligible']) && !$balance['is_eligible'])
+                                                <span style="display:block; font-size:10px; color:#F04438; font-weight:500;">Not eligible</span>
+                                            @endif
+                                            @if($balance['auto_approve'])
+                                                <span style="display:block; font-size:10px; color:#12B76A; font-weight:500;">Auto-approved</span>
+                                            @endif
+                                        </td>
+                                        <td style="text-align:center; padding:8px;">
+                                            {{ $balance['total_days'] ?? 'Unlimited' }}
+                                            @if($balance['max_days_per_year'])
+                                                <div style="font-size:10px; color:var(--ink4);">Max: {{ $balance['max_days_per_year'] }}</div>
+                                            @endif
+                                        </td>
+                                        <td style="text-align:center; padding:8px;">{{ $balance['used_days'] }}</td>
+                                        <td style="text-align:center; padding:8px;">
+                                            <span style="font-weight:700; color: {{ $balance['balance_days'] > 0 ? '#12B76A' : '#F04438' }};">
+                                                {{ $balance['balance_days'] }}
+                                            </span>
+                                            @if($balance['carried_forward'] > 0)
+                                                <div style="font-size:10px; color:var(--ink4);">+{{ $balance['carried_forward'] }} CF</div>
+                                            @endif
+                                        </td>
+                                        <td style="text-align:center; padding:8px; font-size:11px;">
+                                            @if($balance['requires_medical_document'])
+                                                <span style="color:#F59E0B;">Medical required</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top:20px; padding:12px; background:#F8F9FE; border-radius:8px; font-size:11px; color:var(--ink4);">
+                            <strong>Legend:</strong> CF = Carried Forward | Medical required = Medical document needed | Auto-approved = No HR approval needed | Not eligible = Gender-restricted leave type
+                        </div>
+                    @else
+                        <div style="text-align:center; padding:40px; color:var(--ink4);">
+                            <p>No leave balance records found for this employee.</p>
+                        </div>
+                    @endif
+                </div>
+                <div style="padding:16px 32px; border-top:1px solid var(--border); display:flex; justify-content:flex-end;">
+                    <button class="hlm-btn hlm-btn-ghost" wire:click="closeBalanceInfo">Close</button>
                 </div>
             </div>
         </div>

@@ -139,6 +139,24 @@ class LeaveRequestForm extends Component
             return;
         }
 
+        // Central Validation Service (including Departmental Restrictions)
+        $leaveType = LeaveType::find($this->selectedLeaveType);
+        $employee = auth()->user()->employee;
+        $val = \App\Services\LeaveService::validateLeaveRequest(
+            $employee,
+            $leaveType,
+            \Carbon\Carbon::parse($this->start_date),
+            \Carbon\Carbon::parse($this->end_date),
+            (int)$this->total_days
+        );
+
+        if (!$val['valid']) {
+            foreach ($val['errors'] as $err) {
+                $this->addError('policy', $err);
+            }
+            return;
+        }
+
         $leaveRequest = LeaveRequest::create([
             'code' => 'LR-' . uniqid(),
             'employee_id' => auth()->user()->employee->id,

@@ -71,12 +71,22 @@ class Attendance extends Model
     protected $fillable = [
         'code',
         'employee_id',
+        'shift_id',
         'date',
         'check_in',
         'check_out',
         'device_id',
         'check_in_method',
         'check_out_method',
+        'check_in_latitude',
+        'check_in_longitude',
+        'check_out_latitude',
+        'check_out_longitude',
+        'late_minutes',
+        'overtime_minutes',
+        'total_worked_minutes',
+        'total_break_minutes',
+        'daily_status',
         'status',
         'approval_status',
         'is_locked',
@@ -92,6 +102,10 @@ class Attendance extends Model
             'date' => 'date',
             'check_in' => 'datetime:H:i:s',
             'check_out' => 'datetime:H:i:s',
+            'check_in_latitude' => 'float',
+            'check_in_longitude' => 'float',
+            'check_out_latitude' => 'float',
+            'check_out_longitude' => 'float',
             'check_in_method' => AttendanceMethod::class,
             'check_out_method' => AttendanceMethod::class,
             'status' => AttendanceStatus::class,
@@ -114,6 +128,11 @@ class Attendance extends Model
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
     }
     public function project():HasManyThrough
     {

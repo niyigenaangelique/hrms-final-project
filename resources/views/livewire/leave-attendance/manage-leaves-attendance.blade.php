@@ -1,6 +1,7 @@
 {{--
     manage-leaves-attendance.blade.php
     Sections: overview | leaves | communication | calendar | attendance
+    Updated: Comprehensive leave balance system with all leave types
 --}}
 
 <div class="la-local-shell">
@@ -566,18 +567,42 @@ table.la-table { width:100%; border-collapse:collapse; }
 ════════════════════════════════════════════════════════ --}}
 <div class="la-section {{ $activeSection==='overview'?'active':'' }}" id="section-overview">
 @php
-    $empTotal=0; $empPresent=0; $leavePending=0; $leaveApproved=0; $leaveTaken=0;
-    $recentLeaves=collect(); $todayAtt=collect(); $attRate=0;
+    $tz = 'Africa/Kigali';
+    $today = \Carbon\Carbon::today($tz)->format('Y-m-d');
+    
+    $empTotal = 0; $empPresent = 0; $leavePending = 0; $leaveApproved = 0; $leaveTaken = 0;
+    $recentLeaves = collect(); $todayAtt = collect(); $attRate = 0;
+    
     try {
-        $empTotal      = \App\Models\Employee::count();
-        $empPresent    = \App\Models\Attendance::whereDate('date',today())->whereNotNull('check_in')->count();
-        $leavePending  = \App\Models\LeaveRequest::where('status','pending')->count();
-        $leaveApproved = \App\Models\LeaveRequest::where('status','approved')->whereMonth('start_date',now()->month)->count();
-        $leaveTaken    = \App\Models\LeaveRequest::where('status','approved')->whereDate('start_date','<=',today())->whereDate('end_date','>=',today())->count();
-        $recentLeaves  = \App\Models\LeaveRequest::with(['employee','leaveType'])->orderBy('created_at','desc')->take(5)->get();
-        $todayAtt      = \App\Models\Attendance::with('employee')->whereDate('date',today())->orderBy('check_in','asc')->take(8)->get();
-        $attRate = $empTotal > 0 ? round(($empPresent/$empTotal)*100) : 0;
-    } catch(\Exception $e){}
+        $empTotal = \App\Models\Employee::where('is_active', true)->count();
+        
+        // Count employees who have checked in today
+        $empPresent = \App\Models\Attendance::whereDate('date', $today)
+            ->whereNotNull('check_in')
+            ->count();
+            
+        $leavePending = \App\Models\LeaveRequest::where('status', \App\Enum\LeaveStatus::PENDING)->count();
+        
+        // Employees approved for leave today
+        $leaveTaken = \App\Models\LeaveRequest::where('status', \App\Enum\LeaveStatus::APPROVED)
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->count();
+            
+        $leaveApproved = \App\Models\LeaveRequest::where('status', \App\Enum\LeaveStatus::APPROVED)
+            ->whereMonth('start_date', \Carbon\Carbon::parse($today)->month)
+            ->count();
+
+        $recentLeaves = \App\Models\LeaveRequest::with(['employee','leaveType'])->orderBy('created_at','desc')->take(5)->get();
+        $todayAtt = \App\Models\Attendance::with('employee')->whereDate('date', $today)->orderBy('check_in','asc')->take(8)->get();
+        
+        $attRate = $empTotal > 0 ? round(($empPresent / $empTotal) * 100) : 0;
+        
+        // Calculate dynamic absences for today (Total - Present - On Leave)
+        $empAbsent = max(0, $empTotal - $empPresent - $leaveTaken);
+    } catch(\Exception $e) {
+        \Log::error('Attendance Dashboard Error: ' . $e->getMessage());
+    }
 @endphp
 <div class="la-wrap">
 
@@ -719,7 +744,7 @@ table.la-table { width:100%; border-collapse:collapse; }
                             ['label'=>'Total Employees',  'val'=>$empTotal,     'color'=>'#3B6FE8'],
                             ['label'=>'Present',           'val'=>$empPresent,   'color'=>'#12B76A'],
                             ['label'=>'On Leave',          'val'=>$leaveTaken,   'color'=>'#7C3AED'],
-                            ['label'=>'Absent',            'val'=>max(0,$empTotal-$empPresent-$leaveTaken), 'color'=>'#EF4444'],
+                            ['label'=>'Absent',            'val'=>$empAbsent,    'color'=>'#EF4444'],
                             ['label'=>'Pending Approvals', 'val'=>$leavePending, 'color'=>'#F59E0B'],
                         ];
                     @endphp
@@ -750,11 +775,11 @@ table.la-table { width:100%; border-collapse:collapse; }
                     </div>
                 </div>
                 <div class="la-card-bd">
-                    <button class="la-quick-action" onclick="laSwitch('leaves',document.querySelector('[data-section=leaves]'))">
+                    <!-- <button class="la-quick-action" onclick="laSwitch('leaves',document.querySelector('[data-section=leaves]'))">
                         <div class="la-qa-icon" style="background:var(--amber-lt);"><svg style="stroke:var(--amber)" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
                         <div><div class="la-qa-lbl">New Leave Request</div><div class="la-qa-sub">Submit a leave application</div></div>
                         <svg class="la-qa-arr" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
+                    </button> -->
                     <button class="la-quick-action" onclick="laSwitch('leaves',document.querySelector('[data-section=leaves]'))">
                         <div class="la-qa-icon" style="background:var(--blue-lt);"><svg style="stroke:var(--blue)" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></div>
                         <div><div class="la-qa-lbl">Approve Leaves</div><div class="la-qa-sub">{{ $leavePending }} awaiting review</div></div>
@@ -794,9 +819,6 @@ table.la-table { width:100%; border-collapse:collapse; }
 ════════════════════════════════════════════════════════ --}}
 <div class="la-section {{ $activeSection==='leaves'?'active':'' }}" id="section-leaves">
 @php
-    /* ── Constants ─────────────────────────────────────── */
-    const ANNUAL_LEAVE_CAP = 30;          // Rwanda Labour Law: 30 days/year max
-
     $leaveRequests = collect();
     $leaveTypes    = collect();
     $allEmployees  = collect();
@@ -809,76 +831,15 @@ table.la-table { width:100%; border-collapse:collapse; }
             ->paginate(20, ['*'], 'leavePage');
         $leaveTypes    = \App\Models\LeaveType::all();
         $allEmployees  = \App\Models\Employee::orderBy('first_name')->get(['id','first_name','last_name']);
-        $pendingAll    = \App\Models\LeaveRequest::where('status','pending')->count();
-        $approvedAll   = \App\Models\LeaveRequest::where('status','approved')->count();
-        $rejectedAll   = \App\Models\LeaveRequest::where('status','rejected')->count();
+        $pendingAll    = \App\Models\LeaveRequest::where('status', \App\Enum\LeaveStatus::PENDING->value)->count();
+        $approvedAll   = \App\Models\LeaveRequest::where('status', \App\Enum\LeaveStatus::APPROVED->value)->count();
+        $rejectedAll   = \App\Models\LeaveRequest::where('status', \App\Enum\LeaveStatus::REJECTED->value)->count();
         $pendingLeaves = \App\Models\LeaveRequest::with(['employee','leaveType'])
-            ->where('status','pending')
+            ->where('status', \App\Enum\LeaveStatus::PENDING->value)
             ->orderBy('created_at','asc')
             ->get();
     } catch(\Exception $e) {}
-
-    /* ── Leave balance query for the selected employee ── */
-    $balYear      = (int) request('bal_year', now()->year);
-    $balEmpId     = request('bal_emp', '');
-    $balEmployee  = null;
-    $empLeaveData = collect();        // per-type breakdown
-    $totalUsedAll = $totalRemAll = 0; // across ALL types (capped pool)
-
-    if ($balEmpId) {
-        try {
-            $balEmployee = \App\Models\Employee::with('department')->find($balEmpId);
-
-            if ($balEmployee && $leaveTypes->count()) {
-
-                /* Sum every approved request across ALL leave types for this year */
-                $allApprovedDays = \App\Models\LeaveRequest::where('employee_id', $balEmpId)
-                    ->where('status', 'approved')
-                    ->whereYear('start_date', $balYear)
-                    ->get()
-                    ->sum(function ($r) {
-                        // prefer the stored total_days field; fall back to date diff
-                        if (!empty($r->total_days) && $r->total_days > 0) {
-                            return (int) $r->total_days;
-                        }
-                        return \Carbon\Carbon::parse($r->start_date)
-                            ->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1;
-                    });
-
-                /* Pool is 30 days; can never go negative */
-                $totalUsedAll = min($allApprovedDays, ANNUAL_LEAVE_CAP);
-                $totalRemAll  = max(0, ANNUAL_LEAVE_CAP - $totalUsedAll);
-
-                /* Per-type breakdown (used only for the detail table rows) */
-                $empLeaveData = $leaveTypes->map(function ($lt) use ($balEmpId, $balYear) {
-                    $reqs = \App\Models\LeaveRequest::with('leaveType')
-                        ->where('employee_id', $balEmpId)
-                        ->where('leave_type_id', $lt->id)
-                        ->whereYear('start_date', $balYear)
-                        ->orderBy('start_date', 'desc')
-                        ->get();
-
-                    $used = $reqs->where('status', 'approved')
-                        ->sum(function ($r) {
-                            if (!empty($r->total_days) && $r->total_days > 0) return (int) $r->total_days;
-                            return \Carbon\Carbon::parse($r->start_date)
-                                ->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1;
-                        });
-
-                    return [
-                        'type'     => $lt,
-                        'requests' => $reqs,
-                        'used'     => $used,
-                    ];
-                });
-            }
-        } catch(\Exception $e) {}
-    }
-
-    /* ── Active leave sub-tab (requests | balance | submit) ── */
-    $leaveTab = request('leave_tab', 'requests');
 @endphp
-
 <div class="la-wrap">
 
     {{-- ── Hero ── --}}
@@ -900,7 +861,7 @@ table.la-table { width:100%; border-collapse:collapse; }
         <div class="la-hero-right">
             <div class="la-hero-stat"><div class="la-hero-sv">{{ $pendingAll }}</div><div class="la-hero-sl">Pending</div></div>
             <div class="la-hero-stat"><div class="la-hero-sv">{{ $approvedAll }}</div><div class="la-hero-sl">Approved</div></div>
-            <div class="la-hero-stat"><div class="la-hero-sv">{{ ANNUAL_LEAVE_CAP }}</div><div class="la-hero-sl">Days/Year</div></div>
+            <div class="la-hero-stat"><div class="la-hero-sv">{{ $annualCap }}</div><div class="la-hero-sl">Days/Year</div></div>
         </div>
     </div>
 
@@ -910,9 +871,9 @@ table.la-table { width:100%; border-collapse:collapse; }
             ['requests', 'Requests', '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>'],
             ['balance',  'Leave Balance', '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'],
             ['pending',  'Pending Approvals', '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'],
-            ['submit',   'Submit Request', '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'],
+            
         ] as [$tab, $label, $icon])
-            <a href="?leave_tab={{ $tab }}#section-leaves"
+            <button wire:click="$set('leaveTab', '{{ $tab }}')"
                style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;text-decoration:none;
                       {{ $leaveTab===$tab ? 'background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(59,111,232,0.28);' : 'background:var(--bg);color:var(--ink3);' }}">
                 <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;">{!! $icon !!}</svg>
@@ -920,7 +881,7 @@ table.la-table { width:100%; border-collapse:collapse; }
                 @if($tab==='pending' && $pendingAll>0)
                     <span style="background:{{ $leaveTab==='pending'?'rgba(255,255,255,0.25)':'var(--amber-lt)' }};color:{{ $leaveTab==='pending'?'#fff':'#92400E' }};font-size:10px;font-weight:800;padding:1px 7px;border-radius:100px;">{{ $pendingAll }}</span>
                 @endif
-            </a>
+            </button>
         @endforeach
     </div>
 
@@ -998,24 +959,31 @@ table.la-table { width:100%; border-collapse:collapse; }
                     <svg style="stroke:var(--purple)" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <div>
-                    <div class="la-card-ttl">Employee Leave Balance</div>
-                    <div class="la-card-sub">30-day annual pool · all leave types combined</div>
+                    <div class="la-card-ttl">Comprehensive Leave Balance</div>
+                    <div class="la-card-sub">All leave types with individual tracking</div>
                 </div>
             </div>
         </div>
         <div class="la-card-bd">
 
-            {{-- ── Selector ── --}}
-            <form method="GET" action="" id="la-bal-form"
-                  style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;"
-                  onsubmit="this.action=window.location.pathname+'?leave_tab=balance#section-leaves';">
-                <input type="hidden" name="leave_tab" value="balance">
+            {{-- Use Livewire properties for leave balance data --}}
+            @php
+                $balEmployee = $this->balEmployee;
+                $empLeaveData = $this->empLeaveData ?? collect();
+                $totalUsedAll = $this->totalUsedAll ?? 0;
+                $totalRemAll = $this->totalRemAll ?? 0;
+                $balYear = $this->balYear ?? now()->year;
+                $allEmployees = \App\Models\Employee::orderBy('first_name')->get(['id','first_name','last_name']);
+            @endphp
+
+            {{-- Selector --}}
+            <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;">
                 <div class="la-field" style="flex:1;min-width:200px;">
                     <label>Employee</label>
-                    <select name="bal_emp" onchange="document.getElementById('la-bal-form').submit()">
+                    <select wire:model.live="balEmpId">
                         <option value="">— Select employee —</option>
                         @foreach($allEmployees as $emp)
-                            <option value="{{ $emp->id }}" {{ $balEmpId == $emp->id ? 'selected' : '' }}>
+                            <option value="{{ $emp->id }}">
                                 {{ $emp->first_name }} {{ $emp->last_name }}
                             </option>
                         @endforeach
@@ -1023,13 +991,13 @@ table.la-table { width:100%; border-collapse:collapse; }
                 </div>
                 <div class="la-field" style="min-width:120px;">
                     <label>Year</label>
-                    <select name="bal_year" onchange="document.getElementById('la-bal-form').submit()">
+                    <select wire:model.live="balYear">
                         @for($y = now()->year; $y >= now()->year - 4; $y--)
-                            <option value="{{ $y }}" {{ $balYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            <option value="{{ $y }}">{{ $y }}</option>
                         @endfor
                     </select>
                 </div>
-            </form>
+            </div>
 
             @if($balEmployee && $empLeaveData->count())
 
@@ -1043,7 +1011,10 @@ table.la-table { width:100%; border-collapse:collapse; }
                             {{ $balEmployee->first_name }} {{ $balEmployee->last_name }}
                         </div>
                         <div style="font-size:12px;color:var(--ink3);font-weight:500;">
-                            {{ $balEmployee->department?->name ?? '—' }} · {{ $balYear }} Leave Summary
+                            {{ $balEmployee->department?->name ?? '—' }} — {{ $balYear }} Comprehensive Leave Balance
+                        </div>
+                        <div style="font-size:10px;color:var(--ink4);font-weight:500;">
+                            Totals represent leave days used and remaining for the selected year.
                         </div>
                     </div>
                     <div style="margin-left:auto;display:flex;gap:20px;flex-wrap:wrap;">
@@ -1056,47 +1027,70 @@ table.la-table { width:100%; border-collapse:collapse; }
                             <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Remaining</div>
                         </div>
                         <div style="text-align:center;">
-                            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--blue-2);">{{ ANNUAL_LEAVE_CAP }}</div>
+                            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--blue-2);">{{ $annualCap }}</div>
                             <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ink4);">Annual Cap</div>
                         </div>
                     </div>
                 </div>
 
-                {{-- ── Master progress bar (30-day pool) ── --}}
-                @php
-                    $masterPct  = min(100, round(($totalUsedAll / ANNUAL_LEAVE_CAP) * 100));
-                    $masterColor= $masterPct >= 90 ? 'var(--red)' : ($masterPct >= 60 ? 'var(--amber)' : 'var(--green)');
-                @endphp
-                <div style="margin-bottom:20px;">
-                    <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--ink3);margin-bottom:7px;">
-                        <span>Annual Leave Pool Usage</span>
-                        <span style="color:{{ $masterColor }};">{{ $totalUsedAll }} of {{ ANNUAL_LEAVE_CAP }} days used ({{ $masterPct }}%)</span>
-                    </div>
-                    <div style="height:12px;background:var(--bg);border-radius:100px;border:1px solid var(--border);overflow:hidden;">
-                        <div style="height:100%;border-radius:100px;background:{{ $masterColor }};width:{{ $masterPct }}%;transition:width .5s;"></div>
-                    </div>
-                    @if($totalUsedAll >= ANNUAL_LEAVE_CAP)
-                        <div style="margin-top:8px;padding:8px 13px;background:var(--red-lt);border:1px solid rgba(239,68,68,0.22);border-radius:var(--r);font-size:12.5px;font-weight:600;color:#991B1B;display:flex;align-items:center;gap:7px;">
-                            <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            Annual entitlement fully used — no more leave days available for {{ $balYear }}.
-                        </div>
-                    @elseif($totalRemAll <= 5)
-                        <div style="margin-top:8px;padding:8px 13px;background:var(--amber-lt);border:1px solid rgba(245,158,11,0.22);border-radius:var(--r);font-size:12.5px;font-weight:600;color:#92400E;display:flex;align-items:center;gap:7px;">
-                            <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
-                            Only {{ $totalRemAll }} day{{ $totalRemAll != 1 ? 's' : '' }} remaining for {{ $balYear }}.
-                        </div>
-                    @endif
+                {{-- All Leave Types Balance Cards --}}
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--ink4);margin-bottom:15px;">
+                    All Leave Types Balance
                 </div>
-
-                {{-- ── Per-type breakdown cards ── --}}
-                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--ink4);margin-bottom:10px;">
-                    Breakdown by Leave Type
+                <div class="la-balance-strip">
+                    @foreach($empLeaveData as $balanceData)
+                        @php
+                            $leaveType = $balanceData['type'];
+                            $balance = $balanceData['balance'] ?? null;
+                            $used = $balanceData['used'] ?? 0;
+                            $remaining = array_key_exists('remaining', $balanceData) ? $balanceData['remaining'] : 0;
+                            $total = array_key_exists('total_days', $balanceData) ? $balanceData['total_days'] : null;
+                            
+                            // For unlimited leave types, don't show progress bar
+                            if ($remaining === null) {
+                                $pct = 0;
+                                $color = 'green';
+                            } else {
+                                $pct = $total > 0 ? min(100, round(($used / $total) * 100)) : 0;
+                                $color = $pct >= 90 ? 'amber' : ($pct >= 60 ? 'blue' : 'green');
+                            }
+                        @endphp
+                        <div class="la-balance-card">
+                            <div class="la-balance-top">
+                                <div class="la-balance-lbl">{{ $leaveType->name }}</div>
+                                @if($balanceData['auto_approve'] ?? false)
+                                    <span style="font-size:9px;color:#12B76A;font-weight:600;">Auto</span>
+                                @endif
+                            </div>
+                            <div class="la-balance-val">{{ $remaining ?? 'Unlimited' }}</div>
+                            <div class="la-balance-sub">{{ $used }}/{{ $total ?? 'Unlimited' }} used</div>
+                            @if(($remaining ?? null) !== null)
+                            <div class="la-balance-bar">
+                                <div class="la-balance-fill {{ $color }}" style="width:{{ $pct }}%;"></div>
+                            </div>
+                            @endif
+                            @if($balanceData['requires_medical_document'] ?? false)
+                                <div style="font-size:9px;color:var(--amber);margin-top:4px;">Medical required</div>
+                            @endif
+                            @if($leaveType->max_days_per_year)
+                                <div style="font-size:9px;color:var(--ink4);margin-top:2px;">Max: {{ $leaveType->max_days_per_year }}d/year</div>
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
                 @foreach($empLeaveData as $ld)
-                    @if($ld['requests']->count() === 0) @continue @endif
                     @php
-                        $ldPct   = ANNUAL_LEAVE_CAP > 0 ? min(100, round(($ld['used'] / ANNUAL_LEAVE_CAP) * 100)) : 0;
-                        $ldColor = $ldPct >= 90 ? 'var(--red)' : ($ldPct >= 60 ? 'var(--amber)' : 'var(--blue)');
+                        $balance = $ld['balance'] ?? null;
+                        $totalDays = $ld['total_days'] ?? null;
+                        
+                        // For unlimited leave types, don't show progress bar
+                        if (($ld['remaining'] ?? null) === null) {
+                            $ldPct = 0;
+                            $ldColor = 'var(--green)';
+                        } else {
+                            $ldPct = $totalDays > 0 ? min(100, round(($ld['used'] / $totalDays) * 100)) : 0;
+                            $ldColor = $ldPct >= 90 ? 'var(--red)' : ($ldPct >= 60 ? 'var(--amber)' : 'var(--green)');
+                        }
                     @endphp
                     <div style="border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;">
                         {{-- Type header --}}
@@ -1105,17 +1099,29 @@ table.la-table { width:100%; border-collapse:collapse; }
                                 <div style="width:9px;height:9px;border-radius:50%;background:{{ $ldColor }};flex-shrink:0;"></div>
                                 <div>
                                     <div style="font-size:13.5px;font-weight:700;color:var(--ink);">{{ $ld['type']->name }}</div>
-                                    <div style="font-size:11px;color:var(--ink4);">{{ $ld['type']->is_paid ? 'Paid leave' : 'Unpaid leave' }} · {{ $ld['used'] }}d drawn from 30-day pool</div>
+                                    <div style="font-size:11px;color:var(--ink4);">
+                                            {{ $ld['type']->is_paid ? 'Paid' : 'Unpaid' }} · 
+                                            {{ $ld['used'] ?? 0 }} used · 
+                                            @if(($ld['remaining'] ?? null) === null)
+                                                Unlimited
+                                            @else
+                                                {{ $ld['remaining'] }} remaining
+                                            @endif
+                                            @if($ld['requires_medical_document'] ?? false) · Medical required @endif
+                                            @if($ld['auto_approve'] ?? false) · Auto-approved @endif
+                                        </div>
                                 </div>
                             </div>
                             <div style="display:flex;align-items:center;gap:6px;">
-                                <span class="la-badge {{ $ld['used'] > 0 ? 'lb-blue' : 'lb-gray' }}">{{ $ld['used'] }} day{{ $ld['used'] != 1 ? 's' : '' }} used</span>
+                                <span class="la-badge {{ ($ld['used'] ?? 0) > 0 ? 'lb-blue' : 'lb-gray' }}">{{ $ld['used'] ?? 0 }} day{{ ($ld['used'] ?? 0) != 1 ? 's' : '' }} used</span>
                             </div>
                         </div>
                         {{-- Thin progress strip --}}
+                        @if(($ld['remaining'] ?? null) !== null)
                         <div style="height:4px;background:var(--bg);">
                             <div style="height:100%;background:{{ $ldColor }};width:{{ $ldPct }}%;transition:width .5s;"></div>
                         </div>
+                        @endif
                         {{-- Individual request rows --}}
                         <div style="background:#FAFBFF;">
                             <table class="la-table" style="font-size:12.5px;">
@@ -1156,20 +1162,20 @@ table.la-table { width:100%; border-collapse:collapse; }
                     <div class="la-empty" style="padding:28px 0;">
                         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
                         <div class="la-empty-ttl">No leave requests in {{ $balYear }}</div>
-                        <div class="la-empty-sub">All {{ ANNUAL_LEAVE_CAP }} days are available</div>
+                        <div class="la-empty-sub">All leave days are available across all leave types</div>
                     </div>
                 @endif
 
             @elseif($balEmpId && !$balEmployee)
                 <div class="la-empty">
-                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <div class="la-empty-ttl">Employee not found</div>
                 </div>
             @else
                 <div class="la-empty" style="padding:36px;">
                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <div class="la-empty-ttl">Select an employee above</div>
-                    <div class="la-empty-sub">Choose an employee and year to view their 30-day leave balance and full request history</div>
+                    <div class="la-empty-sub">Choose an employee and year to view their comprehensive leave balance across all leave types</div>
                 </div>
             @endif
         </div>
@@ -1204,20 +1210,56 @@ table.la-table { width:100%; border-collapse:collapse; }
                                 ? (int)$pl->total_days
                                 : \Carbon\Carbon::parse($pl->start_date)->diffInDays(\Carbon\Carbon::parse($pl->end_date)) + 1;
 
-                            /* Check how many days this employee has already used this year */
-                            $plUsed = 0;
+                            /* Check how many days this employee has already used/remaining for THIS leave type */
+                            $plRemaining = 0;
+                            $plLt = $pl->leaveType;
+                            
                             try {
-                                $plUsed = \App\Models\LeaveRequest::where('employee_id', $plEmp?->id)
-                                    ->where('status','approved')
-                                    ->whereYear('start_date', now()->year)
-                                    ->get()
-                                    ->sum(fn($r) => !empty($r->total_days) && $r->total_days > 0
-                                        ? (int)$r->total_days
-                                        : \Carbon\Carbon::parse($r->start_date)->diffInDays(\Carbon\Carbon::parse($r->end_date)) + 1
-                                    );
-                            } catch(\Exception $e) {}
-                            $plRemaining = max(0, ANNUAL_LEAVE_CAP - $plUsed);
-                            $plExceeds   = $plDays > $plRemaining;
+                                if ($plLt && $plEmp) {
+                                    $isAnnual = $plLt->deduct_from_annual || str_contains(strtolower($plLt->name), 'annual');
+                                    
+                                    if ($isAnnual) {
+                                        // Annual pool (30 days default)
+                                        $plUsed = \App\Models\LeaveRequest::where('employee_id', $plEmp->id)
+                                            ->where('status', 'approved')
+                                            ->whereYear('start_date', now()->year)
+                                            ->whereHas('leaveType', function($q) {
+                                                $q->where('deduct_from_annual', true)
+                                                  ->orWhere('name', 'like', '%annual%');
+                                            })
+                                            ->sum('total_days');
+                                        
+                                        $plLimit = $annualCap;
+                                        // Check if they have a specific annual balance record
+                                        $bal = \App\Models\LeaveBalance::where('employee_id', $plEmp->id)
+                                            ->where('leave_type_id', $plLt->id)
+                                            ->where('year', now()->year)
+                                            ->first();
+                                        if ($bal) $plLimit = $bal->total_days + ($bal->carried_forward_days ?? 0);
+                                        
+                                        $plRemaining = max(0, $plLimit - $plUsed);
+                                    } else {
+                                        // Specific leave type pool
+                                        $plUsed = \App\Models\LeaveRequest::where('employee_id', $plEmp->id)
+                                            ->where('status', 'approved')
+                                            ->where('leave_type_id', $plLt->id)
+                                            ->whereYear('start_date', now()->year)
+                                            ->sum('total_days');
+                                        
+                                        $plLimit = $plLt->max_days_per_year ?: ($plLt->default_days ?: 0);
+                                        // Check for specific balance record
+                                        $bal = \App\Models\LeaveBalance::where('employee_id', $plEmp->id)
+                                            ->where('leave_type_id', $plLt->id)
+                                            ->where('year', now()->year)
+                                            ->first();
+                                        if ($bal) $plLimit = $bal->total_days + ($bal->carried_forward_days ?? 0);
+                                        
+                                        $plRemaining = max(0, $plLimit - $plUsed);
+                                    }
+                                }
+                            } catch(\Exception $e) { $plRemaining = 0; }
+                            
+                            $plExceeds = $plDays > $plRemaining;
                         @endphp
                         <tr>
                             <td>
@@ -1238,21 +1280,27 @@ table.la-table { width:100%; border-collapse:collapse; }
                                     <div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px;">Exceeds balance!</div>
                                 @endif
                             </td>
-                            <td style="max-width:180px;color:var(--ink3);font-size:12.5px;">{{ \Illuminate\Support\Str::limit($pl->reason ?? $pl->notes ?? '—', 50) }}</td>
-                            <td>
-                                <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                                    @if(\Illuminate\Support\Facades\Route::has('hr.leaves.approve'))
-                                        <a href="{{ route('hr.leaves.approve', $pl->id) }}"
-                                           class="la-btn la-btn-green la-btn-sm"
-                                           onclick="return confirm('Approve this leave request?')">
-                                            <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Approve
+                            <td style="max-width:180px;color:var(--ink3);font-size:12.5px;">
+                                {{ \Illuminate\Support\Str::limit($pl->reason ?? $pl->notes ?? '—', 50) }}
+                                @if($pl->attachment_path)
+                                    <div style="margin-top:6px;">
+                                        <a href="{{ \Illuminate\Support\Facades\Storage::url($pl->attachment_path) }}" 
+                                           target="_blank" 
+                                           class="la-badge lb-blue" 
+                                           style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                                            <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                            Medical Doc
                                         </a>
-                                        <a href="{{ route('hr.leaves.reject', $pl->id) }}"
-                                           class="la-btn la-btn-danger la-btn-sm"
-                                           onclick="return confirm('Reject this leave request?')">Reject</a>
-                                    @else
-                                        <span class="la-badge lb-amber">Pending</span>
-                                    @endif
+                                    </div>
+                                @endif
+                            </td>
+                            <td>
+                                    <button wire:click="approveLeave('{{ $pl->id }}')"
+                                            class="la-btn la-btn-green la-btn-sm">
+                                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg> Approve
+                                    </button>
+                                    <button wire:click="rejectLeave('{{ $pl->id }}')"
+                                            class="la-btn la-btn-danger la-btn-sm">Reject</button>
                                 </div>
                             </td>
                         </tr>
@@ -1275,7 +1323,7 @@ table.la-table { width:100%; border-collapse:collapse; }
     {{-- ══════════════════════════════════════════════════════
          TAB 4 — SUBMIT REQUEST
     ══════════════════════════════════════════════════════ --}}
-    @if($leaveTab === 'submit')
+    <!-- @if($leaveTab === 'submit')
     <div class="la-card">
         <div class="la-card-hd">
             <div class="la-card-hdl">
@@ -1338,7 +1386,7 @@ table.la-table { width:100%; border-collapse:collapse; }
     @endif
 
 </div>
-</div>{{-- /section-leaves --}}
+</div>{{-- /section-leaves --}} -->
 
 
 {{-- ════════════════════════════════════════════════════════
@@ -1661,7 +1709,7 @@ table.la-table { width:100%; border-collapse:collapse; }
             }
         }
         $upcomingHols   = $calHols->filter(fn($h)=>\Carbon\Carbon::parse($h->date)->gte(today()))->take(5);
-        $upcomingLeaves = $calLeaves->filter(fn($l)=>\Carbon\Carbon::parse($l->start_date)->gte(today()))->take(5);
+        $upcomingLeaves = $calLeaves->filter(fn($l)=>\Carbon\Carbon::parse($l->start_date)->gte(today()) && $l->status === 'approved')->take(5);
         $upcomingPay    = $calPaydays->filter(fn($p)=>\Carbon\Carbon::parse($p->payment_date)->gte(today()))->take(4);
     } catch(\Exception){}
 
@@ -2048,19 +2096,87 @@ table.la-table { width:100%; border-collapse:collapse; }
     $monthPresent=0; $monthAbsent=0; $monthLate=0; $monthTotal=0; $attRate=0; $allEmployees=collect();
 
     try {
-        $attQuery = \App\Models\Attendance::with('employee')->whereBetween('date',[$attFirst,$attLast]);
-        $attRecords   = $attQuery->orderBy('date','desc')->orderBy('check_in','asc')->paginate(30,['*'],'attPage');
-        $totalPresent = \App\Models\Attendance::whereDate('date',today())->whereNotNull('check_in')->count();
-        $totalAbsent  = \App\Models\Attendance::whereDate('date',today())->where('status','absent')->count();
-        $totalLate    = \App\Models\Attendance::whereDate('date',today())->where('status','late')->count();
-        $totalOnLeave = \App\Models\Attendance::whereDate('date',today())->where('status','leave')->count();
-        $monthPresent = \App\Models\Attendance::whereBetween('date',[$attFirst,$attLast])->whereNotNull('check_in')->count();
-        $monthAbsent  = \App\Models\Attendance::whereBetween('date',[$attFirst,$attLast])->where('status','absent')->count();
-        $monthLate    = \App\Models\Attendance::whereBetween('date',[$attFirst,$attLast])->where('status','late')->count();
-        $monthTotal   = \App\Models\Attendance::whereBetween('date',[$attFirst,$attLast])->count();
-        $attRate      = $monthTotal>0?round(($monthPresent/$monthTotal)*100):0;
-        $allEmployees = \App\Models\Employee::orderBy('first_name')->get(['id','first_name','last_name']);
-    } catch(\Exception $e){}
+        $tz = 'Africa/Kigali';
+        $todayStr = \Carbon\Carbon::today($tz)->format('Y-m-d');
+        $attFirstStr = $attFirst->format('Y-m-d');
+        $attLastStr  = $attLast->format('Y-m-d');
+
+        $attQuery = \App\Models\Attendance::with(['employee.departmentAssignment', 'employee.positionAssignment', 'employee.shift', 'shift'])
+            ->whereBetween('date', [$attFirstStr, $attLastStr])
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->whereNotIn('employee_id', function($query) use ($attFirstStr, $attLastStr) {
+                $query->select('employee_id')
+                    ->from('leave_requests')
+                    ->where('status', 'approved')
+                    ->where(function($q) use ($attFirstStr, $attLastStr) {
+                        $q->whereBetween('start_date', [$attFirstStr, $attLastStr])
+                          ->orWhereBetween('end_date', [$attFirstStr, $attLastStr])
+                          ->orWhere(function($sub) use ($attFirstStr, $attLastStr) {
+                              $sub->where('start_date', '<=', $attFirstStr)
+                                   ->where('end_date', '>=', $attLastStr);
+                          });
+                    });
+            });
+            
+        $attRecords = $attQuery->orderBy('date', 'desc')->orderBy('check_in', 'asc')->paginate(30, ['*'], 'attPage');
+        
+        // Today's Stats (dynamic calculation for real-time dashboard)
+        $totalPresent = \App\Models\Attendance::whereDate('date', $todayStr)
+            ->whereNotNull('check_in')
+            ->where('daily_status', '!=', 'Rejected')
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+            
+        $totalOnLeave = \App\Models\LeaveRequest::where('status', 'approved')
+            ->whereDate('start_date', '<=', $todayStr)
+            ->whereDate('end_date', '>=', $todayStr)
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+
+        $empTotalCount = \App\Models\Employee::where('is_active', true)
+            ->whereHas('user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+            
+        // Dynamic Absence = Total Employees - (Present + On Leave)
+        $totalAbsent = max(0, $empTotalCount - ($totalPresent + $totalOnLeave));
+        
+        // Late is still based on detected records
+        $totalLate = \App\Models\Attendance::whereDate('date', $todayStr)
+            ->where('daily_status', 'Late')
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+        
+        // Month's Stats
+        $monthPresent = \App\Models\Attendance::whereBetween('date', [$attFirstStr, $attLastStr])
+            ->whereNotNull('check_in')
+            ->where('daily_status', '!=', 'Rejected')
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+            
+        $monthAbsent  = \App\Models\Attendance::whereBetween('date', [$attFirstStr, $attLastStr])
+            ->where('daily_status', 'Absent')
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+            
+        $monthLate    = \App\Models\Attendance::whereBetween('date', [$attFirstStr, $attLastStr])
+            ->where('daily_status', 'Late')
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+            
+        $monthTotal   = \App\Models\Attendance::whereBetween('date', [$attFirstStr, $attLastStr])
+            ->whereHas('employee.user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+        
+        $empTotalCount = \App\Models\Employee::where('is_active', true)
+            ->whereHas('user', fn($q) => $q->where('role', 'employee'))
+            ->count();
+            
+        $attRate = $empTotalCount > 0 ? round(($totalPresent / $empTotalCount) * 100) : 0;
+        
+        $allEmployees = \App\Models\Employee::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
+    } catch(\Exception $e) {
+        \Log::error('Attendance Log Error: ' . $e->getMessage());
+    }
 @endphp
 <div class="la-wrap">
 
@@ -2101,7 +2217,6 @@ table.la-table { width:100%; border-collapse:collapse; }
         </div>
         <div style="width:1px;height:28px;background:var(--border);flex-shrink:0;"></div>
         <div class="la-search-box" style="max-width:220px;">
-            <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input type="text" id="laAttSearch" placeholder="Search employee…" oninput="laAttFilter()">
         </div>
         <select class="la-sel" id="laAttStatusSel" onchange="laAttFilter()">
@@ -2132,23 +2247,53 @@ table.la-table { width:100%; border-collapse:collapse; }
         </div>
         <div class="la-table-wrap">
             <table class="la-table">
-                <thead><tr><th>Employee</th><th>Department</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th><th>Note</th></tr></thead>
+                <thead><tr><th>Employee</th><th>Department</th><th>Assigned Shift</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th><th>Note</th><th>Actions</th></tr></thead>
                 <tbody id="laAttTbody">
                     @forelse($attRecords as $att)
                         @php
                             $attE    = $att->employee;
-                            $attInit = $attE?strtoupper(substr($attE->first_name??'',0,1).substr($attE->last_name??'',0,1)):'??';
-                            $attStat = $att->status instanceof \BackedEnum?$att->status->value:($att->status??'present');
-                            $attCls  = match($attStat){'present'=>'la-att-present','absent'=>'la-att-absent','late'=>'la-att-late','leave'=>'la-att-leave','half_day'=>'la-att-half',default=>'la-att-present'};
+                            $attInit = $attE ? strtoupper(substr($attE->first_name??'',0,1).substr($attE->last_name??'',0,1)) : '??';
                             $ci = $att->check_in  ? \Carbon\Carbon::parse($att->check_in)  : null;
                             $co = $att->check_out ? \Carbon\Carbon::parse($att->check_out) : null;
-                            $hrs = ($ci&&$co&&$co->gt($ci))?round($ci->diffInMinutes($co)/60,1).'h':'—';
+                            if ($ci && $co && $co->gt($ci)) {
+                                $totalMinutes = $ci->diffInMinutes($co);
+                                $totalHours = round($totalMinutes / 60, 1);
+                                $standardHours = 8; // Standard workday
+                                $overtimeHours = max(0, $totalHours - $standardHours);
+                                
+                                if ($overtimeHours > 0) {
+                                    $hrs = $standardHours . 'h + ' . $overtimeHours . 'h OT';
+                                } else {
+                                    $hrs = min($totalHours, $standardHours) . 'h';
+                                }
+                            } else {
+                                $hrs = '—';
+                            }
                         @endphp
                         <tr data-emp="{{ strtolower(($attE?->first_name??'').' '.($attE?->last_name??'')) }}"
-                            data-status="{{ $attStat }}"
+                            data-status="{{ strtolower($att->daily_status ?? 'present') }}"
                             data-empid="{{ $attE?->id }}">
-                            <td><div class="la-emp-cell"><div class="la-emp-av">{{ $attInit }}</div><div><div class="la-emp-name">{{ $attE?trim($attE->first_name.' '.$attE->last_name):'—' }}</div><div class="la-emp-role">{{ $attE?->department?->name??'' }}</div></div></div></td>
-                            <td style="font-size:12.5px;color:var(--ink3);">{{ $attE?->department?->name??'—' }}</td>
+                            <td>
+                                <div class="la-emp-cell">
+                                    <div class="la-emp-av">{{ $attInit }}</div>
+                                    <div>
+                                        <div class="la-emp-name">{{ $attE ? trim($attE->first_name.' '.$attE->last_name) : '—' }}</div>
+                                        <div class="la-emp-role">{{ $attE?->positionAssignment?->name ?? 'Staff' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-size:12px;color:var(--ink3);">{{ $attE?->departmentAssignment?->name ?? '—' }}</td>
+                            <td>
+                                @php
+                                    $displayShift = $att->shift ?: $attE?->shift;
+                                @endphp
+                                @if($displayShift)
+                                    <div style="font-size:11px;font-weight:700;color:var(--blue-2);">{{ $displayShift->name }}</div>
+                                    <div style="font-size:10px;color:var(--ink4);">{{ $displayShift->start_time->format('H:i') }} - {{ $displayShift->end_time->format('H:i') }}</div>
+                                @else
+                                    <span style="font-size:11px;color:var(--ink4);">No Shift</span>
+                                @endif
+                            </td>
                             <td style="font-weight:700;color:var(--ink2);">
                                 {{ \Carbon\Carbon::parse($att->date)->format('D, M d') }}
                                 @if(\Carbon\Carbon::parse($att->date)->isToday())<span class="la-badge lb-blue" style="margin-left:5px;font-size:9.5px;">Today</span>@endif
@@ -2156,8 +2301,32 @@ table.la-table { width:100%; border-collapse:collapse; }
                             <td style="font-weight:700;color:var(--blue-2);">{{ $ci?$ci->format('H:i'):'—' }}</td>
                             <td style="color:var(--ink3);">{{ $co?$co->format('H:i'):'—' }}</td>
                             <td style="font-family:'Sora',sans-serif;font-size:12.5px;font-weight:800;color:var(--ink2);">{{ $hrs }}</td>
-                            <td><span class="la-att-status {{ $attCls }}">{{ ucfirst(str_replace('_',' ',$attStat)) }}</span></td>
+                            <td>
+                                @php
+                                    $dStat = $att->daily_status ?? 'Present';
+                                    $dCls = match(strtolower($dStat)){
+                                        'present'=>'la-att-present',
+                                        'absent'=>'la-att-absent',
+                                        'late'=>'la-att-late',
+                                        'on leave','leave'=>'la-att-leave',
+                                        'half-day'=>'la-att-half',
+                                        'requires review'=>'lb-amber',
+                                        default=>'la-att-present'
+                                    };
+                                @endphp
+                                <span class="la-att-status {{ $dCls }}">{{ $dStat }}</span>
+                            </td>
                             <td style="font-size:12px;color:var(--ink4);">{{ \Illuminate\Support\Str::limit($att->note??$att->notes??'',40) }}</td>
+                            <td>
+                                {{-- Attendance is managed by employees only - HR cannot approve/reject attendance --}}
+                                @if($dStat === 'Requires Review' && $att->approval_status === \App\Enum\ApprovalStatus::Pending)
+                                    <span style="font-size:10px;color:var(--amber);font-weight:600;">Pending Employee Action</span>
+                                @elseif($att->approval_status === \App\Enum\ApprovalStatus::Approved)
+                                    <span style="color:var(--green);font-size:11px;font-weight:700;">✓ Approved</span>
+                                @elseif($att->approval_status === \App\Enum\ApprovalStatus::Rejected)
+                                    <span style="color:var(--red);font-size:11px;font-weight:700;">✗ Rejected</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr><td colspan="8"><div class="la-empty"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/></svg><div class="la-empty-ttl">No records for {{ $attFirst->format('F Y') }}</div><div class="la-empty-sub">Try a different month or adjust filters</div></div></td></tr>

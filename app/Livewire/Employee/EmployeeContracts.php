@@ -22,7 +22,7 @@ class EmployeeContracts extends Component
     {
         $user = Auth::user();
         $this->employee = Employee::where('user_id', $user->id)
-            ->with(['position', 'department'])
+            ->with(['positionAssignment', 'departmentAssignment'])
             ->first();
         
         if ($this->employee) {

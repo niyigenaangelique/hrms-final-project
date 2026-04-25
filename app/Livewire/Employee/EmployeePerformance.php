@@ -44,13 +44,13 @@ class EmployeePerformance extends Component
     {
         $user = Auth::user();
         $this->employee = Employee::where('user_id', $user->id)
-            ->with(['position', 'department'])
+            ->with(['positionAssignment', 'departmentAssignment'])
             ->first();
 
         if (!$this->employee) {
             // Smart Link: Check by email
             $this->employee = Employee::where('email', $user->email)
-                ->with(['position', 'department'])
+                ->with(['positionAssignment', 'departmentAssignment'])
                 ->first();
                 
             if ($this->employee) {
@@ -89,7 +89,7 @@ class EmployeePerformance extends Component
                 'phone_number' => $user->phone_number,
                 'user_id' => $user->id,
                 'approval_status' => \App\Enum\ApprovalStatus::Approved,
-            ])->load(['position', 'department']);
+            ])->load(['positionAssignment', 'departmentAssignment']);
             
             $this->loadPerformanceData();
         } catch (\Exception $e) {

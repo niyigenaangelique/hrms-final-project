@@ -408,11 +408,11 @@ class EmployeeDashboard extends Component
 
     public function prepareChartData()
     {
-        // Leave Chart Data
+        // Leave Chart Data - use proper enum comparison
         $leaveStats = [
-            'approved' => $this->leaveRequests->where('status', 'approved')->count(),
-            'pending' => $this->leaveRequests->where('status', 'pending')->count(),
-            'rejected' => $this->leaveRequests->where('status', 'rejected')->count(),
+            'approved' => $this->leaveRequests->where('status', \App\Enum\LeaveStatus::APPROVED)->count(),
+            'pending' => $this->leaveRequests->where('status', \App\Enum\LeaveStatus::PENDING)->count(),
+            'rejected' => $this->leaveRequests->where('status', \App\Enum\LeaveStatus::REJECTED)->count(),
         ];
         
         $this->leaveChartData = [
@@ -420,23 +420,62 @@ class EmployeeDashboard extends Component
             'data' => [$leaveStats['approved'], $leaveStats['pending'], $leaveStats['rejected']],
         ];
 
-        // Attendance Chart Data (last 7 days)
+        // Attendance Chart Data (last 7 days) - include both Entered and Approved as present
         $attendanceStats = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $present = $this->attendances->where('date', $date)->where('status', 'present')->count();
-            $attendanceStats[] = $present > 0 ? 1 : 0;
+            $date = now()->subDays($i);
+            $dateStr = $date->format('Y-m-d');
+            
+            // Check if it's a weekend
+            if ($date->isWeekend()) {
+                $attendanceStats[] = 0; // Weekends always show 0
+            } else {
+                $present = $this->attendances->filter(function($att) use ($dateStr) {
+                    $attDate = \Carbon\Carbon::parse($att->date)->format('Y-m-d');
+                    return $attDate === $dateStr && in_array($att->status, [\App\Enum\AttendanceStatus::Entered, \App\Enum\AttendanceStatus::Approved]);
+                })->count();
+                $attendanceStats[] = $present > 0 ? 1 : 0;
+            }
+        }
+        
+        // Generate proper day labels based on actual dates
+        $dayLabels = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $dayLabels[] = now()->subDays($i)->format('D');
         }
         
         $this->attendanceChartData = [
-            'labels' => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            'labels' => $dayLabels,
             'data' => $attendanceStats,
         ];
 
-        // Performance Chart Data (sample data)
+        // Performance Chart Data - calculate from attendance data
+        $performanceStats = [];
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        
+        foreach ($months as $index => $month) {
+            // Calculate attendance performance for each month
+            $monthStart = now()->month($index + 1)->startOfMonth();
+            $monthEnd = now()->month($index + 1)->endOfMonth();
+            
+            $monthAttendances = $this->attendances->filter(function($att) use ($monthStart, $monthEnd) {
+                $attDate = \Carbon\Carbon::parse($att->date);
+                return $attDate->between($monthStart, $monthEnd);
+            });
+            
+            $totalDays = $monthAttendances->count();
+            $presentDays = $monthAttendances
+                ->whereIn('status', [\App\Enum\AttendanceStatus::Entered, \App\Enum\AttendanceStatus::Approved])
+                ->count();
+            
+            // Calculate performance percentage
+            $performance = $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 0) : 0;
+            $performanceStats[] = $performance;
+        }
+        
         $this->performanceChartData = [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [85, 88, 92, 87, 90, 93],
+            'labels' => $months,
+            'data' => $performanceStats,
         ];
     }
 

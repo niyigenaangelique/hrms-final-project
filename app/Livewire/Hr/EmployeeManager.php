@@ -71,13 +71,15 @@ class EmployeeManager extends Component
     public string $pensionRate        = '3';
     public bool   $subjectToPaye      = true;
 
-    // Department & Position (from related models if you have them)
+    // Department & Position & Shift
     public string $departmentId = '';
     public string $positionId   = '';
+    public string $shiftId      = '';
 
     // ── Helpers ────────────────────────────────────────────
     public array  $departments  = [];
     public array  $positions    = [];
+    public array  $shifts       = [];
 
     // ── Bank list ──────────────────────────────────────────
     public const BANKS = [
@@ -184,6 +186,7 @@ class EmployeeManager extends Component
         try {
             $this->departments = Department::orderBy('name')->get(['id','name'])->toArray();
             $this->positions   = Position::orderBy('name')->get(['id','name'])->toArray();
+            $this->shifts      = \App\Models\Shift::where('is_active', true)->orderBy('name')->get(['id','name'])->toArray();
             
             Log::info('loadDepartmentsAndPositions - Departments loaded: ' . count($this->departments));
             Log::info('loadDepartmentsAndPositions - Positions loaded: ' . count($this->positions));
@@ -293,6 +296,7 @@ class EmployeeManager extends Component
         $this->address        = $emp->address ?? '';
         $this->departmentId   = $emp->department_id ?? '';
         $this->positionId     = $emp->position_id ?? '';
+        $this->shiftId        = $emp->shift_id ?? '';
         
         Log::info('fillForm - department_id from DB: ' . ($emp->department_id ?? 'null'));
         Log::info('fillForm - position_id from DB: ' . ($emp->position_id ?? 'null'));
@@ -429,6 +433,7 @@ class EmployeeManager extends Component
                 'address'                => $this->address ?: null,
                 'department_id'          => $this->departmentId ?: null,
                 'position_id'            => $this->positionId ?: null,
+                'shift_id'               => $this->shiftId ?: null,
                 // Salary fields
                 'basic_salary'           => $this->basicSalary ?: null,
                 'currency'               => $this->currency,
@@ -499,6 +504,7 @@ class EmployeeManager extends Component
         $this->address            = '';
         $this->departmentId       = '';
         $this->positionId         = '';
+        $this->shiftId            = '';
         $this->basicSalary        = '';
         $this->currency           = 'RWF';
         $this->paymentMethod      = 'bank_transfer';
@@ -518,6 +524,7 @@ class EmployeeManager extends Component
     public function render()
     {
         $employees = Employee::query()
+            ->with(['departmentAssignment', 'positionAssignment'])
             ->when($this->search, fn($q) => $q->where(function($q2) {
                 $q2->where('first_name',  'like', "%{$this->search}%")
                    ->orWhere('last_name',   'like', "%{$this->search}%")
@@ -548,6 +555,7 @@ class EmployeeManager extends Component
             'banks'         => self::BANKS,
             'departments'   => $this->departments,
             'positions'     => $this->positions,
+            'shifts'        => $this->shifts,
         ])->layout('components.layouts.app');
     }
 }

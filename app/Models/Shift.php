@@ -5,100 +5,85 @@ namespace App\Models;
 use App\Enum\ApprovalStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- * Class Department
+ *
+ * Class Shift
  *
  * @property string $id
  * @property string $code
  * @property string $name
- * @property string $description
- * @property string $manager_id
- * @property bool $is_active
  *
  * @property string $created_by
  * @property string $updated_by
- * @property string $deleted_by
+ * @property string $locked_by
  * @property ApprovalStatus $approval_status
+ *
+ * @property-read Collection|Comment[] $comments
+ * @property-read Collection|Note[] $notes
+ * @property-read User|null $creator
+ * @property-read User|null $updater
+ * @property-read User|null $locker
  *
  * @property Carbon|null $deleted_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  *
- * @property-read User|null $creator
- * @property-read User|null $updater
- * @property-read User|null $deleter
- * @property-read \Illuminate\Database\Eloquent\Collection|Employee[] $employees
- *
  * @method static updateOrCreate(array $attributes, array $values)
  * @method static create(array $attributes)
+ * @method static update(array $attributes)
  * @method static where(string $column, $value)
  * @method static latest(string $column = 'created_at')
  * @method static find($id)
+ *
  */
-class Department extends Model
+
+class Shift extends Model
 {
     use HasApiTokens, HasUuids, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'code',
         'name',
-        'description',
-        'manager_id',
-        'latitude',
-        'longitude',
-        'geofence_radius_meters',
+        'start_time',
+        'end_time',
+        'grace_period_minutes',
         'is_active',
+        'metadata',
         'approval_status',
+        'is_locked',
+        'locked_by',
         'created_by',
         'updated_by',
-        'deleted_by',
     ];
 
     protected function casts(): array
     {
         return [
+            'start_time' => 'datetime:H:i:s',
+            'end_time' => 'datetime:H:i:s',
             'is_active' => 'boolean',
-            'latitude' => 'float',
-            'longitude' => 'float',
-            'geofence_radius_meters' => 'integer',
+            'is_locked' => 'boolean',
             'approval_status' => ApprovalStatus::class,
         ];
     }
 
     protected $hidden = [
-        //
+
     ];
 
-    /**
-     * Get the employees for the department.
-     */
-    public function employees(): HasMany
-    {
-        return $this->hasMany(Employee::class);
-    }
 
-    public function performanceReviews(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
-    {
-        return $this->hasManyThrough(PerformanceReview::class, Employee::class);
-    }
-
-    // Note: positions relationship removed as department_id column doesn't exist in positions table
-
-    /**
-     * Get the manager of the department.
-     */
-    public function manager()
-    {
-        return $this->belongsTo(User::class, 'manager_id');
-    }
 
     /**
      * Notes associated with this record as a notable entity.
@@ -119,18 +104,20 @@ class Department extends Model
     /**
      * Relationships
      */
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function updater()
+    public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function deleter()
+    public function locker(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'deleted_by');
+        return $this->belongsTo(User::class, 'locked_by');
     }
+
+
 }

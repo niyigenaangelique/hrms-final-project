@@ -7,9 +7,11 @@ use App\Models\LeaveType;
 use App\Models\Employee;
 use App\Enum\LeaveStatus;
 use App\Enum\ApprovalStatus;
+use App\Services\LeaveService;
 use Livewire\Component;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 #[Title('TalentFlow Pro | HR Leave Management')]
 class HrLeaveManagement extends Component
@@ -22,6 +24,8 @@ class HrLeaveManagement extends Component
     public $rejectionReason = '';
     public $rejectModalOpen = false;
     public $rejectingRequestId = null;
+    public $showBalanceInfo = false;
+    public $selectedEmployeeBalance = null;
 
     public function mount()
     {
@@ -110,9 +114,32 @@ class HrLeaveManagement extends Component
     {
         try {
             \Log::info('Approving leave request: ' . $requestId);
-            $request = LeaveRequest::find($requestId);
+            $request = LeaveRequest::with(['employee', 'leaveType'])->find($requestId);
             if ($request) {
                 \Log::info('Found request, current status: ' . $request->status->value);
+                
+                // Validate leave request before approval
+                $validation = LeaveService::validateLeaveRequest(
+                    $request->employee,
+                    $request->leaveType,
+                    \Carbon\Carbon::parse($request->start_date),
+                    \Carbon\Carbon::parse($request->end_date),
+                    $request->total_days
+                );
+
+                if (!$validation['valid']) {
+                    $errorMessage = "Cannot approve leave request:\n" . implode("\n", $validation['errors']);
+                    session()->flash('error', $errorMessage);
+                    return;
+                }
+
+                // Check for warnings
+                if (!empty($validation['warnings'])) {
+                    $warningMessage = "Warning:\n" . implode("\n", $validation['warnings']);
+                    session()->flash('warning', $warningMessage);
+                }
+
+                // Approve the request
                 $request->update([
                     'status' => LeaveStatus::APPROVED->value,
                     'approval_status' => ApprovalStatus::Approved->value,
@@ -120,6 +147,12 @@ class HrLeaveManagement extends Component
                     'approved_at' => now(),
                 ]);
                 \Log::info('Request approved successfully');
+
+                // Update leave balance
+                LeaveService::updateLeaveBalance($request);
+
+                // Check for exceeded limits
+                LeaveService::checkLeaveLimitExceeded($request);
 
                 $this->loadLeaveRequests();
                 session()->flash('success', 'Leave request approved successfully!');
@@ -186,6 +219,92 @@ class HrLeaveManagement extends Component
     {
         $this->selectedRequest = null;
         $this->rejectionReason = '';
+    }
+
+    public function showEmployeeBalance($employeeId)
+    {
+        $employee = Employee::find($employeeId);
+        if ($employee) {
+            $this->selectedEmployeeBalance = [
+                'employee' => $employee,
+                'balances' => []
+            ];
+
+            // Get ALL active leave types
+            $allLeaveTypes = \App\Models\LeaveType::where('is_active', true)->get();
+            $currentYear = \Carbon\Carbon::now()->year;
+
+            foreach ($allLeaveTypes as $leaveType) {
+                // Check if employee is eligible for this leave type (gender restriction)
+                $isEligible = true;
+                if ($leaveType->gender_restriction) {
+                    if ($leaveType->gender_restriction === 'male' && strtolower($employee->gender) !== 'male') {
+                        $isEligible = false;
+                    }
+                    if ($leaveType->gender_restriction === 'female' && strtolower($employee->gender) !== 'female') {
+                        $isEligible = false;
+                    }
+                }
+
+                // Get or create balance for this leave type
+                $balance = \App\Models\LeaveBalance::where('employee_id', $employeeId)
+                    ->where('leave_type_id', $leaveType->id)
+                    ->where('year', $currentYear)
+                    ->first();
+
+                if (!$balance && $isEligible) {
+                    // Create balance if not exists and employee is eligible
+                    $totalDays = $leaveType->default_days ?? 0;
+                    $balance = \App\Models\LeaveBalance::create([
+                        'employee_id' => $employeeId,
+                        'leave_type_id' => $leaveType->id,
+                        'code' => 'BAL-' . $employee->code . '-' . $leaveType->id . '-' . $currentYear,
+                        'total_days' => $totalDays,
+                        'used_days' => 0,
+                        'balance_days' => $totalDays,
+                        'carried_forward_days' => 0,
+                        'year' => $currentYear,
+                        'created_by' => \Illuminate\Support\Facades\Auth::id() ?? 1,
+                    ]);
+                }
+
+                // Calculate used days for this year
+                $usedDays = \App\Models\LeaveRequest::where('employee_id', $employeeId)
+                    ->where('leave_type_id', $leaveType->id)
+                    ->where('status', \App\Enum\LeaveStatus::APPROVED->value)
+                    ->whereYear('start_date', $currentYear)
+                    ->sum('total_days');
+
+                // Prepare balance data
+                $balanceData = [
+                    'leave_type' => $leaveType->name,
+                    'total_days' => $balance ? $balance->total_days : ($leaveType->default_days ?? 0),
+                    'used_days' => $usedDays,
+                    'balance_days' => $balance ? $balance->balance_days : (($leaveType->default_days ?? 0) - $usedDays),
+                    'carried_forward' => $balance ? $balance->carried_forward_days : 0,
+                    'max_days_per_year' => $leaveType->max_days_per_year,
+                    'requires_medical_document' => $leaveType->requires_medical_document,
+                    'auto_approve' => $leaveType->auto_approve,
+                    'is_eligible' => $isEligible,
+                ];
+
+                // Always add to balances array (even if not eligible, show with note)
+                $this->selectedEmployeeBalance['balances'][] = $balanceData;
+            }
+
+            // Sort by leave type name
+            usort($this->selectedEmployeeBalance['balances'], function($a, $b) {
+                return strcmp($a['leave_type'], $b['leave_type']);
+            });
+
+            $this->showBalanceInfo = true;
+        }
+    }
+
+    public function closeBalanceInfo()
+    {
+        $this->showBalanceInfo = false;
+        $this->selectedEmployeeBalance = null;
     }
 
     public function updatedFilterStatus()

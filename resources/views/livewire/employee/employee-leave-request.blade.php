@@ -460,7 +460,7 @@ table.lv-table { width: 100%; border-collapse: collapse; }
                     {{-- Leave type --}}
                     <div class="lv-field">
                         <label>Leave Type</label>
-                        <select wire:model="leave_type_id">
+                        <select wire:model.live="leave_type_id">
                             <option value="">Select leave type…</option>
                             @foreach($leaveTypes as $lt)
                                 <option value="{{ $lt->id }}">{{ $lt->name }}</option>
@@ -513,12 +513,29 @@ table.lv-table { width: 100%; border-collapse: collapse; }
                         @error('reason') <span class="lv-field-error">{{ $message }}</span> @enderror
                     </div>
 
+                    {{-- Document Upload (Medical) --}}
+                    @php
+                        $selType = $leaveTypes->firstWhere('id', $leave_type_id);
+                    @endphp
+                    @if($selType && $selType->requires_medical_document)
+                        <div class="lv-field">
+                            <label>Medical Document / Evidence (Required)</label>
+                            <input type="file" wire:model="attachment" class="lv-file-input">
+                            <div style="font-size:11px;color:var(--ink4);margin-top:4px;">Please upload a doctor's note or medical report (PDF, JPG, PNG)</div>
+                            @error('attachment') <span class="lv-field-error">{{ $message }}</span> @enderror
+                            <div wire:loading wire:target="attachment" style="font-size:11px;color:var(--blue);margin-top:4px;">Uploading...</div>
+                        </div>
+                    @endif
+
                 </div>
 
                 <div class="lv-submit-row">
-                    <button type="submit" class="lv-btn-submit">
-                        <svg viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                        Submit Leave Request
+                    <button type="submit" class="lv-btn-submit" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="submit">
+                            <svg viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            Submit Leave Request
+                        </span>
+                        <span wire:loading wire:target="submit">Processing...</span>
                     </button>
                 </div>
             </form>
@@ -568,7 +585,12 @@ table.lv-table { width: 100%; border-collapse: collapse; }
                                     : null;
                             @endphp
                             <tr>
-                                <td class="bold">{{ $req->leaveType->name ?? 'N/A' }}</td>
+                                <td class="bold">
+                                    {{ $req->leaveType->name ?? 'N/A' }}
+                                    @if($req->attachment_path)
+                                        <svg style="width:12px;height:12px;stroke:var(--ink4);fill:none;margin-left:4px;" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                    @endif
+                                </td>
                                 <td class="muted">
                                     {{ $req->start_date?->format('M d') }}
                                     @if($req->end_date && $req->end_date->ne($req->start_date))
@@ -650,6 +672,15 @@ table.lv-table { width: 100%; border-collapse: collapse; }
                     <span class="lv-modal-label">Reason</span>
                     <p class="lv-modal-prose">{{ $selectedRequest->reason }}</p>
                 </div>
+                @if($selectedRequest->attachment_path)
+                <div class="lv-modal-row">
+                    <span class="lv-modal-label">Attachment</span>
+                    <a href="{{ Storage::url($selectedRequest->attachment_path) }}" target="_blank" class="lv-btn-view" style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
+                        <svg style="width:14px;height:14px;stroke:currentColor;fill:none;" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                        View Medical Document
+                    </a>
+                </div>
+                @endif
                 <div class="lv-modal-row">
                     <span class="lv-modal-label">Status</span>
                     <span class="lv-badge {{ $mbc }}" style="margin-top:4px;">

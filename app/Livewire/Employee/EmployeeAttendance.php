@@ -17,7 +17,10 @@ class EmployeeAttendance extends Component
     public $todayAttendance;
     public $notes;
     public $isClockedIn   = false;
-    public $todayMinutes  = 0;  // total minutes worked today
+    public $isOnBreak     = false;
+    public $activeBreak   = null;
+    public $todayMinutes  = 0;  // total worked minutes today (excluding breaks)
+    public $todayBreakMinutes = 0; // total break minutes today
 
     // All counts for the stat strip
     public $monthPresentCount = 0;
@@ -35,7 +38,7 @@ class EmployeeAttendance extends Component
     public function mount(): void
     {
         $user = Auth::user();
-        $this->employee = Employee::where('user_id', $user->id)->first();
+        $this->employee = Employee::with(['departmentAssignment', 'shift'])->where('user_id', $user->id)->first();
 
         if (!$this->employee) {
             $lastEmployee = Employee::orderBy('id', 'desc')->first();
@@ -68,41 +71,50 @@ class EmployeeAttendance extends Component
             ->orderBy('date', 'desc')
             ->get();
 
-        // ── Today's record ──────────────────────────────────────────────────
-        $this->todayAttendance = Attendance::where('employee_id', $this->employee->id)
-            ->where('date', $today)
+        // ── Today's record (find active session first, then today's record) ──
+        $this->todayAttendance = Attendance::with('shift')
+            ->where('employee_id', $this->employee->id)
+            ->whereNull('check_out')
+            ->orderBy('date', 'desc')
             ->first();
 
+        if (!$this->todayAttendance) {
+            $this->todayAttendance = Attendance::with('shift')
+                ->where('employee_id', $this->employee->id)
+                ->where('date', $today)
+                ->first();
+        }
+
+        // ── Breaks today ──────────────────────────────────────────────────
+        $this->todayBreakMinutes = 0;
+        $this->isOnBreak = false;
+        $this->activeBreak = null;
+        
+        if ($this->todayAttendance) {
+            $breaks = \App\Models\AttendanceBreak::where('attendance_id', $this->todayAttendance->id)->get();
+            $this->todayBreakMinutes = $breaks->sum('total_minutes');
+            $this->activeBreak = $breaks->whereNull('end_time')->first();
+            $this->isOnBreak = !empty($this->activeBreak);
+        }
+
         // ── Minutes worked today ────────────────────────────────────────────
-        // The DB stores check_in/check_out as full datetimes: "2026-03-31 00:19:28"
-        // We use Carbon::parse() which handles any format reliably.
         $this->todayMinutes = 0;
-        if ($this->todayAttendance?->check_in && $this->todayAttendance?->check_out) {
-            try {
-                $ci = $this->toCarbon($this->todayAttendance->check_in);
-                $co = $this->toCarbon($this->todayAttendance->check_out);
-                if ($ci && $co && $co->gt($ci)) {
-                    $this->todayMinutes = (int) $ci->diffInMinutes($co);
-                }
-            } catch (\Exception $e) {
-                \Log::error('todayMinutes error', ['err' => $e->getMessage()]);
+        if ($this->todayAttendance?->check_in) {
+            $ci = $this->toCarbon($this->todayAttendance->check_in, $this->todayAttendance->date);
+            $co = $this->todayAttendance->check_out ? $this->toCarbon($this->todayAttendance->check_out) : $now;
+            
+            if ($ci && $co && $co->gt($ci)) {
+                $this->todayMinutes = (int) $ci->diffInMinutes($co) - (int) $this->todayBreakMinutes;
             }
         }
 
         // ── Monthly stat counts ─────────────────────────────────────────────
-        // Status is "Entered" (= employee showed up), not "present".
-        // Count "present" OR "Entered" OR any record that has a check_in.
-        $this->monthPresentCount = $this->attendances->filter(
-            fn($a) => $a->check_in !== null
+        $this->monthPresentCount = $this->attendances->filter(fn($a) => 
+            $a->check_in !== null && 
+            !in_array(strtolower($a->daily_status), ['absent', 'rejected', 'on leave'])
         )->count();
-
-        $this->monthAbsentCount = $this->attendances->filter(
-            fn($a) => strtolower($a->status?->value ?? '') === 'absent'
-        )->count();
-
-        $this->monthLateCount = $this->attendances->filter(
-            fn($a) => strtolower($a->status?->value ?? '') === 'late'
-        )->count();
+        $this->monthAbsentCount = $this->attendances->filter(fn($a) => strtolower($a->daily_status) === 'absent')->count();
+        $this->monthLateCount = $this->attendances->filter(fn($a) => strtolower($a->daily_status) === 'late')->count();
 
         // ── Is clocked in? ──────────────────────────────────────────────────
         $this->isClockedIn = $this->todayAttendance
@@ -110,11 +122,51 @@ class EmployeeAttendance extends Component
             && !$this->todayAttendance->check_out;
     }
 
-    public function clockIn(): void
+    public function clockIn($lat = null, $lng = null): void
     {
-        $now         = $this->now();
-        $today       = $now->format('Y-m-d');
-        $currentTime = $now->format('H:i:s');
+        $now   = $this->now();
+        $today = $now->format('Y-m-d');
+
+        // Check if on approved leave
+        $onLeave = \App\Models\LeaveRequest::where('employee_id', $this->employee->id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->exists();
+
+        if ($onLeave) {
+            session()->flash('error', 'Check-in failed: You have an approved leave for today.');
+            return;
+        }
+
+        // Geofencing Check...
+        
+        // --- CLEANUP: Close any orphaned sessions from previous days ---
+        $orphans = Attendance::where('employee_id', $this->employee->id)
+            ->where('date', '<', $today)
+            ->whereNull('check_out')
+            ->get();
+        
+        foreach ($orphans as $orphan) {
+            $orphan->update([
+                'check_out'    => $orphan->check_in, // Close it at the same time it started
+                'daily_status' => 'Requires Review',
+                'notes'        => '[Auto-closed] Employee forgot to clock out.',
+                'updated_by'   => Auth::id(),
+            ]);
+        }
+        if ($lat && $lng) {
+            $dept = $this->employee->departmentAssignment;
+            if ($dept && $dept->latitude && $dept->longitude) {
+                $distance = $this->calculateDistance($lat, $lng, $dept->latitude, $dept->longitude);
+                $radius = $dept->geofence_radius_meters ?: 100;
+                
+                if ($distance > $radius) {
+                    session()->flash('error', "Check-in failed: You are outside the office geofence ($distance m).");
+                    return;
+                }
+            }
+        }
 
         $existing = Attendance::where('employee_id', $this->employee->id)
             ->where('date', $today)
@@ -125,6 +177,27 @@ class EmployeeAttendance extends Component
             return;
         }
 
+        $shift = $this->employee->shift;
+        $lateMinutes = 0;
+        $status = 'Present';
+
+        $approvalStatus = \App\Enum\ApprovalStatus::NotApplicable;
+
+        if ($shift) {
+            $shiftStart = Carbon::parse($today . ' ' . $shift->start_time->format('H:i:s'), self::TZ);
+            $shiftEnd   = Carbon::parse($today . ' ' . $shift->end_time->format('H:i:s'), self::TZ);
+            $graceEnd   = $shiftStart->copy()->addMinutes($shift->grace_period_minutes);
+            
+            if ($now->gt($shiftEnd)) {
+                $status = 'Requires Review';
+                $approvalStatus = \App\Enum\ApprovalStatus::Pending;
+                session()->flash('warning', "Notice: Your shift ended at " . $shift->end_time->format('H:i') . ". This check-in has been flagged for HR review.");
+            } elseif ($now->gt($graceEnd)) {
+                $lateMinutes = (int) $shiftStart->diffInMinutes($now);
+                $status = 'Late';
+            }
+        }
+
         $maxNum  = Attendance::where('code', 'like', 'ATT-%')
             ->selectRaw('MAX(CAST(SUBSTRING(code, 5) AS UNSIGNED)) as max_num')
             ->value('max_num') ?? 0;
@@ -133,66 +206,162 @@ class EmployeeAttendance extends Component
         Attendance::updateOrCreate(
             ['employee_id' => $this->employee->id, 'date' => $today],
             [
-                'code'            => $newCode,
-                'check_in'        => $currentTime,
-                'check_in_method' => \App\Enum\AttendanceMethod::Manuel_Input->value,
-                'status'          => \App\Enum\AttendanceStatus::Entered,
-                'approval_status' => \App\Enum\ApprovalStatus::NotApplicable,
-                'notes'           => $this->notes,
-                'created_by'      => Auth::id(),
-                'device_id'       => null,
+                'code'               => $newCode,
+                'check_in'           => $now->format('H:i:s'),
+                'check_in_latitude'  => $lat,
+                'check_in_longitude' => $lng,
+                'check_in_method'    => \App\Enum\AttendanceMethod::Manuel_Input->value,
+                'shift_id'           => $shift?->id,
+                'late_minutes'       => $lateMinutes,
+                'daily_status'       => $status,
+                'status'             => \App\Enum\AttendanceStatus::Entered,
+                'approval_status'    => $approvalStatus,
+                'notes'              => $this->notes,
+                'created_by'         => Auth::id(),
             ]
         );
 
         $this->notes = '';
         $this->loadAttendanceData();
-        session()->flash('success', 'Clocked in at ' . $currentTime);
+        session()->flash('success', 'Clocked in at ' . $now->format('H:i:s'));
     }
 
-    public function clockOut(): void
+    public function clockOut($lat = null, $lng = null): void
     {
         if (!$this->todayAttendance?->check_in) {
             session()->flash('error', 'You need to clock in first.');
             return;
         }
 
-        $now         = $this->now();
-        $currentTime = $now->format('H:i:s');
+        $now = $this->now();
 
-        // Prevent clock-out before clock-in
-        $ci = $this->toCarbon($this->todayAttendance->check_in);
-        $co = $this->toCarbon($currentTime);
-        if ($ci && $co && $co->lt($ci)) {
-            session()->flash('error', 'Clock-out time cannot be before clock-in time.');
-            return;
+        // Break validation: Must end break before clocking out
+        if ($this->isOnBreak) {
+            $this->endBreak();
         }
 
-        $this->todayAttendance->update([
-            'check_out'  => $currentTime,
-            'notes'      => $this->notes ?: $this->todayAttendance->notes,
-            'updated_by' => Auth::id(),
-        ]);
+        // --- MASS CLOCK OUT: Close ALL open sessions ---
+        $openSessions = Attendance::where('employee_id', $this->employee->id)
+            ->whereNull('check_out')
+            ->get();
+
+        foreach ($openSessions as $session) {
+            $checkInTime = $this->toCarbon($session->check_in, $session->date);
+            
+            // If it's the one we just processed or from today, calculate properly
+            // If it's an old one, just close it.
+            $sessionCo = $now;
+            $sessionWorked = (int) $checkInTime->diffInMinutes($sessionCo) - (int) $this->todayBreakMinutes;
+            $sessionOt = 0;
+
+            $shift = $session->shift;
+            if ($shift) {
+                $shiftEnd = $this->toCarbon($shift->end_time, $session->date);
+                if ($sessionCo->gt($shiftEnd)) {
+                    $sessionOt = min(max(0, $sessionWorked), (int) $shiftEnd->diffInMinutes($sessionCo));
+                }
+            }
+
+            $session->update([
+                'check_out'           => $sessionCo->format('H:i:s'),
+                'total_worked_minutes'=> max(0, $sessionWorked),
+                'overtime_minutes'    => $sessionOt,
+                'daily_status'        => $session->date->format('Y-m-d') === $now->format('Y-m-d') ? $session->daily_status : 'Requires Review',
+                'notes'               => $this->notes ?: $session->notes,
+                'updated_by'          => Auth::id(),
+            ]);
+        }
 
         $this->notes = '';
         $this->loadAttendanceData();
-        session()->flash('success', 'Clocked out at ' . $currentTime);
+        session()->flash('success', 'Clocked out at ' . $now->format('H:i:s'));
+    }
+
+    public function startBreak(): void
+    {
+        if (!$this->isClockedIn || $this->isOnBreak) return;
+
+        $now = $this->now();
+        \App\Models\AttendanceBreak::create([
+            'attendance_id' => $this->todayAttendance->id,
+            'start_time'    => $now,
+            'notes'         => 'Manual break',
+            'code'          => 'BRK-' . uniqid(),
+        ]);
+
+        $this->loadAttendanceData();
+        session()->flash('success', 'Break started at ' . $now->format('H:i:s'));
+    }
+
+    public function endBreak(): void
+    {
+        if (!$this->isOnBreak || !$this->activeBreak) return;
+
+        $now = $this->now();
+        $diff = (int) $this->toCarbon($this->activeBreak->start_time)->diffInMinutes($now);
+
+        $this->activeBreak->update([
+            'end_time'      => $now,
+            'total_minutes' => $diff,
+        ]);
+
+        $this->loadAttendanceData();
+        session()->flash('success', 'Break ended at ' . $now->format('H:i:s') . " ($diff min)");
+    }
+    public function formatMinutes($mins): string
+    {
+        if (!$mins || $mins <= 0) return '—';
+        $h = floor($mins / 60);
+        $m = $mins % 60;
+        if ($h > 0) {
+            return "{$h}h" . ($m > 0 ? " {$m}m" : "");
+        }
+        return "{$m}m";
+    }
+    /**
+     * Calculate distance between two points in meters using Haversine formula.
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2): float
+    {
+        $earthRadius = 6371000; // in meters
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return round($earthRadius * $c);
     }
 
     /**
      * Convert any time/datetime value to a Carbon in Africa/Kigali.
      * Handles: Carbon, "H:i:s", "Y-m-d H:i:s", or any parseable string.
      */
-    private function toCarbon(mixed $value): ?Carbon
+    private function toCarbon(mixed $value, mixed $dateContext = null): ?Carbon
     {
         if (!$value) return null;
 
+        $dateStr = '';
+        if ($dateContext) {
+            $dateStr = ($dateContext instanceof Carbon) ? $dateContext->format('Y-m-d ') : $dateContext . ' ';
+        }
+
         if ($value instanceof Carbon) {
+            // If it's already a Carbon, and we have a date context, force the date part
+            if ($dateContext) {
+                $timePart = $value->format('H:i:s');
+                return Carbon::parse($dateStr . $timePart, self::TZ);
+            }
             return $value->copy()->setTimezone(self::TZ);
         }
 
-        // Carbon::parse handles both "H:i:s" and "Y-m-d H:i:s" reliably
         try {
-            return Carbon::parse((string) $value, self::TZ);
+            // If the value is just a time (H:i:s), and we have a date context, combine them
+            $valStr = (string) $value;
+            if ($dateContext && strlen($valStr) <= 8) {
+                return Carbon::parse($dateStr . $valStr, self::TZ);
+            }
+            return Carbon::parse($valStr, self::TZ);
         } catch (\Exception) {
             return null;
         }

@@ -108,6 +108,20 @@ Route::middleware(['web'])->group(function () {
             ]);
             
             $employee = \App\Models\Employee::where('user_id', auth()->id())->first();
+            $leaveType = \App\Models\LeaveType::find($validated['leave_type_id']);
+            $totalDays = \Carbon\Carbon::parse($validated['start_date'])->diffInDays(\Carbon\Carbon::parse($validated['end_date'])) + 1;
+
+            $val = \App\Services\LeaveService::validateLeaveRequest(
+                $employee,
+                $leaveType,
+                \Carbon\Carbon::parse($validated['start_date']),
+                \Carbon\Carbon::parse($validated['end_date']),
+                $totalDays
+            );
+
+            if (!$val['valid']) {
+                return redirect()->back()->with('error', implode(' ', $val['errors']));
+            }
             
             $leaveRequest = \App\Models\LeaveRequest::create([
                 'code' => 'LR-' . date('Y') . '-' . str_pad(\App\Models\LeaveRequest::count() + 1, 4, '0', STR_PAD_LEFT),
@@ -404,6 +418,7 @@ Route::middleware(['web'])->group(function () {
         Route::get('/hr/positions', PositionManager::class)->name('position-manager');
         
         Route::get('/hr/leaves-attendance', \App\Livewire\LeaveAttendance\ManageLeavesAttendance::class)->name('hr.leaves-attendance');
+        Route::get('/hr/payroll', \App\Livewire\HR\PayrollManager::class)->name('hr.payroll');
 
 // Payroll Management
         Route::get('/manage-payroll', function() {

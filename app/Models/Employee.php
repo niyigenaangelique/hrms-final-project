@@ -98,6 +98,8 @@ class Employee extends Model
         'bank_branch',
         'mobile_money_provider',
         'mobile_money_number',
+        'house_allowance',
+        'transport_allowance',
         'salary_effective_date',
         'is_taxable',
         'rssb_rate',
@@ -109,6 +111,7 @@ class Employee extends Model
         'profile_photo',
         'position_id',
         'department_id',
+        'shift_id',
         'user_id',
         'is_active',
         'is_locked',
@@ -258,14 +261,19 @@ class Employee extends Model
         return $this->hasMany(Feedback::class, 'receiver_id');
     }
 
-    public function position(): BelongsTo
+    public function positionAssignment(): BelongsTo
     {
-        return $this->belongsTo(Position::class);
+        return $this->belongsTo(Position::class, 'position_id');
     }
 
-    public function department(): BelongsTo
+    public function departmentAssignment(): BelongsTo
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
     }
 
     public function emergencyContacts(): HasMany

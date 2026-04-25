@@ -336,11 +336,11 @@ table.att-table { width: 100%; border-collapse: collapse; }
             <div class="att-stat-cell-val">{{ $statCiDisplay }}</div>
         </div>
         <div class="att-stat-cell">
-            <div class="att-stat-cell-icon" style="background:var(--green-lt);">
-                <svg viewBox="0 0 24 24" style="stroke:var(--green)"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <div class="att-stat-cell-icon" style="background:var(--red-lt);">
+                <svg viewBox="0 0 24 24" style="stroke:var(--red)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
             </div>
-            <div class="att-stat-cell-label">Clocked Out</div>
-            <div class="att-stat-cell-val">{{ $statCoDisplay }}</div>
+            <div class="att-stat-cell-label">Absent (Month)</div>
+            <div class="att-stat-cell-val">{{ $monthAbsentCount }}</div>
         </div>
         <div class="att-stat-cell">
             <div class="att-stat-cell-icon" style="background:var(--green-lt);">
@@ -389,7 +389,6 @@ table.att-table { width: 100%; border-collapse: collapse; }
                         </div>
                     </div>
                 </div>
-                {{-- Live time display in card header --}}
                 <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:800;
                             color:var(--blue);letter-spacing:-0.3px;" id="att-card-clock">
                     {{ $kigali->format('H:i') }}
@@ -404,32 +403,52 @@ table.att-table { width: 100%; border-collapse: collapse; }
                 </div>
 
                 @if($isClockedIn)
-                    <button class="att-btn-clock-out"
-                            wire:click="clockOut"
-                            wire:loading.attr="disabled">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                            <polyline points="16 17 21 12 16 7"/>
-                            <line x1="21" y1="12" x2="9" y2="12"/>
-                        </svg>
-                        <span wire:loading.remove wire:target="clockOut">Clock Out Now</span>
-                        <span wire:loading wire:target="clockOut">Saving…</span>
-                    </button>
+                    <div style="display:grid;grid-template-columns: 1fr 1fr;gap:12px;margin-top:10px;">
+                        @if($isOnBreak)
+                            <button class="att-btn-clock-in" 
+                                    wire:click="endBreak" 
+                                    style="background:var(--amber);box-shadow:0 4px 14px rgba(245,158,11,0.3);">
+                                <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+                                End Break
+                            </button>
+                        @else
+                            <button class="att-btn-clock-in" 
+                                    wire:click="startBreak" 
+                                    style="background:var(--ink2);box-shadow:0 4px 14px rgba(45,51,86,0.3);">
+                                <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                Start Break
+                            </button>
+                        @endif
+
+                        <button class="att-btn-clock-out"
+                                onclick="confirmClockAction('out')"
+                                wire:loading.attr="disabled">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            <span wire:loading.remove wire:target="clockOut">Clock Out</span>
+                            <span wire:loading wire:target="clockOut">...</span>
+                        </button>
+                    </div>
                 @else
                     <button class="att-btn-clock-in"
-                            wire:click="clockIn"
+                            onclick="confirmClockAction('in')"
                             wire:loading.attr="disabled">
                         <svg viewBox="0 0 24 24">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                            <polyline points="10 17 15 12 10 7"/>
-                            <line x1="15" y1="12" x2="3" y2="12"/>
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
                         </svg>
                         <span wire:loading.remove wire:target="clockIn">Clock In Now</span>
                         <span wire:loading wire:target="clockIn">Saving…</span>
                     </button>
                 @endif
 
-                {{-- Already clocked in today reminder --}}
+                <div id="gps-status" style="margin-top:12px;font-size:11px;color:var(--ink4);text-align:center;display:none;">
+                    <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="gps-text">Detecting location...</span>
+                </div>
+
                 @if($isClockedIn && $todayAttendance?->check_in)
                     <div style="margin-top:12px;padding:10px 13px;background:var(--green-lt);
                                 border:1px solid rgba(18,183,106,0.22);border-radius:var(--r);
@@ -444,7 +463,6 @@ table.att-table { width: 100%; border-collapse: collapse; }
             </div>
         </div>
 
-        {{-- History table --}}
         <div class="att-card">
             <div class="att-card-hd">
                 <div class="att-card-hd-left">
@@ -471,62 +489,72 @@ table.att-table { width: 100%; border-collapse: collapse; }
                                 <th>Clock Out</th>
                                 <th>Hours</th>
                                 <th>Status</th>
-                                <th>Notes</th>
+                                <th>OT/Late</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($attendances as $att)
                                 @php
-                                    $as = $att->status?->value ?? 'unknown';
-                                    // "Entered" = employee was present
+                                    $as = $att->daily_status ?? 'Present';
                                     $ac = match(strtolower($as)) {
-                                        'present','entered' => 'badge-green',
-                                        'absent'            => 'badge-red',
-                                        'late'              => 'badge-amber',
-                                        default             => 'badge-gray',
+                                        'present'         => 'badge-green',
+                                        'absent'          => 'badge-red',
+                                        'late'            => 'badge-amber',
+                                        'half-day'        => 'badge-amber',
+                                        'requires review' => 'badge-amber',
+                                        'rejected'        => 'badge-red',
+                                        default           => 'badge-gray',
                                     };
 
-                                    // Format check_in / check_out for display (show time only)
-                                    $ciDisplay = '—';
-                                    $coDisplay = '—';
-                                    $hrs       = '—';
-
-                                    if ($att->check_in) {
-                                        try {
-                                            $ciDisplay = \Carbon\Carbon::parse($att->check_in, 'Africa/Kigali')->format('H:i');
-                                        } catch (\Exception $e) { $ciDisplay = $att->check_in; }
-                                    }
-                                    if ($att->check_out) {
-                                        try {
-                                            $coDisplay = \Carbon\Carbon::parse($att->check_out, 'Africa/Kigali')->format('H:i');
-                                        } catch (\Exception $e) { $coDisplay = $att->check_out; }
-                                    }
-
-                                    // Calculate hours between check_in and check_out
-                                    if ($att->check_in && $att->check_out) {
-                                        try {
-                                            $ci   = \Carbon\Carbon::parse($att->check_in,  'Africa/Kigali');
-                                            $co   = \Carbon\Carbon::parse($att->check_out, 'Africa/Kigali');
-                                            if ($co->gt($ci)) {
-                                                $diff = (int) $ci->diffInMinutes($co);
-                                                $hrs  = floor($diff / 60) . 'h' . ($diff % 60 > 0 ? ' ' . ($diff % 60) . 'm' : '');
-                                            }
-                                        } catch (\Exception $e) { $hrs = '—'; }
+                                    $ciDisplay = $att->check_in ? \Carbon\Carbon::parse($att->check_in)->format('H:i') : '—';
+                                    $coDisplay = $att->check_out ? \Carbon\Carbon::parse($att->check_out)->format('H:i') : '—';
+                                    
+                                    if ($att->total_worked_minutes > 0) {
+                                        $totalHours = $att->total_worked_minutes / 60;
+                                        $standardHours = 8; // Standard workday
+                                        $overtimeHours = max(0, $totalHours - $standardHours);
+                                        
+                                        if ($overtimeHours > 0) {
+                                            $h = floor($standardHours);
+                                            $m = round(($standardHours - $h) * 60);
+                                            $otH = floor($overtimeHours);
+                                            $otM = round(($overtimeHours - $otH) * 60);
+                                            
+                                            $standardPart = $h > 0 ? "{$h}h" : "";
+                                            $standardPart .= $m > 0 ? " {$m}m" : "";
+                                            $overtimePart = $otH > 0 ? "{$otH}h" : "";
+                                            $overtimePart .= $otM > 0 ? " {$otM}m" : "";
+                                            
+                                            $hrsFmt = $standardPart . " + " . $overtimePart . " OT";
+                                        } else {
+                                            $displayHours = min($totalHours, $standardHours);
+                                            $h = floor($displayHours);
+                                            $m = round(($displayHours - $h) * 60);
+                                            $hrsFmt = $h > 0 ? "{$h}h" : "";
+                                            $hrsFmt .= $m > 0 ? " {$m}m" : "";
+                                        }
+                                    } else {
+                                        $hrsFmt = '—';
                                     }
                                 @endphp
                                 <tr>
                                     <td class="bold">{{ $att->date->format('M d, Y') }}</td>
                                     <td class="muted">{{ $ciDisplay }}</td>
                                     <td class="muted">{{ $coDisplay }}</td>
-                                    <td style="font-weight:700;color:var(--blue-2);">{{ $hrs }}</td>
+                                    <td style="font-weight:700;color:var(--blue-2);">{{ $hrsFmt }}</td>
                                     <td>
                                         <span class="att-badge {{ $ac }}">
                                             <svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>
-                                            {{ ucfirst($as) }}
+                                            {{ $as }}
                                         </span>
                                     </td>
-                                    <td class="muted" style="max-width:160px;white-space:normal;font-size:12px;">
-                                        {{ $att->notes ?? '—' }}
+                                    <td class="muted">
+                                        @if($att->late_minutes > 0)
+                                            <span style="color:var(--amber);">Late: {{ $this->formatMinutes($att->late_minutes) }}</span>
+                                        @endif
+                                        @if($att->overtime_minutes > 0)
+                                            <span style="color:var(--green); margin-left:5px;">OT: {{ $this->formatMinutes($att->overtime_minutes) }}</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -544,9 +572,8 @@ table.att-table { width: 100%; border-collapse: collapse; }
             @endif
         </div>
 
-    </div>{{-- /left col --}}
+    </div>
 
-    {{-- RIGHT: Status sidebar --}}
     <div class="att-card">
         <div class="att-card-hd">
             <div class="att-card-hd-left">
@@ -566,22 +593,32 @@ table.att-table { width: 100%; border-collapse: collapse; }
         </div>
         <div class="att-card-body">
 
-            {{-- Status indicator --}}
             <div class="att-status-indicator {{ $isClockedIn ? 'in-status' : 'out-status' }}">
-                <div class="att-status-dot {{ $isClockedIn ? 'dot-in' : 'dot-out' }}"></div>
+                <div class="att-status-dot {{ $isClockedIn ? ($isOnBreak ? 'dot-out' : 'dot-in') : 'dot-out' }}"></div>
                 <div>
                     <div class="att-status-text">
-                        {{ $isClockedIn ? 'Currently Clocked In' : 'Not Clocked In' }}
+                        @if($isOnBreak)
+                            On Break
+                        @elseif($isClockedIn)
+                            Clocked In
+                        @else
+                            Not Clocked In
+                        @endif
                     </div>
                     <div class="att-status-sub">
-                        {{ $isClockedIn ? 'Session is active' : 'Click "Clock In" to begin' }}
+                        @if($isOnBreak)
+                            Taking a rest session
+                        @elseif($isClockedIn)
+                            Active at {{ $statCiDisplay }}
+                        @else
+                            Click "Clock In" to begin
+                        @endif
                     </div>
                 </div>
             </div>
 
-            {{-- Hours ring --}}
             @php
-                $maxMinutes    = 8 * 60; // 480 min = 8h
+                $maxMinutes    = 8 * 60;
                 $ringPct       = min(100, round(($todayMinutes / max(1, $maxMinutes)) * 100));
                 $circumference = round(2 * 3.14159 * 34);
                 $offset        = round($circumference * (1 - $ringPct / 100));
@@ -602,49 +639,46 @@ table.att-table { width: 100%; border-collapse: collapse; }
                 <div style="font-size:12px;font-weight:600;color:var(--ink3);">Today's hours</div>
             </div>
 
-            {{-- Detail rows --}}
             <div class="att-detail-row">
-                <span class="att-detail-label">Date</span>
-                <span class="att-detail-value">{{ $kigali->format('M d, Y') }}</span>
+                <span class="att-detail-label">Assigned Shift</span>
+                <span class="att-detail-value">{{ $employee->shift->name ?? 'None' }}</span>
             </div>
+            
+            @if($employee->shift)
+            <div class="att-detail-row">
+                <span class="att-detail-label">Shift Hours</span>
+                <span class="att-detail-value">{{ $employee->shift->start_time->format('H:i') }} - {{ $employee->shift->end_time->format('H:i') }}</span>
+            </div>
+            @endif
+
             @if($todayAttendance)
                 <div class="att-detail-row">
-                    <span class="att-detail-label">Clocked In</span>
-                    <span class="att-detail-value" style="color:var(--blue-2);">
-                        {{ $statCiDisplay }}
-                    </span>
-                </div>
-                <div class="att-detail-row">
-                    <span class="att-detail-label">Clocked Out</span>
-                    <span class="att-detail-value">
-                        {{ $statCoDisplay }}
-                    </span>
-                </div>
-                <div class="att-detail-row">
-                    <span class="att-detail-label">Hours Today</span>
+                    <span class="att-detail-label">Worked (Net)</span>
                     <span class="att-detail-value" style="color:var(--green);">{{ $todayFmt }}</span>
                 </div>
-                @php
-                    $ts = $todayAttendance->status?->value ?? 'pending';
-                    $tc = match($ts) { 'present' => 'badge-green', 'absent' => 'badge-red', 'late' => 'badge-amber', default => 'badge-gray' };
-                @endphp
                 <div class="att-detail-row">
-                    <span class="att-detail-label">Status</span>
-                    <span class="att-badge {{ $tc }}">{{ ucfirst($ts) }}</span>
+                    <span class="att-detail-label">Breaks</span>
+                    <span class="att-detail-value">{{ $todayBreakMinutes }} min</span>
                 </div>
-            @else
+                @if($todayAttendance->late_minutes > 0)
                 <div class="att-detail-row">
-                    <span class="att-detail-label">Clocked In</span>
-                    <span class="att-detail-value" style="color:var(--ink4);">Not yet</span>
+                    <span class="att-detail-label">Lateness</span>
+                    <span class="att-detail-value" style="color:var(--amber);">{{ $todayAttendance->late_minutes }} min</span>
                 </div>
+                @endif
+                @if($todayAttendance->overtime_minutes > 0)
+                <div class="att-detail-row">
+                    <span class="att-detail-label">Overtime</span>
+                    <span class="att-detail-value" style="color:var(--green);">{{ $todayAttendance->overtime_minutes }} min</span>
+                </div>
+                @endif
             @endif
 
         </div>
-    </div>{{-- /right sidebar --}}
+    </div>
 
-</div>{{-- /att-grid --}}
+</div>
 
-{{-- ══ FLOATING NAV ══ --}}
 <nav class="ios-nav">
     <a href="{{ route('employee.dashboard') }}" class="ios-nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -673,12 +707,42 @@ table.att-table { width: 100%; border-collapse: collapse; }
     </a>
 </nav>
 
-{{-- ══ Live clock script — Africa/Kigali (UTC+2) ══ --}}
 <script>
-(function () {
-    // UTC offset for Africa/Kigali is always +2 (no DST)
-    var TZ_OFFSET_MS = 2 * 60 * 60 * 1000;
+function confirmClockAction(type) {
+    const statusDiv = document.getElementById('gps-status');
+    const statusText = document.getElementById('gps-text');
+    
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
 
+    statusDiv.style.display = 'block';
+    statusText.innerText = "Capturing secure location...";
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            statusText.innerText = "Location verified. Processing...";
+            
+            if (type === 'in') {
+                @this.clockIn(lat, lng);
+            } else {
+                @this.clockOut(lat, lng);
+            }
+        },
+        (error) => {
+            statusText.innerText = "Location access denied.";
+            alert("Error: Location access is required to clock " + type + ".");
+            console.error(error);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+}
+
+(function () {
+    var TZ_OFFSET_MS = 2 * 60 * 60 * 1000;
     function getKigaliDate() {
         var utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
         return new Date(utc + TZ_OFFSET_MS);

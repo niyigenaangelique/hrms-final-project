@@ -46,12 +46,12 @@ class ReportBuilder extends Component
     private function getReportData()
     {
         $query = match($this->reportCategory) {
-            'employee' => Employee::with(['department', 'position']),
+            'employee' => Employee::with(['departmentAssignment', 'positionAssignment']),
             'attendance' => Attendance::with('employee')->whereBetween('date', [$this->startDate, $this->endDate]),
             'performance' => PerformanceReview::with('employee')->whereBetween('review_date', [$this->startDate, $this->endDate]),
             'leave' => LeaveRequest::with('employee')->whereBetween('start_date', [$this->startDate, $this->endDate]),
             'payroll' => PayrollEntry::with('employee'),
-            'skills' => Employee::with(['department'])->whereHas('performanceReviews'),
+            'skills' => Employee::with(['departmentAssignment'])->whereHas('performanceReviews'),
             default => null,
         };
 

@@ -495,25 +495,15 @@ document.head.appendChild(style);
                             </div>
                         </td>
                         <td>
-                            @if($emp->department_id)
-                                @php $dept = \App\Models\Department::find($emp->department_id); @endphp
-                                @if($dept)
-                                    <span class="em-badge badge-dept">{{ $dept->name }}</span>
-                                @else
-                                    <span style="color:var(--ink4);font-size:12px;">—</span>
-                                @endif
+                            @if($emp->departmentAssignment)
+                                <span class="em-badge badge-dept">{{ $emp->departmentAssignment->name }}</span>
                             @else
                                 <span style="color:var(--ink4);font-size:12px;">—</span>
                             @endif
                         </td>
                         <td>
-                            @if($emp->position_id)
-                                @php $pos = \App\Models\Position::find($emp->position_id); @endphp
-                                @if($pos)
-                                    <span class="em-badge badge-pos">{{ $pos->name }}</span>
-                                @else
-                                    <span style="color:var(--ink4);font-size:12px;">—</span>
-                                @endif
+                            @if($emp->positionAssignment)
+                                <span class="em-badge badge-pos">{{ $emp->positionAssignment->name }}</span>
                             @else
                                 <span style="color:var(--ink4);font-size:12px;">—</span>
                             @endif
@@ -680,8 +670,8 @@ document.head.appendChild(style);
                 </div>
             </div>
 
-            <div class="em-section-lbl">Department &amp; Position</div>
-            <div class="em-form-grid-2">
+            <div class="em-section-lbl">Department &amp; Schedule</div>
+            <div class="em-form-grid">
                 <div class="em-field">
                     <label>Department</label>
                     <select wire:model="departmentId">
@@ -699,6 +689,16 @@ document.head.appendChild(style);
                             <option value="{{ $pos['id'] }}">{{ $pos['name'] }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="em-field">
+                    <label>Work Shift <span class="req">*</span></label>
+                    <select wire:model="shiftId">
+                        <option value="">Select a shift</option>
+                        @foreach($shifts as $sh)
+                            <option value="{{ $sh['id'] }}">{{ $sh['name'] }}</option>
+                        @endforeach
+                    </select>
+                    @error('shiftId') <span class="em-field-error">{{ $message }}</span> @enderror
                 </div>
             </div>
             @endif

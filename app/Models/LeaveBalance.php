@@ -107,6 +107,15 @@ class LeaveBalance extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function ($balance) {
+            if (empty($balance->code)) {
+                $balance->code = 'BAL-' . strtoupper(uniqid());
+            }
+        });
+    }
+
     public function updateBalance(): void
     {
         $this->used_days = $this->employee->leaveRequests()
