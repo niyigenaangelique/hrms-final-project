@@ -24,6 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
  * Class Employee
  *
  * @property string $id
+ * @property string $employee_number
  * @property string $code
  * @property string $first_name
  * @property string $last_name
@@ -271,6 +272,11 @@ class Employee extends Model
         return $this->belongsTo(Department::class, 'department_id');
     }
 
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
@@ -379,6 +385,17 @@ class Employee extends Model
     public function deleter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Employee $employee) {
+            if (empty($employee->employee_number)) {
+                $lastEmployee = Employee::withTrashed()->orderBy('employee_number', 'desc')->first();
+                $nextNumber = $lastEmployee ? (int) $lastEmployee->employee_number + 1 : 1000;
+                $employee->employee_number = (string) $nextNumber;
+            }
+        });
     }
 
 }

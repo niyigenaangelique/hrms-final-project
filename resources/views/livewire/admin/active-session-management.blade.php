@@ -1,52 +1,117 @@
-<x-admin-content-styles />
 <div class="ac-root">
- 
-    @if(session('success'))<div class="ac-flash ac-flash-ok"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="ac-flash ac-flash-err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>{{ session('error') }}</div>@endif
- 
-    <div class="ac-header">
-        <div><div class="ac-header-title">Active Sessions</div><div class="ac-header-sub">{{ $sessions->count() }} session{{ $sessions->count() !== 1 ? 's' : '' }} active</div></div>
-        <button class="ac-btn ac-btn-danger" wire:click="terminateAll" wire:confirm="Terminate all other sessions? Your current session will be preserved.">
-            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            Terminate All Others
-        </button>
+    <x-admin-content-styles />
+
+    {{-- ── HERO ── --}}
+    <div class="ac-hero">
+        <div style="display:flex; align-items:center; gap:24px;">
+            <div class="ac-av" style="width:72px; height:72px; font-size:24px; background:rgba(255,255,255,0.25); color:#fff; border:3px solid rgba(255,255,255,0.4);">
+                <svg viewBox="0 0 24 24" style="width:1.4em; height:1.4em;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+                <div class="ac-hero-ttl">Session Monitoring</div>
+                <div class="ac-hero-sub">Live User Connection Registry</div>
+            </div>
+        </div>
+        <div>
+            <button wire:click="terminateAll" class="ac-btn" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.3);" onclick="showTerminateAllConfirm()">
+                <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                Kill All Other Connections
+            </button>
+        </div>
     </div>
- 
+
+    {{-- ── ALERTS ── --}}
+    @if (session()->has('success'))
+        <div class="ac-flash ac-flash-ok" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- ── MAIN TABLE ── --}}
     <div class="ac-card">
         <div class="ac-card-hd">
-            <div><div class="ac-card-title">Session Registry</div><div class="ac-card-sub">All authenticated sessions on this server</div></div>
+            <div>
+                <div class="ac-card-title">Connected Principals</div>
+                <div class="ac-card-sub">Real-time session state and telemetry</div>
+            </div>
+            <div class="ac-badge ab-indigo">{{ count($sessions) }} Active Shards</div>
         </div>
-        @if($sessions->isEmpty())
-            <div class="ac-empty">
-                <div class="ac-empty-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div>
-                <div class="ac-empty-ttl">No sessions found</div>
-                <div class="ac-empty-sub">Set SESSION_DRIVER=database in .env and run php artisan session:table && php artisan migrate</div>
-            </div>
-        @else
-            @foreach($sessions as $sess)
-            <div class="ac-sess-row">
-                <div style="display:flex;align-items:center;gap:12px;flex:1;">
-                    <div style="width:36px;height:36px;border-radius:10px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink4)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    </div>
-                    <div>
-                        <div class="ac-sess-ip">{{ $sess->ip_address ?? '—' }}</div>
-                        <div class="ac-sess-time">Last active {{ $sess->last_activity_human ?? '—' }}</div>
-                    </div>
-                </div>
-                @if($sess->is_current ?? false)
-                    <span class="ac-current-pill">Current Session</span>
-                @else
-                    <button class="ac-btn ac-btn-danger ac-btn-sm"
-                        wire:click="terminateSession('{{ $sess->id }}')"
-                        wire:confirm="Terminate this session? The user will be logged out immediately.">
-                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        Terminate
-                    </button>
-                @endif
-            </div>
-            @endforeach
-        @endif
+        <div class="ac-table-wrap">
+            <table class="ac-table">
+                <thead>
+                    <tr>
+                        <th>Identity Hash</th>
+                        <th>IP Address</th>
+                        <th>Browser / OS</th>
+                        <th>Last Pulse</th>
+                        <th>Status</th>
+                        <th>Command</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($sessions as $s)
+                        <tr style="{{ $s->is_current ? 'background: var(--blue-lt);' : '' }}">
+                            <td>
+                                <div style="font-family: monospace; font-size: 11px; color: var(--ink3);">
+                                    {{ substr($s->id, 0, 16) }}...
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: var(--ink2);">{{ $s->ip_address ?? '0.0.0.0' }}</div>
+                            </td>
+                            <td>
+                                <div style="font-size: 12px; color: var(--ink3); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ $s->user_agent ?? 'Terminal Interface' }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="ac-user-meta">{{ $s->last_activity_human }}</div>
+                            </td>
+                            <td>
+                                @if($s->is_current)
+                                    <span class="ac-badge ab-green">CURRENT NODE</span>
+                                @else
+                                    <span class="ac-badge ab-teal">ACTIVE</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if(!$s->is_current)
+                                    <button wire:click="terminateSession('{{ $s->id }}')" class="ac-btn ac-btn-sm" style="background: var(--red-lt); color: var(--red);">
+                                        Terminate
+                                    </button>
+                                @else
+                                    <span style="font-size: 11px; font-weight: 700; color: var(--green);">Secure Connection</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6">
+                                <div class="ac-empty">No active connections detected.</div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
- 
+
+{{-- Include custom confirm dialog component --}}
+@include('components.confirm-dialog')
+
+<script>
+function showTerminateAllConfirm() {
+    showConfirmDialog({
+        title: 'Terminate All Sessions',
+        message: 'Are you sure you want to terminate all other active sessions? This will force all users to log out immediately.',
+        confirmText: 'Terminate All',
+        cancelText: 'Cancel',
+        type: 'warning',
+        onConfirm: function() {
+            @this.terminateAll();
+        }
+    });
+}
+</script>

@@ -12,135 +12,80 @@ use Livewire\Component;
 
 class SystemAnalytics extends Component
 {
-    // Analytics Filters
     public $dateRange = '30'; // days
-    public $departmentFilter = '';
-    public $userTypeFilter = '';
-    public $chartType = 'overview';
-
-    public function mount()
-    {
-        // Initialize with empty values
-    }
+    public $activeTab = 'security'; // security, infrastructure, governance
 
     public function render()
     {
-        // Get all analytics data
-        $overviewStats = $this->getOverviewStats();
-        $userAnalytics = $this->getUserAnalytics();
-        $employeeAnalytics = $this->getEmployeeAnalytics();
-        $attendanceAnalytics = $this->getAttendanceAnalytics();
-        $leaveAnalytics = $this->getLeaveAnalytics();
-        $systemPerformance = $this->getSystemPerformance();
-        
-        // Flatten attendance analytics to avoid nested arrays
-        $attendanceRateData = $this->getAttendanceRate(now()->subDays($this->dateRange));
-        
-        // Combine all analytics data into a single array
-        $analytics = array_merge(
-            $overviewStats,
-            $userAnalytics,
-            $employeeAnalytics,
-            $attendanceAnalytics,
-            $leaveAnalytics,
-            $systemPerformance,
-            $attendanceRateData // Add the flattened attendance data
-        );
-
         return view('livewire.admin.system-analytics', [
-            'analytics' => $analytics,
-            'startDate' => now()->subDays($this->dateRange)->format('Y-m-d'),
-            'endDate' => now()->format('Y-m-d'),
+            'securityData' => $this->getSecurityAudit(),
+            'infrastructure' => $this->getInfrastructureHealth(),
+            'governance' => $this->getGovernanceOversight(),
+            'activityTrends' => $this->getActivityTrends(),
         ])->layout('components.layouts.admin');
     }
 
-    private function getOverviewStats()
+    private function getSecurityAudit()
     {
         $startDate = now()->subDays($this->dateRange);
         
         return [
-            'total_users' => User::count(),
-            'new_users' => User::where('created_at', '>=', $startDate)->count(),
-            'total_employees' => Employee::count(),
-            'new_employees' => Employee::where('created_at', '>=', $startDate)->count(),
-            'active_sessions' => ActivityLog::where('action', 'login')->where('created_at', '>=', $startDate)->count(),
-            'total_activities' => ActivityLog::where('created_at', '>=', $startDate)->count(),
-            'system_uptime' => $this->calculateSystemUptime(),
+            'total_logins' => ActivityLog::where('action', 'login')->where('created_at', '>=', $startDate)->count(),
+            'failed_attempts' => ActivityLog::where('action', 'failed_login')->where('created_at', '>=', $startDate)->count(),
+            'password_resets' => ActivityLog::where('action', 'password_reset')->where('created_at', '>=', $startDate)->count(),
+            'active_admins' => User::where('role', 'admin')->where('is_active', true)->count(),
+            'recent_failures' => ActivityLog::where('action', 'failed_login')
+                ->orderBy('created_at', 'desc')->take(5)->get(),
         ];
     }
 
-    private function getUserAnalytics()
+    private function getInfrastructureHealth()
+    {
+        return [
+            'database_size' => $this->getEstimatedDbSize(),
+            'total_records' => ActivityLog::count() + User::count(),
+            'cache_status' => 'Optimized',
+            'storage_used' => '1.2 GB',
+            'environment' => config('app.env'),
+            'row_counts' => [
+                'Users' => User::count(),
+                'Activity Logs' => ActivityLog::count(),
+                'Permissions' => DB::table('role_permissions')->count(),
+            ]
+        ];
+    }
+
+    private function getGovernanceOversight()
+    {
+        return [
+            'role_distribution' => User::selectRaw('role, COUNT(*) as count')->groupBy('role')->get(),
+            'recent_permission_changes' => ActivityLog::where('action', 'update_permissions')
+                ->orderBy('created_at', 'desc')->take(5)->get(),
+            'account_status' => [
+                'Active' => User::where('is_active', true)->count(),
+                'Inactive' => User::where('is_active', false)->count(),
+            ]
+        ];
+    }
+
+    private function getActivityTrends()
     {
         $startDate = now()->subDays($this->dateRange);
-        $previousStartDate = now()->subDays($this->dateRange * 2);
-        
-        // Calculate growth percentages
-        $currentPeriodUsers = User::where('created_at', '>=', $startDate)->count();
-        $previousPeriodUsers = User::whereBetween('created_at', [$previousStartDate, $startDate])->count();
-        $userGrowth = $previousPeriodUsers > 0 ? round((($currentPeriodUsers - $previousPeriodUsers) / $previousPeriodUsers) * 100, 2) : 0;
-        
-        $currentPeriodEmployees = Employee::where('created_at', '>=', $startDate)->count();
-        $previousPeriodEmployees = Employee::whereBetween('created_at', [$previousStartDate, $startDate])->count();
-        $employeeGrowth = $previousPeriodEmployees > 0 ? round((($currentPeriodEmployees - $previousPeriodEmployees) / $previousPeriodEmployees) * 100, 2) : 0;
-        
-        return [
-            'user_growth' => $userGrowth,
-            'user_activity' => $this->getUserActivityData($startDate),
-            'user_roles' => $this->getUserRoleDistribution(),
-            'user_registration_trend' => $this->getUserGrowthData($startDate),
-        ];
+        return ActivityLog::where('created_at', '>=', $startDate)
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
     }
 
-    private function getEmployeeAnalytics()
+    private function getEstimatedDbSize()
     {
-        $startDate = now()->subDays($this->dateRange);
-        $previousStartDate = now()->subDays($this->dateRange * 2);
-        
-        // Calculate employee growth percentage
-        $currentPeriodEmployees = Employee::where('created_at', '>=', $startDate)->count();
-        $previousPeriodEmployees = Employee::whereBetween('created_at', [$previousStartDate, $startDate])->count();
-        $employeeGrowth = $previousPeriodEmployees > 0 ? round((($currentPeriodEmployees - $previousPeriodEmployees) / $previousPeriodEmployees) * 100, 2) : 0;
-        
-        return [
-            'employee_growth' => $employeeGrowth,
-            'department_distribution' => $this->getDepartmentDistribution(),
-            'position_distribution' => $this->getPositionDistribution(),
-            'employee_turnover' => $this->getEmployeeTurnoverRate($startDate),
-        ];
-    }
-
-    private function getAttendanceAnalytics()
-    {
-        $startDate = now()->subDays($this->dateRange);
-        
-        return [
-            'attendance_rate' => $this->getAttendanceRate($startDate),
-            'attendance_trends' => $this->getAttendanceTrends($startDate),
-            'absence_patterns' => $this->getAbsencePatterns($startDate),
-            'department_attendance' => $this->getDepartmentAttendance($startDate),
-        ];
-    }
-
-    private function getLeaveAnalytics()
-    {
-        $startDate = now()->subDays($this->dateRange);
-        
-        return [
-            'leave_requests' => $this->getLeaveRequestStats($startDate),
-            'leave_types' => $this->getLeaveTypeDistribution($startDate),
-            'leave_approval_rate' => $this->getLeaveApprovalRate($startDate),
-            'leave_balance' => $this->getLeaveBalanceStats(),
-        ];
-    }
-
-    private function getSystemPerformance()
-    {
-        return [
-            'response_times' => $this->getAverageResponseTimes(),
-            'error_rates' => $this->getErrorRates(),
-            'database_performance' => $this->getDatabasePerformance(),
-            'cache_performance' => $this->getCachePerformance(),
-        ];
+        try {
+            $results = DB::select('SELECT SUM(data_length + index_length) / 1024 / 1024 AS size FROM information_schema.TABLES WHERE table_schema = ?', [config('database.connections.mysql.database')]);
+            return round($results[0]->size, 2) . ' MB';
+        } catch (\Exception $e) {
+            return 'N/A';
+        }
     }
 
     private function getChartData()

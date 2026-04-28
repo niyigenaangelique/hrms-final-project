@@ -66,7 +66,13 @@ use App\Livewire\Admin\NotificationsManager;
 use App\Livewire\Admin\AccessControlManager;
 use App\Livewire\Admin\ImportsManager;
 use App\Livewire\Admin\BanksManager;
- 
+use App\Livewire\Admin\DeviceManagement;
+use App\Livewire\Admin\IntegrationSettings;
+use App\Livewire\Admin\CompanyPolicy;
+use App\Livewire\Admin\DataOversight;
+use App\Livewire\Admin\SecurityMonitoring;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 Route::middleware(['web'])->group(function () {
 
@@ -162,7 +168,13 @@ Route::middleware(['web'])->group(function () {
         Route::get('/admin/permissions', \App\Livewire\Admin\PermissionManagement::class)->name('admin.permissions');
         Route::get('/admin/security-settings', \App\Livewire\Admin\SecuritySettingsManagement::class)->name('admin.security-settings');
         Route::get('/admin/system-analytics', \App\Livewire\Admin\SystemAnalytics::class)->name('admin.system-analytics');
+        Route::get('/admin/report-builder', \App\Livewire\Admin\AdminReportBuilder::class)->name('admin.report-builder');
         Route::get('/admin/system-config', \App\Livewire\Admin\SystemConfigurationManagement::class)->name('admin.system-config');
+        Route::get('/admin/device-management', \App\Livewire\Admin\DeviceManagement::class)->name('admin.device-management');
+        Route::get('/admin/integration', \App\Livewire\Admin\IntegrationSettings::class)->name('admin.integration');
+        Route::get('/admin/company-policy', \App\Livewire\Admin\CompanyPolicy::class)->name('admin.company-policy');
+        Route::get('/admin/data-oversight', \App\Livewire\Admin\DataOversight::class)->name('admin.data-oversight');
+        Route::get('/admin/security-monitoring', \App\Livewire\Admin\SecurityMonitoring::class)->name('admin.security-monitoring');
         
         // Additional Admin Routes - Redirect to main admin dashboard or remove if unused
         Route::get('/admin/notifications', \App\Livewire\HR\HrNotificationCenter::class)->name('admin.notifications');
@@ -498,6 +510,23 @@ Route::middleware(['web'])->group(function () {
 //        analytics
         Route::get('/analytics/dashboard', AnalyticsDashboard::class)->name('analytics.dashboard');
         Route::get('/analytics/report-builder', ReportBuilder::class)->name('analytics.report-builder');
+
+//        external recruitment (FastAPI) SSO shortcut
+        Route::get('/external/recruitment/post-job', function () {
+            if (!auth()->check()) {
+                return redirect()->route('login');
+            }
+
+            $token = (string) config('services.talentflow_recruitment.sso_token', '');
+            if ($token === '') {
+                abort(500, 'SSO token not configured.');
+            }
+
+            $base = (string) config('services.talentflow_recruitment.url', 'http://localhost:8003');
+            $base = rtrim($base, '/');
+
+            return redirect()->away($base . '/sso/hr?token=' . urlencode($token) . '&next=' . urlencode('/post-job'));
+        })->name('external.recruitment.post-job');
 
 //        notifications
         

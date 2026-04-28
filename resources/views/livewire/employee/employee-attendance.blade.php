@@ -734,7 +734,14 @@ function confirmClockAction(type) {
         },
         (error) => {
             statusText.innerText = "Location access denied.";
-            alert("Error: Location access is required to clock " + type + ".");
+            showConfirmDialog({
+                title: 'Location Access Required',
+                message: 'Location access is required to clock ' + type + '. Please enable location services in your browser settings.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                type: 'warning',
+                showCancel: false
+            });
             console.error(error);
         },
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
@@ -765,5 +772,8 @@ function confirmClockAction(type) {
     setInterval(tick, 1000);
 })();
 </script>
+
+{{-- Include custom confirm dialog component --}}
+@include('components.confirm-dialog')
 
 </div>{{-- /att-root --}}

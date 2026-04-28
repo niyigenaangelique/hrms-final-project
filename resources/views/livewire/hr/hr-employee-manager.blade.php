@@ -469,6 +469,7 @@ document.head.appendChild(style);
         <table class="em-table">
             <thead>
                 <tr>
+                    <th>Emp #</th>
                     <th>Employee</th>
                     <th>Department</th>
                     <th>Position</th>
@@ -485,6 +486,7 @@ document.head.appendChild(style);
                         $isActive = $emp->is_active ?? true;
                     @endphp
                     <tr>
+                        <td class="bold">{{ $emp->employee_number }}</td>
                         <td>
                             <div class="em-av-cell">
                                 <div class="em-av">{{ $initials }}</div>
@@ -576,6 +578,9 @@ document.head.appendChild(style);
                 @if($code)
                     <span style="font-size:12px;font-weight:600;background:rgba(255,255,255,0.18);padding:2px 10px;border-radius:100px;">{{ $code }}</span>
                 @endif
+                @if($employeeNumber)
+                    <span style="font-size:12px;font-weight:600;background:rgba(255,255,255,0.18);padding:2px 10px;border-radius:100px;margin-left:5px;">#{{ $employeeNumber }}</span>
+                @endif
             </div>
             <button class="em-modal-close" wire:click="closeModal">
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -605,10 +610,14 @@ document.head.appendChild(style);
             @if($activeTab === 'personal')
 
             <div class="em-section-lbl">Basic Details</div>
-            <div class="em-form-grid">
+            <div class="em-form-grid-4">
                 <div class="em-field">
                     <label>Employee Code</label>
                     <input type="text" wire:model="code" placeholder="EMP-0001" readonly style="background:#F0F4FA;color:var(--ink3);">
+                </div>
+                <div class="em-field">
+                    <label>Employee Number</label>
+                    <input type="text" wire:model="employeeNumber" placeholder="1000" readonly style="background:#F0F4FA;color:var(--ink3);">
                 </div>
                 <div class="em-field">
                     <label>Gender <span class="req">*</span></label>
@@ -901,6 +910,7 @@ document.head.appendChild(style);
             <div class="em-view-name">{{ $viewEmployee->first_name }} {{ $viewEmployee->middle_name }} {{ $viewEmployee->last_name }}</div>
             <div class="em-view-meta">
                 <span class="em-badge badge-dept" style="font-size:12px;">{{ $viewEmployee->code }}</span>
+                <span class="em-badge badge-pos" style="font-size:12px;background:var(--ink2);color:#fff;">#{{ $viewEmployee->employee_number }}</span>
                 @if($viewEmployee->position_id)
                     @php $pos = \App\Models\Position::find($viewEmployee->position_id); @endphp
                     @if($pos)

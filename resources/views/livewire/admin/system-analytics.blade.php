@@ -1,234 +1,176 @@
-<div>
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">System Analytics</h1>
-        <p class="text-gray-600 mt-2">View system performance and usage analytics</p>
-    </div>
+<div class="ac-root">
+    <x-admin-content-styles />
 
-    <!-- Date Range Filter -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Start Date</label>
-                <input type="date" wire:model.live.debounce.250ms="startDate" 
-                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">End Date</label>
-                <input type="date" wire:model.live.debounce.250ms="endDate" 
-                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-            </div>
-            <div class="flex items-end">
-                <button wire:click="applyDateFilter" 
-                        class="px-4 py-2 bg-white text-black rounded hover:bg-blue-50 hover:border-blue-300 border border-transparent">
-                    Apply Filter
-                </button>
-            </div>
+    @if(session()->has('success'))<div class="ac-flash ac-flash-ok"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{{ session('success') }}</div>@endif
+
+    {{-- ── HERO ── --}}
+    <div class="ac-hero">
+        <div>
+            <div class="ac-hero-ttl">System Analytics & Insights</div>
+            <div class="ac-hero-sub">Infrastructure health, security audit, and platform governance</div>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button class="ac-btn {{ $activeTab === 'security' ? 'ac-btn-primary' : 'ac-btn-ghost' }}" style="{{ $activeTab === 'security' ? '' : 'background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);' }}" wire:click="$set('activeTab', 'security')">Security</button>
+            <button class="ac-btn {{ $activeTab === 'infrastructure' ? 'active' : 'ac-btn-ghost' }}" style="{{ $activeTab === 'infrastructure' ? 'background:#fff; color:var(--blue);' : 'background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);' }}" wire:click="$set('activeTab', 'infrastructure')">Infrastructure</button>
+            <button class="ac-btn {{ $activeTab === 'governance' ? 'active' : 'ac-btn-ghost' }}" style="{{ $activeTab === 'governance' ? 'background:#fff; color:var(--blue);' : 'background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);' }}" wire:click="$set('activeTab', 'governance')">Governance</button>
         </div>
     </div>
 
-    <!-- Overview Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="text-sm font-medium text-gray-500">Total Users</div>
-                <div class="text-2xl font-bold text-gray-900">{{ $analytics['total_users'] ?? 0 }}</div>
-                <div class="text-sm text-green-600">+{{ $analytics['user_growth'] ?? 0 }}% this month</div>
+    @if($activeTab === 'security')
+        <div class="ac-tiles">
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--blue);"></div>
+                <div class="ac-tile-icon" style="background:var(--blue-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--blue);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div><div class="ac-tile-lbl">Total Logins</div><div class="ac-tile-val">{{ $securityData['total_logins'] }}</div><div class="ac-tile-sub">Past 30 days</div></div>
             </div>
-        </div>
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="text-sm font-medium text-gray-500">Total Employees</div>
-                <div class="text-2xl font-bold text-gray-900">{{ $analytics['total_employees'] ?? 0 }}</div>
-                <div class="text-sm text-green-600">+{{ $analytics['employee_growth'] ?? 0 }}% this month</div>
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--red);"></div>
+                <div class="ac-tile-icon" style="background:var(--red-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--red);"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <div><div class="ac-tile-lbl">Failed Attempts</div><div class="ac-tile-val" style="color:var(--red);">{{ $securityData['failed_attempts'] }}</div><div class="ac-tile-sub">Blocked entries</div></div>
             </div>
-        </div>
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="text-sm font-medium text-gray-500">Active Sessions</div>
-                <div class="text-2xl font-bold text-gray-900">{{ $analytics['active_sessions'] ?? 0 }}</div>
-                <div class="text-sm text-blue-600">Currently online</div>
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--amber);"></div>
+                <div class="ac-tile-icon" style="background:var(--amber-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--amber);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="8 12 11 15 16 9"/></svg></div>
+                <div><div class="ac-tile-lbl">Password Resets</div><div class="ac-tile-val">{{ $securityData['password_resets'] }}</div><div class="ac-tile-sub">Security events</div></div>
             </div>
-        </div>
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="text-sm font-medium text-gray-500">System Load</div>
-                <div class="text-2xl font-bold text-gray-900">{{ $analytics['system_load'] ?? 0 }}%</div>
-                <div class="text-sm text-yellow-600">Average load</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <!-- User Registration Chart -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">User Registration Trend</h3>
-            <div class="h-64 flex items-center justify-center bg-gray-50 rounded">
-                <div class="text-center text-gray-500">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <p class="mt-2">User registration chart would be displayed here</p>
-                    <p class="text-sm">Last 30 days: {{ $analytics['new_users_30_days'] ?? 0 }} new users</p>
-                </div>
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--green);"></div>
+                <div class="ac-tile-icon" style="background:var(--green-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--green);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div><div class="ac-tile-lbl">Active Admins</div><div class="ac-tile-val" style="color:var(--green);">{{ $securityData['active_admins'] }}</div><div class="ac-tile-sub">Privileged users</div></div>
             </div>
         </div>
 
-        <!-- Attendance Analytics -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Attendance Analytics</h3>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">Present Today</span>
-                    <span class="text-sm font-medium text-green-600">{{ $analytics['attendance_present'] ?? 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">Absent Today</span>
-                    <span class="text-sm font-medium text-red-600">{{ $analytics['attendance_absent'] ?? 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">On Leave</span>
-                    <span class="text-sm font-medium text-yellow-600">{{ $analytics['attendance_leave'] ?? 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">Attendance Rate</span>
-                    <span class="text-sm font-medium text-blue-600">{{ $analytics['attendance_rate'] ?? 0 }}%</span>
-                </div>
+        <div class="ac-card">
+            <div class="ac-card-hd">
+                <div><div class="ac-card-title">Recent Security Failures</div><div class="ac-card-sub">Login attempts with invalid credentials</div></div>
+                <button class="ac-btn ac-btn-ghost ac-btn-sm" wire:click="refreshAnalytics">Refresh</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Department Distribution -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Department Distribution</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="h-64 flex items-center justify-center bg-gray-50 rounded">
-                <div class="text-center text-gray-500">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                    </svg>
-                    <p class="mt-2">Department distribution chart would be displayed here</p>
-                </div>
+            <div class="ac-table-wrap">
+                <table class="ac-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:24px;">Event Time</th>
+                            <th>Identity / Username</th>
+                            <th>Access Point</th>
+                            <th style="text-align:right; padding-right:24px;">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($securityData['recent_failures'] as $log)
+                            <tr>
+                                <td style="padding-left:24px;">{{ $log->created_at->format('M d, H:i:s') }}</td>
+                                <td><span class="ac-badge ab-red">{{ $log->user_id ? 'User ID: '.substr($log->user_id,0,8) : 'Anonymous' }}</span></td>
+                                <td><div style="font-family:monospace; font-size:12px; color:var(--ink3);">{{ $log->ip_address ?? 'Hidden' }}</div></td>
+                                <td style="text-align:right; padding-right:24px;"><div style="font-size:12px; font-weight:600; color:var(--ink2);">Potential Unauthorized Access</div></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4"><div class="ac-empty">No recent security threats detected.</div></td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            <div class="space-y-2">
-                @forelse($analytics['department_stats'] ?? [] as $department)
-                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                        <span class="text-sm text-gray-700">{{ $department['name'] }}</span>
-                        <div class="flex items-center space-x-2">
-                            <div class="w-24 bg-gray-200 rounded-full h-2">
-                                <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ $department['percentage'] }}%"></div>
-                            </div>
-                            <span class="text-sm font-medium text-gray-900">{{ $department['count'] }}</span>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center text-sm text-gray-500 py-4">No department data available</div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-
-    <!-- Leave Analytics -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Leave Analytics</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="text-center">
-                <div class="text-2xl font-bold text-yellow-600">{{ $analytics['pending_leaves'] ?? 0 }}</div>
-                <div class="text-sm text-gray-600">Pending Leaves</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl font-bold text-green-600">{{ $analytics['approved_leaves'] ?? 0 }}</div>
-                <div class="text-sm text-gray-600">Approved Leaves</div>
-            </div>
-            <div class="text-center">
-                <div class="text-2xl font-bold text-red-600">{{ $analytics['rejected_leaves'] ?? 0 }}</div>
-                <div class="text-sm text-gray-600">Rejected Leaves</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- System Performance -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">System Performance</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-                <div class="text-sm text-gray-600">CPU Usage</div>
-                <div class="text-lg font-medium text-gray-900">{{ $analytics['cpu_usage'] ?? 0 }}%</div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $analytics['cpu_usage'] ?? 0 }}%"></div>
-                </div>
-            </div>
-            <div>
-                <div class="text-sm text-gray-600">Memory Usage</div>
-                <div class="text-lg font-medium text-gray-900">{{ $analytics['memory_usage'] ?? 0 }}%</div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                    <div class="bg-green-600 h-2 rounded-full" style="width: {{ $analytics['memory_usage'] ?? 0 }}%"></div>
-                </div>
-            </div>
-            <div>
-                <div class="text-sm text-gray-600">Disk Usage</div>
-                <div class="text-lg font-medium text-gray-900">{{ $analytics['disk_usage'] ?? 0 }}%</div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                    <div class="bg-yellow-600 h-2 rounded-full" style="width: {{ $analytics['disk_usage'] ?? 0 }}%"></div>
-                </div>
-            </div>
-            <div>
-                <div class="text-sm text-gray-600">Response Time</div>
-                <div class="text-lg font-medium text-gray-900">{{ $analytics['response_time'] ?? 0 }}ms</div>
-                <div class="text-sm text-green-600">Good</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activities -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Recent System Activities</h3>
-        <div class="space-y-3">
-            @forelse($analytics['recent_activities'] ?? [] as $activity)
-                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                    <div class="flex-shrink-0">
-                        <div class="w-2 h-2 bg-indigo-600 rounded-full"></div>
-                    </div>
-                    <div class="flex-1">
-                        <div class="text-sm text-gray-900">{{ $activity['description'] }}</div>
-                        <div class="text-xs text-gray-500">{{ $activity['time'] }} by {{ $activity['user'] }}</div>
-                    </div>
-                </div>
-            @empty
-                <div class="text-center text-sm text-gray-500 py-4">No recent activities</div>
-            @endforelse
-        </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="mt-6 flex space-x-3">
-        <button wire:click="exportAnalytics" 
-                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-            Export Report
-        </button>
-        <button wire:click="refreshAnalytics" 
-                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Refresh Data
-        </button>
-        <button wire:click="scheduleReport" 
-                class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-            Schedule Report
-        </button>
-    </div>
-
-    <!-- Success Message -->
-    @if(session()->has('success'))
-        <div class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50">
-            {{ session('success') }}
         </div>
     @endif
 
-    <!-- Error Message -->
-    @if(session()->has('error'))
-        <div class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
-            {{ session('error') }}
+    @if($activeTab === 'infrastructure')
+        <div class="ac-tiles">
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--blue);"></div>
+                <div class="ac-tile-icon" style="background:var(--blue-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--blue);"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+                <div><div class="ac-tile-lbl">Database Size</div><div class="ac-tile-val">{{ $infrastructure['database_size'] }}</div><div class="ac-tile-sub">Physical footprint</div></div>
+            </div>
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--indigo);"></div>
+                <div class="ac-tile-icon" style="background:var(--indigo-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--indigo);"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                <div><div class="ac-tile-lbl">Total Records</div><div class="ac-tile-val">{{ number_format($infrastructure['total_records']) }}</div><div class="ac-tile-sub">Indexed objects</div></div>
+            </div>
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--teal);"></div>
+                <div class="ac-tile-icon" style="background:var(--teal-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--teal);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="8 12 11 15 16 9"/></svg></div>
+                <div><div class="ac-tile-lbl">Cache Engine</div><div class="ac-tile-val">{{ $infrastructure['cache_status'] }}</div><div class="ac-tile-sub">Buffer status</div></div>
+            </div>
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--amber);"></div>
+                <div class="ac-tile-icon" style="background:var(--amber-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--amber);"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                <div><div class="ac-tile-lbl">Environment</div><div class="ac-tile-val">{{ strtoupper($infrastructure['environment']) }}</div><div class="ac-tile-sub">Operational mode</div></div>
+            </div>
+        </div>
+
+        <div class="ac-card">
+            <div class="ac-card-hd">
+                <div><div class="ac-card-title">Database Integrity</div><div class="ac-card-sub">Current row counts across critical system tables</div></div>
+            </div>
+            <div class="ac-table-wrap">
+                <table class="ac-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:24px;">Table Name</th>
+                            <th>Record Count</th>
+                            <th style="text-align:right; padding-right:24px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($infrastructure['row_counts'] as $table => $count)
+                            <tr>
+                                <td style="padding-left:24px; font-weight:800; color:var(--ink);">{{ $table }}</td>
+                                <td style="font-weight:700; color:var(--blue);">{{ number_format($count) }}</td>
+                                <td style="text-align:right; padding-right:24px;"><span class="ac-badge ab-green">Synchronized</span></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
+    @if($activeTab === 'governance')
+        <div class="ac-tiles">
+            @foreach($governance['account_status'] as $status => $count)
+                <div class="ac-tile">
+                    <div class="ac-tile-accent" style="background:{{ $status === 'Active' ? 'var(--green)' : 'var(--red)' }};"></div>
+                    <div class="ac-tile-icon" style="background:{{ $status === 'Active' ? 'var(--green-lt)' : 'var(--red-lt)' }};">
+                        <svg viewBox="0 0 24 24" style="stroke:{{ $status === 'Active' ? 'var(--green)' : 'var(--red)' }};">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div><div class="ac-tile-lbl">{{ $status }} Accounts</div><div class="ac-tile-val">{{ $count }}</div><div class="ac-tile-sub">System-wide</div></div>
+                </div>
+            @endforeach
+            <div class="ac-tile">
+                <div class="ac-tile-accent" style="background:var(--indigo);"></div>
+                <div class="ac-tile-icon" style="background:var(--indigo-lt);"><svg viewBox="0 0 24 24" style="stroke:var(--indigo);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div><div class="ac-tile-lbl">Defined Roles</div><div class="ac-tile-val">{{ $governance['role_distribution']->count() }}</div><div class="ac-tile-sub">Access levels</div></div>
+            </div>
+        </div>
+
+        <div class="ac-card">
+            <div class="ac-card-hd">
+                <div><div class="ac-card-title">Privileged Access Logs</div><div class="ac-card-sub">Recent changes to system permissions or roles</div></div>
+            </div>
+            <div class="ac-table-wrap">
+                <table class="ac-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left:24px;">Timestamp</th>
+                            <th>Administrator</th>
+                            <th>Identity</th>
+                            <th style="text-align:right; padding-right:24px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($governance['recent_permission_changes'] as $log)
+                            <tr>
+                                <td style="padding-left:24px;">{{ $log->created_at->diffForHumans() }}</td>
+                                <td><div style="font-weight:800; color:var(--ink);">Admin Account</div></td>
+                                <td><span class="ac-badge ab-indigo">#{{ substr($log->user_id,0,8) }}</span></td>
+                                <td style="text-align:right; padding-right:24px;"><span class="ac-badge ab-teal">Matrix Update</span></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4"><div class="ac-empty">No administrative overrides recorded recently.</div></td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     @endif
 </div>

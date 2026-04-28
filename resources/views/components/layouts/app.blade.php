@@ -414,6 +414,18 @@
                 <span class="tf-nav-label">Report</span>
                 <span class="tf-tooltip">Report</span>
             </a>
+
+            {{-- Talent Acquisition (External) --}}
+            <a href="{{ route('external.recruitment.post-job') }}" target="_blank" class="tf-nav-item">
+                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+                <span class="tf-nav-label">Post New Job (AI)</span>
+                <span class="tf-tooltip">Post New Job (AI)</span>
+            </a>
+            <a href="http://localhost:8003" target="_blank" class="tf-nav-item">
+                <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 00 3 8v8a2 2 0 00 1 1.73l7 4a2 2 0 00 2 0l7-4A2 2 0 00 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                <span class="tf-nav-label">Recruitment Portal</span>
+                <span class="tf-tooltip">Recruitment Portal</span>
+            </a>
             
         </nav>
 

@@ -39,6 +39,7 @@ class EmployeeManager extends Component
     public string $activeTab = 'personal';
 
     // ══ PERSONAL INFORMATION ════════════════════════════════
+    public string $employeeNumber = '';
     public string $code         = '';
     public string $firstName    = '';
     public string $middleName   = '';
@@ -264,6 +265,7 @@ class EmployeeManager extends Component
         Log::info('fillForm - Gender type: ' . gettype($emp->gender ?? 'null'));
         Log::info('fillForm - Gender length: ' . strlen($emp->gender ?? ''));
         
+        $this->employeeNumber = $emp->employee_number ?? '';
         $this->code           = $emp->code ?? '';
         $this->firstName      = $emp->first_name ?? '';
         $this->middleName     = $emp->middle_name ?? '';
@@ -447,6 +449,7 @@ class EmployeeManager extends Component
                 'rssb_rate'              => $this->rssbRate ?: 5,
                 'pension_rate'           => $this->pensionRate ?: 3,
                 'subject_to_paye'        => $this->subjectToPaye,
+                'employee_number'        => $this->employeeNumber ?: null,
                 'approval_status'        => ApprovalStatus::Approved,
             ];
 
@@ -485,6 +488,7 @@ class EmployeeManager extends Component
     private function resetForm(): void
     {
         $this->editingId          = null;
+        $this->employeeNumber     = '';
         $this->code               = '';
         $this->firstName          = '';
         $this->middleName         = '';

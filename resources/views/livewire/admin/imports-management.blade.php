@@ -1,296 +1,79 @@
-<div>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+<div class="ac-root">
+    <x-admin-content-styles />
 
-.imports-root {
-    --glass-bg:       rgba(255,255,255,0.50);
-    --glass-border:   rgba(255,255,255,0.72);
-    --glass-shadow:   0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
-    --blur:           blur(22px) saturate(1.7);
-    --radius:         20px;
-    --radius-sm:      13px;
-    --text-primary:   rgba(15,15,25,0.96);
-    --text-secondary: rgba(15,15,25,0.68);
-    --text-tertiary:  rgba(15,15,25,0.44);
-    font-family: 'DM Sans', -apple-system, sans-serif;
-    padding: 32px 36px 110px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    height: 100vh;
-    overflow-y: auto;
-    background: transparent;
-}
+    @if(session()->has('success'))<div class="ac-flash ac-flash-ok"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{{ session('success') }}</div>@endif
 
-@keyframes fadeSlideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-.anim-1 { animation: fadeSlideUp 0.35s ease both; }
-.anim-2 { animation: fadeSlideUp 0.35s 0.07s ease both; }
+    {{-- ── HERO ── --}}
+    <div class="ac-hero">
+        <div>
+            <div class="ac-hero-ttl">Imports & Data Bridge</div>
+            <div class="ac-hero-sub">Mass record updates and external data synchronization</div>
+        </div>
+        <button class="ac-btn ac-btn-primary" style="background:rgba(255,255,255,0.2); box-shadow:none; border:1px solid rgba(255,255,255,0.3);">
+            <svg viewBox="0 0 24 24" style="stroke:#fff;"><polyline points="21 15 16 10 11 15"/><line x1="16" y1="10" x2="16" y2="22"/><path d="M18 13V9a6 6 0 0 0-12 0v4a5 5 0 0 0 1 10h4"/></svg>
+            Export All Data
+        </button>
+    </div>
 
-.g-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    box-shadow: var(--glass-shadow);
-    position: relative;
-}
-
-.g-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
-    pointer-events: none;
-    border-radius: var(--radius) var(--radius) 0 0;
-}
-
-.page-header {
-    padding: 24px 30px;
-    text-align: center;
-}
-
-.page-header h1 {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: -0.4px;
-    margin: 0 0 6px;
-}
-
-.page-header p {
-    font-size: 13.5px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.upload-area {
-    border: 2px dashed var(--glass-border);
-    border-radius: var(--radius);
-    padding: 40px;
-    text-align: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.upload-area:hover {
-    border-color: #2563eb;
-    background: rgba(37,99,235,0.05);
-}
-
-.upload-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    color: var(--text-secondary);
-}
-
-.upload-text {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 8px;
-}
-
-.upload-subtext {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 20px;
-}
-
-.btn {
-    padding: 10px 20px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #2563eb, #6366f1);
-    color: white;
-    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37,99,235,0.4);
-}
-
-.btn-secondary {
-    background: rgba(255,255,255,0.2);
-    color: var(--text-primary);
-    border: 1px solid var(--glass-border);
-}
-
-.btn-secondary:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-.import-item {
-    padding: 16px;
-    border-bottom: 1px solid var(--glass-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.import-item:last-child {
-    border-bottom: none;
-}
-
-.import-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.import-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-
-.import-details h4 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 4px 0;
-}
-
-.import-details p {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.import-status {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-}
-
-.status-success {
-    background: rgba(16,185,129,0.1);
-    color: #10b981;
-}
-
-.status-processing {
-    background: rgba(245,158,11,0.1);
-    color: #f59e0b;
-}
-
-.status-failed {
-    background: rgba(239,68,68,0.1);
-    color: #ef4444;
-}
-
-@media (max-width: 768px) {
-    .imports-root { padding: 18px 14px 100px; }
-    .upload-area { padding: 24px; }
-}
-</style>
-
-<div class="imports-root">
-
-    {{-- Header --}}
-    <div class="g-card anim-1">
-        <div class="page-header">
-            <h1>Imports/Exports Management</h1>
-            <p>Import data from files and export system data</p>
+    {{-- ── UPLOAD ZONE ── --}}
+    <div class="ac-card" style="padding:40px; text-align:center; border:2px dashed var(--border); background:var(--bg);">
+        <div style="width:80px; height:80px; border-radius:100px; background:var(--blue-lt); display:flex; align-items:center; justify-content:center; margin:0 auto 24px;">
+            <svg viewBox="0 0 24 24" style="width:40px; height:40px; stroke:var(--blue); fill:none; stroke-width:2;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="ac-card-title" style="font-size:20px; margin-bottom:8px;">Ready to Import?</div>
+        <p style="color:var(--ink3); max-width:400px; margin:0 auto 24px; font-size:14px;">Drop your CSV, Excel or JSON files here to start the ingestion process. System will auto-map known headers.</p>
+        <div style="display:flex; justify-content:center; gap:12px;">
+            <button class="ac-btn ac-btn-primary">Browse Files</button>
+            <button class="ac-btn ac-btn-ghost">Download Template</button>
         </div>
     </div>
 
-    <!-- Upload Area -->
-    <div class="g-card anim-2">
-        <div style="padding: 20px 24px; border-bottom: 1px solid var(--glass-border);">
-            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">Import Data</h3>
+    {{-- ── RECENT IMPORTS ── --}}
+    <div class="ac-card">
+        <div class="ac-card-hd">
+            <div><div class="ac-card-title">Recent Ingestion Jobs</div><div class="ac-card-sub">History of data updates and syncs</div></div>
+            <button class="ac-btn ac-btn-ghost ac-btn-sm">Clear History</button>
         </div>
-        
-        <div class="upload-area">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">Drop files here or click to upload</div>
-            <div class="upload-subtext">Support for CSV, Excel, and JSON files</div>
-            <button class="btn btn-primary">Choose Files</button>
-        </div>
-        
-        <div style="padding: 20px 24px; border-top: 1px solid var(--glass-border); display: flex; gap: 12px;">
-            <button class="btn btn-secondary">Download Template</button>
-            <button class="btn btn-primary">View Import History</button>
-        </div>
-    </div>
-
-    <!-- Recent Imports -->
-    <div class="g-card anim-2">
-        <div style="padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">Recent Imports</h3>
-            <button class="btn btn-primary">Export Data</button>
-        </div>
-        
-        <div style="max-height: 400px; overflow-y: auto;">
-            <div class="import-item">
-                <div class="import-info">
-                    <div class="import-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
-                        📊
-                    </div>
-                    <div class="import-details">
-                        <h4>employees_data.csv</h4>
-                        <p>156 employee records imported</p>
-                    </div>
-                </div>
-                <div class="import-status status-success">Completed</div>
-            </div>
-            
-            <div class="import-item">
-                <div class="import-info">
-                    <div class="import-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
-                        📈
-                    </div>
-                    <div class="import-details">
-                        <h4>payroll_data.xlsx</h4>
-                        <p>Processing 89 payroll records</p>
-                    </div>
-                </div>
-                <div class="import-status status-processing">Processing</div>
-            </div>
-            
-            <div class="import-item">
-                <div class="import-info">
-                    <div class="import-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
-                        🏦
-                    </div>
-                    <div class="import-details">
-                        <h4>bank_accounts.json</h4>
-                        <p>45 bank account records imported</p>
-                    </div>
-                </div>
-                <div class="import-status status-success">Completed</div>
-            </div>
-            
-            <div class="import-item">
-                <div class="import-info">
-                    <div class="import-icon" style="background: rgba(239,68,68,0.1); color: #ef4444;">
-                        ❌
-                    </div>
-                    <div class="import-details">
-                        <h4>departments.csv</h4>
-                        <p>Import failed - invalid format</p>
-                    </div>
-                </div>
-                <div class="import-status status-failed">Failed</div>
-            </div>
+        <div class="ac-table-wrap">
+            <table class="ac-table">
+                <thead>
+                    <tr>
+                        <th style="padding-left:24px;">File Identity</th>
+                        <th>Type</th>
+                        <th>Volume</th>
+                        <th>Outcome</th>
+                        <th style="text-align:right; padding-right:24px;">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $jobs = [
+                            ['file'=>'employees_data.csv','type'=>'CSV','records'=>156,'status'=>'Success','time'=>'2 hours ago'],
+                            ['file'=>'payroll_data.xlsx','type'=>'Excel','records'=>89,'status'=>'Processing','time'=>'Just now'],
+                            ['file'=>'bank_accounts.json','type'=>'JSON','records'=>45,'status'=>'Success','time'=>'Yesterday'],
+                            ['file'=>'departments.csv','type'=>'CSV','records'=>0,'status'=>'Failed','time'=>'3 days ago'],
+                        ];
+                    @endphp
+                    @foreach($jobs as $j)
+                        <tr>
+                            <td style="padding-left:24px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="padding:8px; border-radius:8px; background:var(--bg2); color:var(--ink3);"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                                    <div style="font-weight:800; color:var(--ink);">{{ $j['file'] }}</div>
+                                </div>
+                            </td>
+                            <td><span style="font-family:'Sora',sans-serif; font-size:11px; font-weight:800; color:var(--blue);">{{ $j['type'] }}</span></td>
+                            <td style="font-weight:700;">{{ $j['records'] }} <span style="font-size:11px; color:var(--ink4); font-weight:500;">Rows</span></td>
+                            <td>
+                                @php $cls = match($j['status']){'Success'=>'ab-green','Processing'=>'ab-teal',default=>'ab-red'}; @endphp
+                                <span class="ac-badge {{ $cls }}">{{ strtoupper($j['status']) }}</span>
+                            </td>
+                            <td style="text-align:right; padding-right:24px; font-size:12px; color:var(--ink4);">{{ $j['time'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
-
 </div>
-</div>
+

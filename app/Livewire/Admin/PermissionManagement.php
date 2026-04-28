@@ -12,29 +12,84 @@ class PermissionManagement extends Component
     public array $permissions = [];
  
     const ALL_PERMISSIONS = [
-        'payroll'   => ['payroll.view'=>'View Payroll','payroll.create'=>'Create Payroll','payroll.edit'=>'Edit Payroll','payroll.delete'=>'Delete Payroll','payroll.approve'=>'Approve Payroll'],
-        'employees' => ['employees.view'=>'View Employees','employees.create'=>'Create Employees','employees.edit'=>'Edit Employees','employees.delete'=>'Delete Employees'],
-        'reports'   => ['reports.view'=>'View Reports','reports.export'=>'Export Reports'],
-        'admin'     => ['admin.users'=>'Manage Users','admin.roles'=>'Manage Roles','admin.settings'=>'System Settings','admin.audit'=>'View Audit Log'],
+        'payroll'     => [
+            'payroll.view' => 'View Payroll',
+            'payroll.create' => 'Create Entry',
+            'payroll.edit' => 'Edit Entry',
+            'payroll.delete' => 'Delete Entry',
+            'payroll.approve' => 'Approve Payroll',
+            'payroll.payslips' => 'Generate Payslips'
+        ],
+        'employees'   => [
+            'employees.view' => 'View Employees',
+            'employees.create' => 'Create Employee',
+            'employees.edit' => 'Edit Employee',
+            'employees.delete' => 'Delete Employee',
+            'employees.contracts' => 'Manage Contracts'
+        ],
+        'attendance'  => [
+            'attendance.view' => 'View Attendance',
+            'attendance.edit' => 'Edit Clock-ins',
+            'attendance.reports' => 'Attendance Reports',
+            'attendance.devices' => 'Manage Devices'
+        ],
+        'leaves'      => [
+            'leaves.view' => 'View Leave Requests',
+            'leaves.approve' => 'Approve/Reject Leaves',
+            'leaves.settings' => 'Manage Leave Types',
+            'leaves.calendar' => 'View Leave Calendar'
+        ],
+        'performance' => [
+            'performance.view' => 'View KPIs',
+            'performance.edit' => 'Manage Targets',
+            'performance.review' => 'Conduct Reviews'
+        ],
+        'finance'     => [
+            'banks.manage' => 'Manage Banks',
+            'currency.edit' => 'Currency Settings',
+            'tax.config' => 'Tax Brackets'
+        ],
+        'system'      => [
+            'admin.users' => 'User Management',
+            'admin.settings' => 'System Settings',
+            'admin.audit' => 'Audit Logs',
+            'admin.oversight' => 'Data Oversight'
+        ],
     ];
  
+    // DEFAULT_PERMISSIONS now acts as a template. Admin always has true for everything.
     const DEFAULT_PERMISSIONS = [
         'admin'      => ['payroll.view'=>true,'payroll.create'=>true,'payroll.edit'=>true,'payroll.delete'=>true,'payroll.approve'=>true,'employees.view'=>true,'employees.create'=>true,'employees.edit'=>true,'employees.delete'=>true,'reports.view'=>true,'reports.export'=>true,'admin.users'=>true,'admin.roles'=>true,'admin.settings'=>true,'admin.audit'=>true],
-        'hr_manager' => ['payroll.view'=>true,'payroll.create'=>true,'payroll.edit'=>true,'payroll.delete'=>false,'payroll.approve'=>true,'employees.view'=>true,'employees.create'=>true,'employees.edit'=>true,'employees.delete'=>false,'reports.view'=>true,'reports.export'=>true,'admin.users'=>false,'admin.roles'=>false,'admin.settings'=>false,'admin.audit'=>false],
-        'employee'   => ['payroll.view'=>true,'payroll.create'=>false,'payroll.edit'=>false,'payroll.delete'=>false,'payroll.approve'=>false,'employees.view'=>false,'employees.create'=>false,'employees.edit'=>false,'employees.delete'=>false,'reports.view'=>false,'reports.export'=>false,'admin.users'=>false,'admin.roles'=>false,'admin.settings'=>false,'admin.audit'=>false],
+        'super_admin'=> ['payroll.view'=>true,'payroll.create'=>true,'payroll.edit'=>true,'payroll.delete'=>true,'payroll.approve'=>true,'employees.view'=>true,'employees.create'=>true,'employees.edit'=>true,'employees.delete'=>true,'reports.view'=>true,'reports.export'=>true,'admin.users'=>true,'admin.roles'=>true,'admin.settings'=>true,'admin.audit'=>true],
     ];
  
-    const ROLES = ['admin'=>'Admin','hr_manager'=>'HR Manager','employee'=>'Employee'];
+    // ROLES are now centralized in User model
  
     public function mount(): void
     {
-        $this->permissions = self::DEFAULT_PERMISSIONS;
+        $targetRoles = ['admin', 'hr_manager', 'employee'];
+
+        // Initialize permissions for selected roles
+        foreach ($targetRoles as $role) {
+            $this->permissions[$role] = self::DEFAULT_PERMISSIONS[$role] ?? [];
+            // Fill missing permissions with false as default
+            foreach (self::ALL_PERMISSIONS as $group => $perms) {
+                foreach ($perms as $key => $label) {
+                    if (!isset($this->permissions[$role][$key])) {
+                        $this->permissions[$role][$key] = false;
+                    }
+                }
+            }
+        }
+
         try {
             $rows = DB::table('role_permissions')->get();
             foreach ($rows as $row) {
-                $this->permissions[$row->role][$row->permission] = (bool) $row->allowed;
+                if (isset($this->permissions[$row->role])) {
+                    $this->permissions[$row->role][$row->permission] = (bool) $row->allowed;
+                }
             }
-        } catch (\Exception) {}
+        } catch (\Exception $e) {}
     }
  
     public function togglePermission(string $role, string $perm): void
@@ -50,20 +105,17 @@ class PermissionManagement extends Component
  
     public function savePermissions(): void
     {
-        DB::beginTransaction();
         try {
             foreach ($this->permissions as $role => $perms) {
                 foreach ($perms as $permKey => $allowed) {
-                    DB::table('role_permissions')->upsert(
-                        ['role'=>$role,'permission'=>$permKey,'allowed'=>(bool)$allowed,'updated_at'=>now(),'created_at'=>now()],
-                        ['role','permission'], ['allowed','updated_at']
+                    DB::table('role_permissions')->updateOrInsert(
+                        ['role' => $role, 'permission' => $permKey],
+                        ['allowed' => (bool)$allowed, 'updated_at' => now()]
                     );
                 }
             }
-            DB::commit();
             session()->flash('success', 'Permissions saved successfully.');
         } catch (\Exception $e) {
-            DB::rollBack();
             session()->flash('error', 'Failed to save permissions: '.$e->getMessage());
         }
     }
@@ -72,7 +124,7 @@ class PermissionManagement extends Component
     {
         return view('livewire.admin.permission-management', [
             'allPermissions' => self::ALL_PERMISSIONS,
-            'roles'          => self::ROLES,
+            'roles'          => \App\Models\User::ROLES,
         ])->layout('components.layouts.admin');
     }
 }

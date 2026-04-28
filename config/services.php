@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | TalentFlow Recruitment SSO
+    |--------------------------------------------------------------------------
+    | Used for single-click navigation from HRMS to the recruitment portal.
+    */
+    'talentflow_recruitment' => [
+        'url' => env('TALENTFLOW_RECRUITMENT_URL', 'http://localhost:8003'),
+        'sso_token' => env('TALENTFLOW_HR_SSO_TOKEN'),
+    ],
+
 ];

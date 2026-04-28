@@ -196,7 +196,7 @@
             <div class="role-icon" style="background: rgba(37,99,235,0.1); color: #2563eb;">
                 👥
             </div>
-            <div class="stat-number">4</div>
+            <div class="stat-number">{{ $stats['total_roles'] }}</div>
             <div class="stat-label">User Roles</div>
         </div>
         
@@ -204,7 +204,7 @@
             <div class="role-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
                 🔐
             </div>
-            <div class="stat-number">28</div>
+            <div class="stat-number">{{ $stats['total_permissions'] }}</div>
             <div class="stat-label">Permissions</div>
         </div>
         
@@ -212,7 +212,7 @@
             <div class="role-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
                 🌐
             </div>
-            <div class="stat-number">156</div>
+            <div class="stat-number">{{ $stats['active_users'] }}</div>
             <div class="stat-label">Active Users</div>
         </div>
     </div>
@@ -221,7 +221,7 @@
     <div class="g-card anim-2">
         <div style="padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
             <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">User Roles</h3>
-            <button class="btn btn-primary">Add Role</button>
+            <a href="{{ route('admin.users') }}" wire:navigate class="btn btn-primary">Manage User Roles</a>
         </div>
         
         <div style="max-height: 400px; overflow-y: auto;">
@@ -235,7 +235,7 @@
                         <p>Full system access and control</p>
                     </div>
                 </div>
-                <div class="role-count">2 users</div>
+                <div class="role-count">{{ $roleCounts['super_admin'] }} users</div>
             </div>
             
             <div class="role-item">
@@ -248,7 +248,7 @@
                         <p>Administrative access to most features</p>
                     </div>
                 </div>
-                <div class="role-count">8 users</div>
+                <div class="role-count">{{ $roleCounts['admin'] }} users</div>
             </div>
             
             <div class="role-item">
@@ -261,7 +261,7 @@
                         <p>HR and employee management access</p>
                     </div>
                 </div>
-                <div class="role-count">12 users</div>
+                <div class="role-count">{{ $roleCounts['hr_manager'] }} users</div>
             </div>
             
             <div class="role-item">
@@ -274,13 +274,13 @@
                         <p>Basic employee access and self-service</p>
                     </div>
                 </div>
-                <div class="role-count">134 users</div>
+                <div class="role-count">{{ $roleCounts['employee'] }} users</div>
             </div>
         </div>
         
         <div style="padding: 20px 24px; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; gap: 12px;">
             <button class="btn btn-secondary">Export Roles</button>
-            <button class="btn btn-primary">Manage Permissions</button>
+            <a href="{{ route('admin.permissions') }}" wire:navigate class="btn btn-primary">Manage Permissions</a>
         </div>
     </div>
 

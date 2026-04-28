@@ -21,6 +21,7 @@ class User extends Authenticatable
         'phone_number',
         'password',
         'role',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -33,13 +34,43 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'is_active'         => 'boolean',
         ];
     }
 
+    // ── Role constants ───────────────────────────────────────
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_HR_MANAGER = 'hr_manager';
+    public const ROLE_HR_ADMIN = 'hr_admin';
+    public const ROLE_HR_OFFICER = 'hr_officer';
+    public const ROLE_HR_CLARK = 'hr_clark';
+    public const ROLE_PAYROLL_OFFICER = 'payroll_officer';
+    public const ROLE_COMPANY_ADMIN = 'company_admin';
+    public const ROLE_DATA_MASTER = 'data_master';
+    public const ROLE_COMPANY_DATA_MASTER = 'company_data_master';
+    public const ROLE_OPERATIONS_MANAGER = 'operations_manager';
+    public const ROLE_FINANCE_ADMIN = 'finance_admin';
+    public const ROLE_FINANCE_MANAGER = 'finance_manager';
+    public const ROLE_FINANCE_OFFICER = 'finance_officer';
+    public const ROLE_SITE_SUPERVISOR = 'site_supervisor';
+    public const ROLE_SITE_ADMIN = 'site_admin';
+    public const ROLE_SITE_MANAGER = 'site_manager';
+    public const ROLE_PROJECT_MANAGER = 'project_manager';
+    public const ROLE_LEADERSHIP_TEAM_MEMBER = 'leadership_team_member';
+    public const ROLE_EMPLOYEE = 'employee';
+    public const ROLE_SITE_EMPLOYEE = 'site_employee';
+
+    public const ROLES = [
+        self::ROLE_ADMIN                  => 'System Admin',
+        self::ROLE_HR_MANAGER             => 'HR Manager',
+        self::ROLE_EMPLOYEE               => 'Standard Employee',
+    ];
+
     // ── Role helpers ─────────────────────────────────────────
-    public function isAdmin(): bool     { return $this->role === 'admin'; }
-    public function isHrManager(): bool { return $this->role === 'hr_manager'; }
-    public function isEmployee(): bool  { return $this->role === 'employee'; }
+    public function isAdmin(): bool     { return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN]); }
+    public function isHrManager(): bool { return $this->role === self::ROLE_HR_MANAGER; }
+    public function isEmployee(): bool  { return in_array($this->role, [self::ROLE_EMPLOYEE, self::ROLE_SITE_EMPLOYEE]); }
 
     public function hasPermission(string $permission): bool
     {
@@ -72,12 +103,7 @@ class User extends Authenticatable
 
     public function getRoleLabelAttribute(): string
     {
-        return match($this->role) {
-            'admin'      => 'Administrator',
-            'hr_manager' => 'HR Manager',
-            'employee'   => 'Employee',
-            default      => ucfirst($this->role ?? ''),
-        };
+        return self::ROLES[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role ?? ''));
     }
 
     // ── Relationships ─────────────────────────────────────────

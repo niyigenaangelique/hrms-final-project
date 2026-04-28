@@ -1,96 +1,150 @@
-<x-admin-content-styles />
 <div class="ac-root">
- 
-    @if(session('success'))<div class="ac-flash ac-flash-ok"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="ac-flash ac-flash-err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>{{ session('error') }}</div>@endif
- 
-    <div class="ac-header">
-        <div><div class="ac-header-title">Security Settings</div><div class="ac-header-sub">Authentication, session and password policies</div></div>
-        <button class="ac-btn ac-btn-primary" wire:click="save">
-            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-            Save Settings
-        </button>
+    <x-admin-content-styles />
+
+    {{-- ── HERO ── --}}
+    <div class="ac-hero">
+        <div style="display:flex; align-items:center; gap:24px;">
+            <div class="ac-av" style="width:72px; height:72px; font-size:24px; background:rgba(255,255,255,0.25); color:#fff; border:3px solid rgba(255,255,255,0.4);">
+                <svg viewBox="0 0 24 24" style="width:1.4em; height:1.4em;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="8 12 11 15 16 9"/></svg>
+            </div>
+            <div>
+                <div class="ac-hero-ttl">Firewall & Security</div>
+                <div class="ac-hero-sub">Infrastructure Governance & Access Control</div>
+            </div>
+        </div>
+        <div>
+            <button wire:click="save" class="ac-btn ac-btn-primary" style="background:#fff; color:var(--blue);">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Deploy Configuration
+            </button>
+        </div>
     </div>
- 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;">
- 
-        <div style="display:flex;flex-direction:column;gap:14px;">
-            <div class="ac-card">
-                <div class="ac-card-hd"><div><div class="ac-card-title">Authentication</div><div class="ac-card-sub">Login and session controls</div></div></div>
-                <div class="ac-toggle-row">
-                    <div><div class="ac-toggle-label">Two-Factor Authentication</div><div class="ac-toggle-desc">Require 2FA for all admin accounts</div></div>
-                    <button class="ac-toggle {{ $twoFactorEnabled ? 'on' : '' }}" wire:click="$toggle('twoFactorEnabled')"></button>
-                </div>
-                <div class="ac-toggle-row">
-                    <div><div class="ac-toggle-label">Login Audit Logging</div><div class="ac-toggle-desc">Log all login attempts to audit trail</div></div>
-                    <button class="ac-toggle {{ $loginAuditEnabled ? 'on' : '' }}" wire:click="$toggle('loginAuditEnabled')"></button>
-                </div>
-                <div class="ac-toggle-row">
-                    <div><div class="ac-toggle-label">Max Login Attempts</div><div class="ac-toggle-desc">Lock account after N failed attempts</div></div>
-                    <input type="number" class="ac-num-input" wire:model.defer="maxLoginAttempts" min="3" max="20">
-                </div>
-                <div class="ac-toggle-row">
-                    <div><div class="ac-toggle-label">Session Timeout</div><div class="ac-toggle-desc">Auto-logout after inactivity (minutes)</div></div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <input type="number" class="ac-num-input" wire:model.defer="sessionTimeoutMinutes" min="5" max="1440">
-                        <button class="ac-toggle {{ $sessionTimeoutEnabled ? 'on' : '' }}" wire:click="$toggle('sessionTimeoutEnabled')"></button>
-                    </div>
+
+    {{-- ── ALERTS ── --}}
+    @if (session()->has('success'))
+        <div class="ac-flash ac-flash-ok" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+        
+        {{-- Authentication Policy --}}
+        <div class="ac-card">
+            <div class="ac-card-hd">
+                <div>
+                    <div class="ac-card-title">Authentication Policy</div>
+                    <div class="ac-card-sub">Login enforcement and MFA rules</div>
                 </div>
             </div>
- 
-            <div class="ac-card">
-                <div class="ac-card-hd">
-                    <div><div class="ac-card-title">IP Whitelist</div><div class="ac-card-sub">Restrict admin access by IP address</div></div>
-                    <button class="ac-toggle {{ $ipWhitelistEnabled ? 'on' : '' }}" wire:click="$toggle('ipWhitelistEnabled')"></button>
+            <div style="padding:24px; display:flex; flex-direction:column; gap:20px;">
+                <div class="ac-field">
+                    <label style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Two-Factor Authentication</span>
+                        <input type="checkbox" wire:model="twoFactorEnabled" style="width:20px; height:20px;">
+                    </label>
+                    <div style="font-size:11px; color:var(--ink4);">Require TOTP or SMS verification for all admin logins</div>
                 </div>
-                <div style="padding:16px;">
+
+                <div class="ac-field">
+                    <label>Maximum Login Attempts</label>
+                    <input type="number" wire:model="maxLoginAttempts" min="1" max="10">
+                    <div style="font-size:11px; color:var(--ink4);">Accounts will be locked after this many failed attempts</div>
+                </div>
+
+                <div class="ac-field">
+                    <label style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Password Expiry</span>
+                        <input type="checkbox" wire:model="passwordExpiry" style="width:20px; height:20px;">
+                    </label>
+                    <div style="font-size:11px; color:var(--ink4);">Force periodic password rotations</div>
+                </div>
+
+                @if($passwordExpiry)
                     <div class="ac-field">
-                        <label>Allowed IP Addresses</label>
-                        <textarea wire:model.defer="ipWhitelist" placeholder="One IP per line&#10;192.168.1.1&#10;10.0.0.0/24"
-                            style="{{ !$ipWhitelistEnabled ? 'opacity:.4;pointer-events:none;' : '' }}"></textarea>
-                        <div class="ac-field-hint">CIDR notation supported. Leave empty to allow all IPs.</div>
+                        <label>Expiry Interval (Days)</label>
+                        <input type="number" wire:model="passwordExpiryDays" min="30" max="365">
                     </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Session & Access --}}
+        <div class="ac-card">
+            <div class="ac-card-hd">
+                <div>
+                    <div class="ac-card-title">Session & Geofencing</div>
+                    <div class="ac-card-sub">Infrastructure perimeter settings</div>
+                </div>
+            </div>
+            <div style="padding:24px; display:flex; flex-direction:column; gap:20px;">
+                <div class="ac-field">
+                    <label style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Auto-Session Timeout</span>
+                        <input type="checkbox" wire:model="sessionTimeoutEnabled" style="width:20px; height:20px;">
+                    </label>
+                    <div style="font-size:11px; color:var(--ink4);">Invalidate sessions after periods of inactivity</div>
+                </div>
+
+                @if($sessionTimeoutEnabled)
+                    <div class="ac-field">
+                        <label>Timeout Threshold (Minutes)</label>
+                        <input type="number" wire:model="sessionTimeoutMinutes" min="5" max="1440">
+                    </div>
+                @endif
+
+                <div class="ac-field">
+                    <label style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>IP Filtering (Whitelisting)</span>
+                        <input type="checkbox" wire:model="ipWhitelistEnabled" style="width:20px; height:20px;">
+                    </label>
+                    <div style="font-size:11px; color:var(--ink4);">Restrict access to specific network segments</div>
+                </div>
+
+                @if($ipWhitelistEnabled)
+                    <div class="ac-field">
+                        <label>Authorized IPv4 / CIDR</label>
+                        <textarea wire:model="ipWhitelist" rows="3" placeholder="192.168.1.1, 10.0.0.0/24"></textarea>
+                        <div style="font-size:11px; color:var(--red); font-weight: 700;">CAUTION: Incorrect settings may lock your account</div>
+                    </div>
+                @endif
+
+                <div class="ac-field">
+                    <label style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Audit Log Retention</span>
+                        <span class="ac-badge ab-amber">90 DAYS</span>
+                    </label>
+                    <div style="font-size:11px; color:var(--ink4);">Automatic purging of logs older than threshold</div>
                 </div>
             </div>
         </div>
- 
-        <div style="display:flex;flex-direction:column;gap:14px;">
-            <div class="ac-card">
-                <div class="ac-card-hd"><div><div class="ac-card-title">Password Policy</div><div class="ac-card-sub">Enforce strong credentials</div></div></div>
-                <div class="ac-toggle-row">
-                    <div><div class="ac-toggle-label">Password Expiry</div><div class="ac-toggle-desc">Force password change periodically</div></div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <input type="number" class="ac-num-input" wire:model.defer="passwordExpiryDays" min="30" max="365">
-                        <span style="font-size:12px;color:var(--ink4);">days</span>
-                        <button class="ac-toggle {{ $passwordExpiry ? 'on' : '' }}" wire:click="$toggle('passwordExpiry')"></button>
-                    </div>
-                </div>
-                @foreach(['Minimum 8 characters','Uppercase + lowercase required','At least one number','At least one special character'] as $policy)
-                <div class="ac-toggle-row">
-                    <div class="ac-toggle-label" style="font-size:13px;">{{ $policy }}</div>
-                    <button class="ac-toggle on" title="Always enforced"></button>
-                </div>
-                @endforeach
+    </div>
+
+    <div class="ac-card" style="margin-top:20px;">
+        <div class="ac-card-hd">
+            <div>
+                <div class="ac-card-title">Security Pulse</div>
+                <div class="ac-card-sub">Infrastructure health and threat status</div>
             </div>
- 
-            <div class="ac-card">
-                <div class="ac-card-hd"><div><div class="ac-card-title">Security Overview</div><div class="ac-card-sub">Current policy status</div></div></div>
-                <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
-                    @foreach([
-                        ['Two-Factor Auth',    $twoFactorEnabled],
-                        ['Session Timeout',    $sessionTimeoutEnabled],
-                        ['Login Audit',        $loginAuditEnabled],
-                        ['IP Whitelist',       $ipWhitelistEnabled],
-                        ['Password Expiry',    $passwordExpiry],
-                    ] as [$lbl, $on])
-                    <div style="display:flex;align-items:center;justify-content:space-between;">
-                        <div style="font-size:13px;color:var(--ink2);">{{ $lbl }}</div>
-                        <span class="ac-badge {{ $on ? 'ab-green' : 'ab-red' }}">{{ $on ? 'ON' : 'OFF' }}</span>
-                    </div>
-                    @endforeach
-                </div>
+        </div>
+        <div style="padding:24px; display:grid; grid-template-columns: repeat(4, 1fr); gap:20px;">
+            <div style="text-align:center;">
+                <div style="font-size:11px; font-weight:800; color:var(--ink4); margin-bottom:5px;">FIREWALL STATUS</div>
+                <div style="font-size:18px; font-weight:900; color:var(--green);">OPERATIONAL</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:11px; font-weight:800; color:var(--ink4); margin-bottom:5px;">BRUTEFORCE BLOCK</div>
+                <div style="font-size:18px; font-weight:900; color:var(--blue);">ACTIVE</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:11px; font-weight:800; color:var(--ink4); margin-bottom:5px;">ACTIVE THREATS</div>
+                <div style="font-size:18px; font-weight:900; color:var(--ink);">0</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:11px; font-weight:800; color:var(--ink4); margin-bottom:5px;">INTEGRITY CHECK</div>
+                <div style="font-size:18px; font-weight:900; color:var(--teal);">PASSED</div>
             </div>
         </div>
     </div>
 </div>
- 

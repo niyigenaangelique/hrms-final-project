@@ -87,6 +87,7 @@ class LoginForm extends Form
         $credentials = [
             $this->determineLoginField() => $this->normalizeCredential($this->username),
             'password' => $this->password,
+            'is_active' => true,
         ];
 
         RateLimiter::hit($rateLimitKey, self::RATE_LIMIT_SECONDS);
@@ -97,6 +98,10 @@ class LoginForm extends Form
 
             // Redirect based on user role
             $user = Auth::user();
+            
+            // Log successful login
+            \App\Models\ActivityLog::logLogin($user->id, "User logged in via standard login form");
+
             return match($user->role) {
                 'employee', 'site_employee' => redirect()->route('employee.dashboard'),
                 'hr_manager', 'hr_admin', 'hr_officer', 'payroll_officer', 'hr_clark', 
@@ -106,10 +111,13 @@ class LoginForm extends Form
                 'super_admin', 'admin' => redirect()->route('admin.dashboard'),
                 default => redirect()->route('home'),
             };
-        }else{
-            session()->flash('error', 'Invalid credentials. Please check your username and password.');
         }
 
+        // Handle failed login
+        $user = \App\Models\User::where($this->determineLoginField(), $this->normalizeCredential($this->username))->first();
+        \App\Models\ActivityLog::logFailedLogin($user?->id, "Failed login attempt for: " . $this->username);
+        
+        session()->flash('error', 'Invalid credentials. Please check your username and password.');
         $this->handleFailedAttempt($rateLimitKey);
     }
     private function normalizeCredential(string $value): string

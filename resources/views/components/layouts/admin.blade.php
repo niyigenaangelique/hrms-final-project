@@ -495,7 +495,15 @@
             margin-left: calc(var(--sb-collapsed) + var(--sb-left) + 14px);
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
             transition: margin-left var(--sb-transition);
+        }
+
+        .tf-main-wrapper main {
+            flex: 1;
+            width: 100%;
+            min-height: 100vh;
         }
 
         .tf-main-wrapper.tf-pinned {
@@ -544,85 +552,163 @@
 
             <nav class="tf-nav">
                 @auth
+                    {{-- General --}}
+                    <a href="{{ route('admin.dashboard') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                        <span class="tf-nav-label"> Dashboard</span>
+                        <span class="tf-tooltip"> Dashboard</span>
+                    </a>
 
-                <a href="{{ route('admin.dashboard') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                    <span class="tf-nav-label">Dashboard</span>
-                    <span class="tf-tooltip">Dashboard</span>
-                </a>
+                    {{-- Governance & Access --}}
 
-                <div class="tf-nav-section">System Access</div>
+                    <a href="{{ route('admin.users') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <line x1="23" y1="11" x2="17" y2="11" />
+                            <line x1="20" y1="8" x2="20" y2="14" />
+                        </svg>
+                        <span class="tf-nav-label">User Management</span>
+                        <span class="tf-tooltip">User Management</span>
+                    </a>
 
-                <a href="{{ route('admin.users') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.users') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/></svg>
-                    <span class="tf-nav-label">User Accounts</span>
-                    <span class="tf-tooltip">User Accounts</span>
-                </a>
+                    <a href="{{ route('admin.permissions') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.permissions') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                        </svg>
+                        <span class="tf-nav-label">Permission matrix</span>
+                        <span class="tf-tooltip">Permission matrix</span>
+                    </a>
+                    <a href="{{ route('admin.password-reset') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.password-reset') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <span class="tf-nav-label">Security Resets</span>
+                        <span class="tf-tooltip">Security Resets</span>
+                    </a>
 
-                <a href="{{ route('admin.access-control') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.access-control') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span class="tf-nav-label">Role Management</span>
-                    <span class="tf-tooltip">Role Management</span>
-                </a>
+                    {{-- System Operations --}}
 
-                <a href="{{ route('admin.permissions') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.permissions') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                    <span class="tf-nav-label">Permissions Matrix</span>
-                    <span class="tf-tooltip">Permissions Matrix</span>
-                </a>
+                    <a href="{{ route('admin.system-config') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.system-config') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        <span class="tf-nav-label">System Config</span>
+                        <span class="tf-tooltip">System Config</span>
+                    </a>
+                    <a href="{{ route('admin.device-management') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.device-management') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                            <line x1="12" y1="18" x2="12.01" y2="18" />
+                        </svg>
+                        <span class="tf-nav-label">Device Fleet</span>
+                        <span class="tf-tooltip">Device Fleet</span>
+                    </a>
+                    <a href="{{ route('admin.company-policy') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.company-policy') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span class="tf-nav-label">Legal Policies</span>
+                        <span class="tf-tooltip">Legal Policies</span>
+                    </a>
+                    <a href="{{ route('admin.integration') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.integration') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="16 18 22 12 16 6" />
+                            <polyline points="8 6 2 12 8 18" />
+                        </svg>
+                        <span class="tf-nav-label">Integrations</span>
+                        <span class="tf-tooltip">Integrations</span>
+                    </a>
 
-                <div class="tf-nav-section">Security</div>
+                    {{-- Security Monitoring --}}
 
-                <a href="{{ route('admin.active-sessions') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.active-sessions') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    <span class="tf-nav-label">Session Management</span>
-                    <span class="tf-tooltip">Session Management</span>
-                </a>
+                    <a href="{{ route('admin.security-monitoring') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.security-monitoring') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            <polyline points="8 12 11 15 16 9" />
+                        </svg>
+                        <span class="tf-nav-label">Security Shield</span>
+                        <span class="tf-tooltip">Security Shield</span>
+                    </a>
+                    <a href="{{ route('admin.security-settings') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.security-settings') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <span class="tf-nav-label">Firewall Config</span>
+                        <span class="tf-tooltip">Firewall Config</span>
+                    </a>
+                    <a href="{{ route('admin.active-sessions') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.active-sessions') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        <span class="tf-nav-label">Active Sessions</span>
+                        <span class="tf-tooltip">Active Sessions</span>
+                    </a>
+                    <a href="{{ route('admin.activity-logs') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.activity-logs') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
+                        <span class="tf-nav-label">Audit Trails</span>
+                        <span class="tf-tooltip">Audit Trails</span>
+                    </a>
 
-                <a href="{{ route('admin.password-reset') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.password-reset') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <span class="tf-nav-label">Password Reset</span>
-                    <span class="tf-tooltip">Password Reset</span>
-                </a>
+                    {{-- Intelligence --}}
 
-                <a href="{{ route('admin.security-settings') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.security-settings') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="8 12 11 15 16 9"/></svg>
-                    <span class="tf-nav-label">Security Settings</span>
-                    <span class="tf-tooltip">Security Settings</span>
-                </a>
-                
-                <div class="tf-nav-section">System Logs</div>
-
-                <a href="{{ route('admin.activity-logs') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('admin.activity-logs') && !request()->query('type') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    <span class="tf-nav-label">Activity Log</span>
-                    <span class="tf-tooltip">Activity Log</span>
-                </a>
-
-                <a href="{{ route('admin.activity-logs', ['type' => 'audit']) }}" wire:navigate
-                   class="tf-nav-item {{ request()->query('type') === 'audit' ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span class="tf-nav-label">Audit Trail</span>
-                    <span class="tf-tooltip">Audit Trail</span>
-                </a>
-
-                <div class="tf-nav-section">Navigation</div>
-
-                <a href="{{ route('home') }}" wire:navigate
-                   class="tf-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
-                    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                    <span class="tf-nav-label">Back to App</span>
-                    <span class="tf-tooltip">Back to App</span>
-                </a>
-
+                    <a href="{{ route('admin.system-analytics') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.system-analytics') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                            <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                        </svg>
+                        <span class="tf-nav-label">System Insights</span>
+                        <span class="tf-tooltip">System Insights</span>
+                    </a>
+                    <a href="{{ route('admin.data-oversight') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.data-oversight') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <span class="tf-nav-label">Data Oversight</span>
+                        <span class="tf-tooltip">Data Oversight</span>
+                    </a>
+                    <a href="{{ route('admin.report-builder') }}" wire:navigate
+                        class="tf-nav-item {{ request()->routeIs('admin.report-builder') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="18" y1="20" x2="18" y2="10" />
+                            <line x1="12" y1="20" x2="12" y2="4" />
+                            <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        <span class="tf-nav-label">Audit Reports</span>
+                        <span class="tf-tooltip">Audit Reports</span>
+                    </a>
                 @endauth
             </nav>
 
@@ -676,11 +762,10 @@
 
         {{-- ══ MAIN CONTENT ══ --}}
         <div class="tf-main-wrapper" id="tfMainWrapper">
-            <flux:sidebar sticky stashable></flux:sidebar>
-            <flux:main class="!p-0 overflow-scroll">
+            <main style="padding:0; overflow-y:auto; height:100vh;">
                 {{ $slot }}
                 @yield('commands')
-            </flux:main>
+            </main>
         </div>
 
     </div>

@@ -47,11 +47,7 @@ class UserManager extends Component
     public string $plainPassword = '';
 
     // ── Constants ────────────────────────────────────────────
-    const ROLES = [
-        'admin'      => 'Admin',
-        'hr_manager' => 'HR Manager',
-        'employee'   => 'Employee',
-    ];
+    // ── Roles are now centralized in User model ─────────────────
 
     // ── Validation ───────────────────────────────────────────
     protected function rules(): array
@@ -64,7 +60,7 @@ class UserManager extends Component
             'username'    => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($this->editingId)],
             'email'       => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingId)],
             'phoneNumber' => ['nullable', 'string', 'max:255'],
-            'role'        => ['required', Rule::in(array_keys(self::ROLES))],
+            'role'        => ['required', Rule::in(array_keys(User::ROLES))],
         ];
 
         if (!$this->editingId) {
@@ -180,6 +176,37 @@ class UserManager extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'Delete failed: ' . $e->getMessage());
             $this->cancelDelete();
+        }
+    }
+
+    public function toggleStatus(string $id): void
+    {
+        try {
+            $user = User::findOrFail($id);
+            $user->is_active = !$user->is_active;
+            $user->save();
+            
+            $status = $user->is_active ? 'activated' : 'deactivated';
+            session()->flash('success', "User account {$status} successfully.");
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to change status: ' . $e->getMessage());
+        }
+    }
+
+    public function assignRole(string $id, string $newRole): void
+    {
+        try {
+            if (!array_key_exists($newRole, User::ROLES)) {
+                throw new \Exception('Invalid role selected.');
+            }
+            
+            $user = User::findOrFail($id);
+            $user->role = $newRole;
+            $user->save();
+            
+            session()->flash('success', "Role for {$user->name} updated to " . User::ROLES[$newRole]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to assign role: ' . $e->getMessage());
         }
     }
 
@@ -307,10 +334,10 @@ class UserManager extends Component
         return view('livewire.admin.user-management', [
             'records'     => $records,
             'totalCount'  => Employee::count() + User::whereDoesntHave('employee')->count(),
-            'adminCount'  => User::where('role', 'admin')->count(),
+            'adminCount'  => User::whereIn('role', ['admin', 'super_admin'])->count(),
             'hrCount'     => User::where('role', 'hr_manager')->count(),
             'empCount'    => Employee::count(),
-            'roles'       => self::ROLES,
+            'roles'       => User::ROLES,
         ])->layout('components.layouts.admin');
     }
 }

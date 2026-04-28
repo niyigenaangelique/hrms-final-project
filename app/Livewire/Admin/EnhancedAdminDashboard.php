@@ -15,52 +15,60 @@ class EnhancedAdminDashboard extends Component
     public function render()
     {
         $totalUsers   = User::count();
-        $adminCount   = User::where('role', 'admin')->count();
-        $hrCount      = User::where('role', 'hr_manager')->count();
-        $empCount     = User::where('role', 'employee')->count();
+        $adminCount   = User::whereIn('role', ['admin', 'super_admin', 'company_admin'])->count();
+        $hrCount      = User::where('role', 'like', 'hr%')->count();
+        $empCount     = User::where('role', 'like', '%employee%')->count();
+        $othersCount  = $totalUsers - ($adminCount + $hrCount + $empCount);
 
         $recentUsers  = User::orderBy('created_at', 'desc')->limit(5)->get();
 
-        $payrollTotal = 0;
-        $payrollCount = 0;
+        $auditCountToday = 0;
+        try { $auditCountToday = DB::table('activity_logs')->whereDate('created_at', today())->count(); } catch (\Exception $e) {}
+
+        $failedLoginsToday = 0;
+        try { $failedLoginsToday = DB::table('activity_logs')->where('action', 'failed_login')->whereDate('created_at', today())->count(); } catch (\Exception $e) {}
+
+        $totalLogs = 0;
+        try { $totalLogs = DB::table('activity_logs')->count(); } catch (\Exception $e) {}
+
+        $dbSize = 'N/A';
         try {
-            $payrollTotal = DB::table('payroll_entries')->where('approval_status','approved')->sum('total_amount');
-            $payrollCount = DB::table('payroll_entries')->count();
-        } catch (\Exception) {}
-
-        $payslipCount = 0;
-        try { $payslipCount = DB::table('payslip_entries')->count(); } catch (\Exception) {}
-
-        $paymentTotal = 0;
-        try { $paymentTotal = DB::table('payment_histories')->where('status','completed')->sum('amount_paid'); } catch (\Exception) {}
-
-        $auditCount = 0;
-        try { $auditCount = DB::table('audit_logs')->whereDate('created_at', today())->count(); } catch (\Exception) {}
-
-        $sessionCount = 0;
-        try { $sessionCount = DB::table('sessions')->count(); } catch (\Exception) {}
+            $results = DB::select('SELECT SUM(data_length + index_length) / 1024 / 1024 AS size FROM information_schema.TABLES WHERE table_schema = ?', [config('database.connections.mysql.database')]);
+            $dbSize = round($results[0]->size ?? 0, 2) . ' MB';
+        } catch (\Exception $e) {}
 
         $recentActivity = collect();
         try {
-            $recentActivity = DB::table('audit_logs')
+            $recentActivity = DB::table('activity_logs')
                 ->orderBy('created_at', 'desc')
                 ->limit(8)
                 ->get();
-        } catch (\Exception) {}
+        } catch (\Exception $e) {}
+
+        // Chart Data: Activity in last 7 days
+        $activityData = [];
+        $activityLabels = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $activityLabels[] = now()->subDays($i)->format('M d');
+            $activityData[] = DB::table('activity_logs')->whereDate('created_at', $date)->count();
+        }
 
         return view('livewire.admin.enhanced-admin-dashboard', [
-            'totalUsers'    => $totalUsers,
-            'adminCount'    => $adminCount,
-            'hrCount'       => $hrCount,
-            'empCount'      => $empCount,
-            'recentUsers'   => $recentUsers,
-            'payrollTotal'  => $payrollTotal,
-            'payrollCount'  => $payrollCount,
-            'payslipCount'  => $payslipCount,
-            'paymentTotal'  => $paymentTotal,
-            'auditCount'    => $auditCount,
-            'sessionCount'  => $sessionCount,
-            'recentActivity'=> $recentActivity,
+            'admin'             => auth()->user(),
+            'totalUsers'        => $totalUsers,
+            'adminCount'        => $adminCount,
+            'hrCount'           => $hrCount,
+            'empCount'          => $empCount,
+            'othersCount'       => $othersCount,
+            'recentUsers'       => $recentUsers,
+            'auditCountToday'   => $auditCountToday,
+            'failedLoginsToday' => $failedLoginsToday,
+            'totalLogs'         => $totalLogs,
+            'dbSize'            => $dbSize,
+            'recentActivity'    => $recentActivity,
+            'chartLabels'       => $activityLabels,
+            'chartData'         => $activityData,
         ])->layout('components.layouts.admin');
     }
 }
