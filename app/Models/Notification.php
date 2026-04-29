@@ -3,9 +3,12 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
  
 class Notification extends Model
 {
+    use HasUuids;
+
     protected $fillable = [
         'user_id','title','body','type','channel','priority','is_read',
         'read_at','status','scheduled_at','sent_at','sent_by','metadata','action_url',

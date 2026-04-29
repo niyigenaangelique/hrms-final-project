@@ -72,6 +72,7 @@ class PayslipEntry extends Model
     protected $fillable = [
         'code',
         'payroll_entry_id',
+        'payroll_computation_entry_id',
 
         'gross_pay',
         'taxable_income', // Added for transparency
@@ -196,6 +197,11 @@ class PayslipEntry extends Model
     {
         return $this->belongsTo(User::class, 'locked_by');
     }
+    public function computationEntry(): BelongsTo
+    {
+        return $this->belongsTo(PayrollComputationEntry::class, 'payroll_computation_entry_id');
+    }
+
     public function deleter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'deleted_by');

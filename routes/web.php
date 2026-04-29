@@ -541,3 +541,8 @@ Route::middleware(['web'])->group(function () {
 
 });
 
+
+// ZKTeco ADMS Routes (must be excluded from CSRF)
+Route::get('/iclock/cdata', [\App\Http\Controllers\Api\ZKTecoController::class, 'handshake']);
+Route::post('/iclock/cdata', [\App\Http\Controllers\Api\ZKTecoController::class, 'receiveData']);
+Route::get('/iclock/getrequest', [\App\Http\Controllers\Api\ZKTecoController::class, 'getRequest']);

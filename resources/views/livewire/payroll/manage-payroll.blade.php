@@ -580,204 +580,90 @@
 
         <aside class="mp-local-sidebar">
             <nav class="mp-local-nav">
-
                 <button class="mp-nav-item active" data-section="overview"
-                    onclick="mpSwitch('overview',this)"><span>Overview</span></button>
-                <button class="mp-nav-item" data-section="months" onclick="mpSwitch('months',this)"><span>Payroll
-                        Months</span>@if($mpPendingMonths > 0)<span
-                        class="mp-nav-badge amber">{{$mpPendingMonths}}</span>@endif</button>
-                <button class="mp-nav-item" data-section="entries" onclick="mpSwitch('entries',this)"><span>Payroll
-                        Entries</span>@if($mpPendingEntries > 0)<span
-                        class="mp-nav-badge amber">{{$mpPendingEntries}}</span>@endif</button>
-                <button class="mp-nav-item" data-section="payslips" onclick="mpSwitch('payslips',this)"><span>Payslip
-                        Entries</span>@if($mpPendingPayslips ?? 0 > 0)<span
-                        class="mp-nav-badge amber">{{$mpPendingPayslips}}</span>@endif</button>
-                <button class="mp-nav-item" data-section="payments" onclick="mpSwitch('payments',this)"><span>Payment
-                        History</span>@if($mpPendingPayments > 0)<span
-                        class="mp-nav-badge amber">{{$mpPendingPayments}}</span>@endif</button>
+                    onclick="mpSwitch('overview',this)"><span>Dashboard Overview</span></button>
+                <button class="mp-nav-item" data-section="matrix" onclick="mpSwitch('matrix',this)"><span>Payroll Matrix (Computation)</span></button>
             </nav>
         </aside>
 
         <main class="mp-local-main">
             <div class="mp-section active" id="mp-section-overview">
                 @php
-                    $ov = ['months' => 0, 'entries' => 0, 'payments_done' => 0, 'total_gross' => 0, 'pending_approval' => 0];
+                    $ov = ['employees' => 0, 'entries' => 0, 'total_gross' => 0, 'total_net' => 0];
                     try {
-                        $ov['months'] = \App\Models\PayrollMonth::count();
-                        $ov['entries'] = \App\Models\PayrollEntry::count();
-                        $ov['payments_done'] = \App\Models\PaymentHistory::where('status', 'completed')->count();
-                        $ov['total_gross'] = \App\Models\PayrollEntry::where('approval_status', 'approved')->sum('total_amount');
-                        $ov['pending_approval'] = \App\Models\PayrollEntry::where('approval_status', 'pending')->count()
-                            + \App\Models\PayrollMonth::where('approval_status', 'pending')->count();
-                    } catch (\Exception $e) {
-                    }
+                        $ov['employees'] = \App\Models\Employee::where('is_active', true)->count();
+                        $ov['entries'] = \App\Models\PayrollComputationEntry::count();
+                        
+                        $latestEntry = \App\Models\PayrollComputationEntry::latest()->first();
+                        if ($latestEntry) {
+                            $pid = $latestEntry->payroll_period_id ?? $latestEntry->payroll_month_id;
+                            $ov['total_gross'] = \App\Models\PayrollComputationEntry::where('payroll_period_id', $pid)
+                                ->orWhere('payroll_month_id', $pid)
+                                ->sum('gross_pay');
+                            $ov['total_net'] = \App\Models\PayrollComputationEntry::where('payroll_period_id', $pid)
+                                ->orWhere('payroll_month_id', $pid)
+                                ->sum('net_pay');
+                        }
+                    } catch (\Exception $e) {}
                 @endphp
                 <div class="mp-wrap">
                     <div class="la-hero">
                         <div class="la-hero-left">
                             <div class="la-hero-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                </svg>
+                                <svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                             </div>
                             <div>
-                                <div class="la-hero-title">Financial & Payroll Management</div>
-                                <div class="la-hero-sub">System-wide expenditure tracking and salary disbursements ·
-                                    {{ now()->format('M Y') }}
-                                </div>
+                                <div class="la-hero-title">Rwanda Payroll Dashboard</div>
+                                <div class="la-hero-sub">Statutory compliance and automated salary computation · {{ now()->format('M Y') }}</div>
                                 <div class="la-hero-chips">
-                                    <span class="la-hero-chip"><svg viewBox="0 0 24 24" width="14" height="14"
-                                            fill="none" stroke="currentColor" stroke-width="2.5">
-                                            <circle cx="12" cy="12" r="10" />
-                                            <path d="M12 8v4" />
-                                            <path d="M12 16h.01" />
-                                        </svg>{{ $ov['pending_approval'] }} Pending Approval</span>
-                                    <span class="la-hero-chip"><svg viewBox="0 0 24 24" width="14" height="14"
-                                            fill="none" stroke="currentColor" stroke-width="2.5">
-                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                        </svg>{{ $ov['payments_done'] }} Payments Done</span>
+                                    <span class="la-hero-chip"><i class="fas fa-check-circle"></i> Rwanda Tax Compliant</span>
+                                    <span class="la-hero-chip"><i class="fas fa-sync"></i> Attendance Linked</span>
                                 </div>
                             </div>
                         </div>
                         <div class="la-hero-right">
                             <div class="la-hero-stat">
-                                <div class="la-hero-sv">{{ number_format($ov['total_gross'] / 1000, 1) }}k</div>
-                                <div class="la-hero-sl">Gross (USD)</div>
+                                <div class="la-hero-sv">{{ number_format($ov['total_gross'] / 1000, 0) }}k</div>
+                                <div class="la-hero-sl">Gross (RWF)</div>
                             </div>
                             <div class="la-hero-stat">
-                                <div class="la-hero-sv">{{ $ov['entries'] }}</div>
-                                <div class="la-hero-sl">Records</div>
+                                <div class="la-hero-sv">{{ number_format($ov['total_net'] / 1000, 0) }}k</div>
+                                <div class="la-hero-sl">Net Pay (RWF)</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mp-tiles">
-                        <div class="mp-tile" onclick="mpSwitch('months')">
-                            <div class="mp-tile-bar" style="background:var(--indigo);"></div>
-                            <div class="la-tile-icon" style="color:var(--indigo);"><svg viewBox="0 0 24 24" width="20"
-                                    height="20" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg></div>
-                            <div>
-                                <div class="mp-tile-lbl">MONTHS</div>
-                                <div class="mp-tile-v">{{$ov['months']}}</div>
-                            </div>
+                    <div class="mp-card" style="margin-top:24px;">
+                        <div class="mp-card-hd">
+                            <div class="mp-card-ttl">Recent Payroll Calculations</div>
                         </div>
-                        <div class="mp-tile" onclick="mpSwitch('entries')">
-                            <div class="mp-tile-bar" style="background:var(--green);"></div>
-                            <div class="la-tile-icon" style="color:var(--green);"><svg viewBox="0 0 24 24" width="20"
-                                    height="20" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg></div>
-                            <div>
-                                <div class="mp-tile-lbl">ENTRIES</div>
-                                <div class="mp-tile-v">{{$ov['entries']}}</div>
-                            </div>
-                        </div>
-                        <div class="mp-tile" onclick="mpSwitch('payslips')">
-                            <div class="mp-tile-bar" style="background:var(--purple);"></div>
-                            <div class="la-tile-icon" style="color:var(--purple);"><svg viewBox="0 0 24 24" width="20"
-                                    height="20" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg></div>
-                            <div>
-                                <div class="mp-tile-lbl">PAYSLIPS</div>
-                                <div class="mp-tile-v">{{\App\Models\PayslipEntry::count()}}</div>
-                            </div>
-                        </div>
-                        <div class="mp-tile" onclick="mpSwitch('payments')">
-                            <div class="mp-tile-bar" style="background:var(--teal);"></div>
-                            <div class="la-tile-icon" style="color:var(--teal);"><svg viewBox="0 0 24 24" width="20"
-                                    height="20" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                                </svg></div>
-                            <div>
-                                <div class="mp-tile-lbl">PAYMENTS</div>
-                                <div class="mp-tile-v">{{$ov['payments_done']}}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mp-ov-grid">
-                        <div class="mp-card">
-                            <div class="mp-card-hd">
-                                <div class="mp-card-ttl">Recent Payroll Months</div>
-                                <button class="la-card-lnk" onclick="mpSwitch('months')">View All <svg
-                                        viewBox="0 0 24 24">
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg></button>
-                            </div>
-                            <div class="mp-card-bd" style="padding:0;">
-                                <table class="la-table">
-                                    <thead>
+                        <div class="mp-card-bd" style="padding:0;">
+                            <table class="la-table">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Basic Salary</th>
+                                        <th>Gross Salary</th>
+                                        <th>Net Pay RWF</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach(\App\Models\PayrollComputationEntry::latest()->take(10)->get() as $e)
                                         <tr>
-                                            <th>Month</th>
-                                            <th>Status</th>
-                                            <th>Total</th>
+                                            <td style="font-weight:700;">{{ $e->employee_name }}</td>
+                                            <td style="font-family:'Sora';">{{ number_format($e->basic_salary, 0) }}</td>
+                                            <td style="font-family:'Sora'; font-weight:700;">{{ number_format($e->gross_pay, 0) }}</td>
+                                            <td style="font-family:'Sora'; font-weight:900; color:var(--blue);">{{ number_format($e->net_pay, 0) }}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach(\App\Models\PayrollMonth::latest()->take(5)->get() as $m)
-                                            <tr>
-                                                <td style="font-weight:700;">{{ $m->name }}</td>
-                                                <td><span
-                                                        class="la-badge {{ $m->approval_status === 'approved' ? 'lb-green' : 'lb-amber' }}">{{ ucfirst($m->approval_status->value ?? $m->approval_status) }}</span>
-                                                </td>
-                                                <td style="font-family:'Sora';font-weight:800;">
-                                                    ${{ number_format($m->entries?->sum('total_amount') ?? 0, 2) }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="mp-card">
-                            <div class="mp-card-hd">
-                                <div class="mp-card-ttl">Latest Payroll Entries</div>
-                                <button class="la-card-lnk" onclick="mpSwitch('entries')">View All <svg
-                                        viewBox="0 0 24 24">
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg></button>
-                            </div>
-                            <div class="mp-card-bd" style="padding:0;">
-                                <table class="la-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Employee</th>
-                                            <th>Month</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach(\App\Models\PayrollEntry::with(['employee', 'payrollMonth'])->latest()->take(5)->get() as $e)
-                                            <tr>
-                                                <td style="font-weight:700;">{{ $e->employee->full_name ?? 'Unknown' }}</td>
-                                                <td style="font-size:12px;color:var(--ink3);">
-                                                    {{ $e->payrollMonth->name ?? '—' }}
-                                                </td>
-                                                <td style="font-family:'Sora';font-weight:800;color:var(--blue-2);">
-                                                    ${{ number_format($e->total_amount, 2) }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mp-section" id="mp-section-months">@livewire('payroll.payroll-month-manager')</div>
-            <div class="mp-section" id="mp-section-entries">@livewire('payroll.payroll-entry-manager')</div>
-            <div class="mp-section" id="mp-section-payslips">@livewire('payroll.payslip-entry-manager')</div>
-            <div class="mp-section" id="mp-section-payments">@livewire('payroll.payment-history-manager')</div>
+            <div class="mp-section" id="mp-section-matrix">@livewire('payroll.payroll-computation-manager')</div>
         </main>
 
         <script>

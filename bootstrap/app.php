@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'check.user.role' => CheckUserRole::class,
         ]);
+        
+        $middleware->validateCsrfTokens(except: [
+            'iclock/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

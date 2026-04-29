@@ -531,7 +531,7 @@ class HrNotificationCenter extends Component
                 ->groupBy('type')->pluck('total','type')->toArray();
         } catch(\Exception){}
 
-        $layout = request()->routeIs('admin.*') ? 'components.layouts.admin' : 'components.layouts.hr';
+        $layout = request()->routeIs('admin.*') ? 'components.layouts.admin' : 'components.layouts.app';
 
         return view('livewire.hr.hr-notification-center', compact(
             'totalSent','unreadCount','scheduledCount','failedCount',

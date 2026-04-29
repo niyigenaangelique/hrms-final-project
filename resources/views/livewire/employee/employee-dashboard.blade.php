@@ -250,6 +250,11 @@
             </div>
         </div>
     </div>
+    
+    <div style="position: absolute; top: 24px; right: 24px; z-index: 10;">
+        @livewire('notification-bell')
+    </div>
+
     <div class="db-hero-right">
         <div class="db-hero-stat"><div class="db-hero-sv">{{ $quickStats['tasks_completed'] }}/{{ $quickStats['total_tasks'] }}</div><div class="db-hero-sl">Tasks</div></div>
         <div class="db-hero-stat"><div class="db-hero-sv">{{ $quickStats['present_days'] }}</div><div class="db-hero-sl">Days In</div></div>

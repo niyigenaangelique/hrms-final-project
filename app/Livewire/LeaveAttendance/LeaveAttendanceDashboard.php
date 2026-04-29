@@ -37,7 +37,7 @@ class LeaveAttendanceDashboard extends Component
         $today = now()->toDateString();
         
         $this->totalEmployees = Employee::where('is_active', true)->count();
-        $this->presentToday = Attendance::where('date', $today)->where('status', 'Approved')->count();
+        $this->presentToday = Attendance::where('date', $today)->whereIn('status', ['Approved', 'Entered'])->count();
         
         // Count employees who are late today (no attendance or arrived after 8:30 AM)
         $employeesWhoClockedIn = Attendance::where('date', $today)

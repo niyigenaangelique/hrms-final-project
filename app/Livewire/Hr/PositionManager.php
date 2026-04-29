@@ -205,6 +205,6 @@ class PositionManager extends Component
             'totalCount'    => $totalCount,
             'withStaffCount'=> $withStaffCount,
             'vacantCount'   => $vacantCount,
-        ])->layout('components.layouts.hr');
+        ])->layout('components.layouts.app');
     }
 }

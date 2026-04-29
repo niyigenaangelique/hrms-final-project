@@ -10,7 +10,8 @@ return new class extends Migration
     public function up(): void
     {
         // ── Payroll Periods (replaces legacy payroll_months for automation) ──
-        Schema::create('payroll_periods', function (Blueprint $table) {
+        if (!Schema::hasTable('payroll_periods')) {
+            Schema::create('payroll_periods', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');             // "April 2026"
             $table->date('start_date');
@@ -31,10 +32,12 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['start_date', 'end_date']);
             $table->index('status');
-        });
+            });
+        }
 
         // ── Payroll Computation Entries (one row per employee per period) ──
-        Schema::create('payroll_computation_entries', function (Blueprint $table) {
+        if (!Schema::hasTable('payroll_computation_entries')) {
+            Schema::create('payroll_computation_entries', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('payroll_period_id');
             $table->uuid('employee_id');
@@ -91,19 +94,23 @@ return new class extends Migration
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
             $table->unique(['payroll_period_id', 'employee_id']);
             $table->index('employee_code');
-        });
+            });
+        }
 
         // ── Payroll Settings (rates, caps) ────────────────────────────────
-        Schema::create('payroll_settings', function (Blueprint $table) {
+        if (!Schema::hasTable('payroll_settings')) {
+            Schema::create('payroll_settings', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('key')->unique();
             $table->text('value');
             $table->text('description')->nullable();
             $table->timestamps();
-        });
+            });
+        }
 
         // ── Rwanda PAYE Tax Brackets ───────────────────────────────────────
-        Schema::create('tax_brackets', function (Blueprint $table) {
+        if (!Schema::hasTable('tax_brackets')) {
+            Schema::create('tax_brackets', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->decimal('min_income', 12, 2);
             $table->decimal('max_income', 12, 2)->nullable(); // null = no upper limit
@@ -112,10 +119,12 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->index(['min_income', 'max_income']);
-        });
+            });
+        }
 
         // ── Salary Components (Basic, House Allowance, Transport, Lunch…) ──
-        Schema::create('salary_components', function (Blueprint $table) {
+        if (!Schema::hasTable('salary_components')) {
+            Schema::create('salary_components', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');                // "House Allowance"
             $table->string('code')->unique();      // "HOUSE"
@@ -126,10 +135,12 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
-        });
+            });
+        }
 
         // ── Employee Salary Structures (per employee, per component, with effective dates) ──
-        Schema::create('employee_salary_structures', function (Blueprint $table) {
+        if (!Schema::hasTable('employee_salary_structures')) {
+            Schema::create('employee_salary_structures', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('employee_id');
             $table->uuid('salary_component_id');
@@ -143,8 +154,9 @@ return new class extends Migration
 
             $table->foreign('employee_id')->references('id')->on('employees')->onDelete('cascade');
             $table->foreign('salary_component_id')->references('id')->on('salary_components');
-            $table->index(['employee_id', 'salary_component_id', 'effective_date']);
-        });
+            $table->index(['employee_id', 'salary_component_id', 'effective_date'], 'emp_salary_eff_idx');
+            });
+        }
 
         // ── Seed default payroll settings ──────────────────────────────────
         DB::table('payroll_settings')->insert([

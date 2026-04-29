@@ -75,26 +75,27 @@ class EmployeePayroll extends Component
 
     public function loadPayrollData()
     {
-        // Load payroll entries for the employee
-        $this->payrollEntries = PayrollEntry::where('employee_id', $this->employee->id)
-            ->with(['payrollMonth', 'deductionEntries.deduction', 'benefitEntries.benefit', 'payslipEntry'])
-            ->orderBy('created_at', 'desc')
+        // Load latest computation entries for the employee (excluding future periods)
+        $this->payrollEntries = \App\Models\PayrollComputationEntry::where('employee_id', $this->employee->id)
+            ->where(function($q) {
+                $q->whereHas('payrollPeriod', function($sq) {
+                    $sq->where('end_date', '<=', now());
+                })->orWhereHas('payrollMonth', function($sq) {
+                    // Assuming legacy months are in the past or check date if needed
+                })->orWhere(function($sq) {
+                    $sq->whereNull('payroll_period_id')->whereNull('payroll_month_id');
+                });
+            })
+            ->with(['payrollPeriod', 'payrollMonth', 'employee', 'payslipEntry'])
+            ->latest()
             ->take(12)
             ->get();
 
-        // Get current month payroll entry
-        $currentMonth = PayrollMonth::where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->first();
-        if ($currentMonth) {
-            $this->currentPayrollEntry = PayrollEntry::where('employee_id', $this->employee->id)
-                ->where('payroll_month_id', $currentMonth->id)
-                ->with(['deductionEntries.deduction', 'benefitEntries.benefit', 'payslipEntry'])
-                ->first();
+        // Get the latest computation entry for the current display
+        $this->currentPayrollEntry = $this->payrollEntries->first();
 
-            if ($this->currentPayrollEntry) {
-                $this->calculateTotals();
-            }
+        if ($this->currentPayrollEntry) {
+            $this->calculateTotals();
         }
 
         // Load leave balances
@@ -112,16 +113,23 @@ class EmployeePayroll extends Component
     {
         if (!$this->currentPayrollEntry) return;
 
-        $this->totalDeductions = $this->currentPayrollEntry->deductionEntries->sum('amount');
-        $this->totalBenefits = $this->currentPayrollEntry->benefitEntries->sum('amount');
-        
-        $grossPay = $this->currentPayrollEntry->work_days_pay + $this->currentPayrollEntry->overtime_total_amount;
-        $this->netPay = $grossPay - $this->totalDeductions + $this->totalBenefits;
+        $this->totalDeductions = $this->currentPayrollEntry->total_deductions;
+        $this->totalBenefits = $this->currentPayrollEntry->house_allowance + $this->currentPayrollEntry->transport_allowance + $this->currentPayrollEntry->other_allowances;
+        $this->netPay = $this->currentPayrollEntry->net_pay;
     }
 
     public function formatCurrency($amount)
     {
         return number_format($amount, 2);
+    }
+
+    public function selectEntry($entryId)
+    {
+        $this->currentPayrollEntry = \App\Models\PayrollComputationEntry::find($entryId);
+        if ($this->currentPayrollEntry) {
+            $this->calculateTotals();
+            $this->dispatch('notify', ['type' => 'success', 'message' => 'Viewing details for ' . $this->currentPayrollEntry->period_name]);
+        }
     }
 
     public function render()

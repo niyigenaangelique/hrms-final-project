@@ -248,7 +248,7 @@ table.pay-table { width: 100%; border-collapse: collapse; }
         @if($currentPayrollEntry)
             <div class="pay-period-badge">
                 <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                {{ $currentPayrollEntry->payrollMonth->name ?? 'Current Period' }}
+                {{ $currentPayrollEntry->period_name }}
             </div>
         @endif
     </div>
@@ -258,25 +258,25 @@ table.pay-table { width: 100%; border-collapse: collapse; }
         <div class="pay-net-band">
             <div class="pay-net-main">
                 <div class="pay-net-label">Net Pay This Period</div>
-                <div class="pay-net-amount">${{ number_format($netPay, 2) }}</div>
-                <div class="pay-net-sub">{{ $currentPayrollEntry->payrollMonth->name ?? 'Current Period' }}</div>
+                <div class="pay-net-amount">RWF {{ number_format($netPay, 0) }}</div>
+                <div class="pay-net-sub">{{ $currentPayrollEntry->period_name }}</div>
             </div>
             <div class="pay-net-mini-stats">
                 <div class="pay-net-mini">
-                    <div class="pay-net-mini-label">Gross</div>
-                    <div class="pay-net-mini-val">${{ number_format($currentPayrollEntry->work_days_pay + $currentPayrollEntry->overtime_total_amount + ($totalBenefits ?? 0), 0) }}</div>
+                    <div class="pay-net-mini-label">Gross (RWF)</div>
+                    <div class="pay-net-mini-val">{{ number_format($currentPayrollEntry->gross_pay, 0) }}</div>
                 </div>
                 <div class="pay-net-mini">
                     <div class="pay-net-mini-label">Deductions</div>
-                    <div class="pay-net-mini-val" style="color:rgba(255,200,200,0.9);">-${{ number_format($totalDeductions, 0) }}</div>
+                    <div class="pay-net-mini-val" style="color:rgba(255,200,200,0.9);">-{{ number_format($totalDeductions, 0) }}</div>
                 </div>
                 <div class="pay-net-mini">
                     <div class="pay-net-mini-label">Work Days</div>
-                    <div class="pay-net-mini-val">{{ $currentPayrollEntry->work_days }}</div>
+                    <div class="pay-net-mini-val">{{ $currentPayrollEntry->present_days }}</div>
                 </div>
                 <div class="pay-net-mini">
-                    <div class="pay-net-mini-label">Overtime hrs</div>
-                    <div class="pay-net-mini-val">{{ $currentPayrollEntry->overtime_hours_worked }}h</div>
+                    <div class="pay-net-mini-label">Late Deduct.</div>
+                    <div class="pay-net-mini-val" style="color:rgba(255,200,200,0.7);">-{{ number_format($currentPayrollEntry->late_deduction, 0) }}</div>
                 </div>
             </div>
         </div>
@@ -287,29 +287,29 @@ table.pay-table { width: 100%; border-collapse: collapse; }
                 <div class="pay-stat-cell-icon" style="background:var(--blue-lt);">
                     <svg viewBox="0 0 24 24" style="stroke:var(--blue)"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                 </div>
-                <div class="pay-stat-label">Daily Rate</div>
-                <div class="pay-stat-val">${{ number_format($currentPayrollEntry->daily_rate, 2) }}</div>
+                <div class="pay-stat-label">Basic Salary</div>
+                <div class="pay-stat-val">{{ number_format($currentPayrollEntry->basic_salary, 0) }}</div>
             </div>
             <div class="pay-stat-cell">
                 <div class="pay-stat-cell-icon" style="background:var(--green-lt);">
                     <svg viewBox="0 0 24 24" style="stroke:var(--green)"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
                 </div>
-                <div class="pay-stat-label">Work Days Pay</div>
-                <div class="pay-stat-val">${{ number_format($currentPayrollEntry->work_days_pay, 0) }}</div>
+                <div class="pay-stat-label">Total Allowances</div>
+                <div class="pay-stat-val">{{ number_format($totalBenefits, 0) }}</div>
             </div>
             <div class="pay-stat-cell">
                 <div class="pay-stat-cell-icon" style="background:var(--amber-lt);">
                     <svg viewBox="0 0 24 24" style="stroke:var(--amber)"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
                 </div>
                 <div class="pay-stat-label">Overtime Pay</div>
-                <div class="pay-stat-val">${{ number_format($currentPayrollEntry->overtime_total_amount, 0) }}</div>
+                <div class="pay-stat-val">{{ number_format($currentPayrollEntry->overtime_pay, 0) }}</div>
             </div>
             <div class="pay-stat-cell">
                 <div class="pay-stat-cell-icon" style="background:var(--red-lt);">
                     <svg viewBox="0 0 24 24" style="stroke:var(--red)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                 </div>
-                <div class="pay-stat-label">Total Deductions</div>
-                <div class="pay-stat-val" style="color:var(--red);">-${{ number_format($totalDeductions, 0) }}</div>
+                <div class="pay-stat-label">Net Receive</div>
+                <div class="pay-stat-val" style="color:var(--blue-2);">{{ number_format($netPay, 0) }}</div>
             </div>
         </div>
     @endif
@@ -337,18 +337,17 @@ table.pay-table { width: 100%; border-collapse: collapse; }
             <div class="pay-section-label">Personal</div>
             <div class="pay-info-row"><span class="pay-info-label">Full Name</span><span class="pay-info-value">{{ $employee->full_name }}</span></div>
             <div class="pay-info-row"><span class="pay-info-label">Employee ID</span><span class="pay-info-value">{{ $employee->code }}</span></div>
-            <div class="pay-info-row"><span class="pay-info-label">Email</span><span class="pay-info-value">{{ $employee->email }}</span></div>
-            <div class="pay-info-row"><span class="pay-info-label">Phone</span><span class="pay-info-value">{{ $employee->phone_number ?? '—' }}</span></div>
-            <div class="pay-info-row"><span class="pay-info-label">National ID</span><span class="pay-info-value">{{ $employee->national_id ?? '—' }}</span></div>
-            <div class="pay-info-row"><span class="pay-info-label">RSS Number</span><span class="pay-info-value">{{ $employee->rss_number ?? '—' }}</span></div>
+            <div class="pay-info-row"><span class="pay-info-label">Nationality</span><span class="pay-info-value">{{ $currentPayrollEntry->nationality }}</span></div>
+            <div class="pay-info-row"><span class="pay-info-label">Bank Name</span><span class="pay-info-value">{{ $currentPayrollEntry->bank_name ?? '—' }}</span></div>
+            <div class="pay-info-row"><span class="pay-info-label">Account No.</span><span class="pay-info-value">{{ $currentPayrollEntry->bank_account ?? '—' }}</span></div>
 
             <div class="pay-section-label" style="margin-top:16px;">Position</div>
-            <div class="pay-info-row"><span class="pay-info-label">Department</span><span class="pay-info-value">{{ $employee->department?->name ?? '—' }}</span></div>
-            <div class="pay-info-row"><span class="pay-info-label">Position</span><span class="pay-info-value">{{ $employee->position?->name ?? '—' }}</span></div>
-            <div class="pay-info-row"><span class="pay-info-label">Hire Date</span><span class="pay-info-value">{{ $employee->join_date?->format('M d, Y') ?? '—' }}</span></div>
+            <div class="pay-info-row"><span class="pay-info-label">Department</span><span class="pay-info-value">{{ $currentPayrollEntry->department ?? '—' }}</span></div>
+            <div class="pay-info-row"><span class="pay-info-label">Position</span><span class="pay-info-value">{{ $currentPayrollEntry->position ?? '—' }}</span></div>
+            <div class="pay-info-row"><span class="pay-info-label">Days Present</span><span class="pay-info-value">{{ $currentPayrollEntry->present_days }} / {{ $currentPayrollEntry->working_days }}</span></div>
             <div class="pay-info-row">
-                <span class="pay-info-label">Status</span>
-                <span class="{{ $employee->is_active ? 'badge-active' : 'badge-inactive' }}">{{ $employee->is_active ? 'Active' : 'Inactive' }}</span>
+                <span class="pay-info-label">Payroll Status</span>
+                <span class="badge-active">{{ ucfirst($currentPayrollEntry->status) }}</span>
             </div>
         </div>
     </div>
@@ -364,29 +363,35 @@ table.pay-table { width: 100%; border-collapse: collapse; }
                         <svg viewBox="0 0 24 24" style="stroke:var(--green)"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                     </div>
                     <div>
-                        <div class="pay-card-title">Earnings</div>
-                        <div class="pay-card-sub">Gross pay breakdown</div>
+                        <div class="pay-card-title">Earnings Breakdown</div>
+                        <div class="pay-card-sub">Gross income details</div>
                     </div>
                 </div>
             </div>
             <div class="pay-card-body">
                 <div class="pay-breakdown-item">
-                    <span class="pay-breakdown-label">Work Days ({{ $currentPayrollEntry->work_days }} days × ${{ number_format($currentPayrollEntry->daily_rate,2) }})</span>
-                    <span class="pay-breakdown-val plus">${{ number_format($currentPayrollEntry->work_days_pay, 2) }}</span>
+                    <span class="pay-breakdown-label">Basic Salary</span>
+                    <span class="pay-breakdown-val plus">{{ number_format($currentPayrollEntry->basic_salary, 0) }}</span>
                 </div>
                 <div class="pay-breakdown-item">
-                    <span class="pay-breakdown-label">Overtime ({{ $currentPayrollEntry->overtime_hours_worked }}h × ${{ number_format($currentPayrollEntry->overtime_hour_rate,2) }})</span>
-                    <span class="pay-breakdown-val plus">${{ number_format($currentPayrollEntry->overtime_total_amount, 2) }}</span>
+                    <span class="pay-breakdown-label">House Allowance</span>
+                    <span class="pay-breakdown-val plus">{{ number_format($currentPayrollEntry->house_allowance, 0) }}</span>
                 </div>
-                @if(isset($totalBenefits) && $totalBenefits > 0)
-                    <div class="pay-breakdown-item">
-                        <span class="pay-breakdown-label">Benefits &amp; allowances</span>
-                        <span class="pay-breakdown-val plus">+${{ number_format($totalBenefits, 2) }}</span>
-                    </div>
-                @endif
+                <div class="pay-breakdown-item">
+                    <span class="pay-breakdown-label">Transport Allowance</span>
+                    <span class="pay-breakdown-val plus">{{ number_format($currentPayrollEntry->transport_allowance, 0) }}</span>
+                </div>
+                <div class="pay-breakdown-item">
+                    <span class="pay-breakdown-label">Other Allowances</span>
+                    <span class="pay-breakdown-val plus">{{ number_format($currentPayrollEntry->other_allowances, 0) }}</span>
+                </div>
+                <div class="pay-breakdown-item">
+                    <span class="pay-breakdown-label">Overtime Pay</span>
+                    <span class="pay-breakdown-val plus">{{ number_format($currentPayrollEntry->overtime_pay, 0) }}</span>
+                </div>
                 <div class="pay-breakdown-total">
-                    <span>Gross Pay</span>
-                    <span>${{ number_format($currentPayrollEntry->work_days_pay + $currentPayrollEntry->overtime_total_amount + ($totalBenefits ?? 0), 2) }}</span>
+                    <span>Total Gross Income</span>
+                    <span>{{ number_format($currentPayrollEntry->gross_pay, 0) }}</span>
                 </div>
             </div>
         </div>
@@ -399,26 +404,38 @@ table.pay-table { width: 100%; border-collapse: collapse; }
                         <svg viewBox="0 0 24 24" style="stroke:var(--red)"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
                     </div>
                     <div>
-                        <div class="pay-card-title">Deductions</div>
-                        <div class="pay-card-sub">Applied deductions this period</div>
+                        <div class="pay-card-title">Statutory Deductions</div>
+                        <div class="pay-card-sub">Rwanda tax compliance</div>
                     </div>
                 </div>
             </div>
             <div class="pay-card-body">
-                @if($currentPayrollEntry->deductionEntries->count() > 0)
-                    @foreach($currentPayrollEntry->deductionEntries as $ded)
-                        <div class="pay-breakdown-item">
-                            <span class="pay-breakdown-label">{{ $ded->deduction->name }}</span>
-                            <span class="pay-breakdown-val minus">-${{ number_format($ded->amount, 2) }}</span>
-                        </div>
-                    @endforeach
-                    <div class="pay-breakdown-total">
-                        <span>Total Deducted</span>
-                        <span style="color:#991B1B;">-${{ number_format($totalDeductions, 2) }}</span>
+                <div class="pay-breakdown-item">
+                    <span class="pay-breakdown-label">PAYE Tax</span>
+                    <span class="pay-breakdown-val minus">-{{ number_format($currentPayrollEntry->paye_tax, 0) }}</span>
+                </div>
+                <div class="pay-breakdown-item">
+                    <span class="pay-breakdown-label">RSSB (Employee 3%)</span>
+                    <span class="pay-breakdown-val minus">-{{ number_format($currentPayrollEntry->rssb_employee, 0) }}</span>
+                </div>
+                <div class="pay-breakdown-item">
+                    <span class="pay-breakdown-label">Maternity Fund</span>
+                    <span class="pay-breakdown-val minus">-{{ number_format($currentPayrollEntry->maternity_fund, 0) }}</span>
+                </div>
+                <div class="pay-breakdown-item">
+                    <span class="pay-breakdown-label">CBHI (4.5%)</span>
+                    <span class="pay-breakdown-val minus">-{{ number_format($currentPayrollEntry->cbhi, 0) }}</span>
+                </div>
+                @if($currentPayrollEntry->salary_advance > 0)
+                    <div class="pay-breakdown-item">
+                        <span class="pay-breakdown-label">Salary Advance</span>
+                        <span class="pay-breakdown-val minus">-{{ number_format($currentPayrollEntry->salary_advance, 0) }}</span>
                     </div>
-                @else
-                    <div style="font-size:13px;color:var(--ink4);font-weight:500;padding:8px 0;">No deductions for this period.</div>
                 @endif
+                <div class="pay-breakdown-total">
+                    <span>Total Deducted</span>
+                    <span style="color:#991B1B;">-{{ number_format($totalDeductions, 0) }}</span>
+                </div>
             </div>
         </div>
 
@@ -542,40 +559,35 @@ table.pay-table { width: 100%; border-collapse: collapse; }
                 <thead>
                     <tr>
                         <th>Period</th>
-                        <th>Work Days Pay</th>
-                        <th>Overtime</th>
+                        <th>Gross Pay</th>
                         <th>Deductions</th>
                         <th>Net Pay</th>
                         <th>Status</th>
-                        <th>Payslip</th>
+                        <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($payrollEntries as $entry)
-                        @php
-                            $es = $entry->status->value;
-                            $ec = match($es) { 'processed'=>'badge-green','pending'=>'badge-amber', default=>'badge-gray' };
-                            $entryDed = $entry->deductionEntries->sum('amount');
-                            $entryNet = $entry->total_amount - $entryDed;
-                        @endphp
                         <tr>
-                            <td class="bold">{{ $entry->payrollMonth->name ?? 'N/A' }}</td>
-                            <td class="muted">${{ number_format($entry->work_days_pay, 2) }}</td>
-                            <td class="muted">${{ number_format($entry->overtime_total_amount, 2) }}</td>
-                            <td class="neg">-${{ number_format($entryDed, 2) }}</td>
-                            <td class="pos">${{ number_format($entryNet, 2) }}</td>
+                            <td class="bold">{{ $entry->period_name }}</td>
+                            <td class="muted">{{ number_format($entry->gross_pay, 0) }}</td>
+                            <td class="neg">-{{ number_format($entry->total_deductions, 0) }}</td>
+                            <td class="pos">{{ number_format($entry->net_pay, 0) }}</td>
                             <td>
-                                <span class="pay-badge {{ $ec }}">
+                                <span class="pay-badge badge-active">
                                     <svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>
-                                    {{ ucfirst($es) }}
+                                    {{ ucfirst($entry->status) }}
                                 </span>
                             </td>
                             <td>
-                                @if($entry->payslipEntry)
-                                    <a class="btn-payslip" href="{{ route('employee.payroll.download', ['entryId' => $entry->payslipEntry->id]) }}" target="_blank">View Payslip</a>
-                                @else
-                                    <span style="font-size:11.5px;color:var(--ink4);">Not yet</span>
-                                @endif
+                                <div style="display:flex; gap:8px;">
+                                    <button class="btn-payslip" wire:click="selectEntry('{{ $entry->id }}')">View Results</button>
+                                    @if($entry->payslipEntry)
+                                        <a href="{{ route('employee.payroll.download', ['entryId' => $entry->payslipEntry->id]) }}" target="_blank" class="btn-payslip" style="color:var(--red); border-color:var(--red-lt); background:var(--red-lt);">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach

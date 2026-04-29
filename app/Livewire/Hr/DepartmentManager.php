@@ -231,7 +231,7 @@ class DepartmentManager extends Component
                 'totalCount'       => $totalCount,
                 'withManagerCount' => $withManagerCount,
                 'totalEmployees'   => $totalEmployees,
-            ])->layout('components.layouts.hr');
+            ])->layout('components.layouts.app');
         } catch (\Exception $e) {
             \Log::error('DepartmentManager render error: ' . $e->getMessage());
             throw $e;

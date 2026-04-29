@@ -10,6 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 #[Title('TalentFlow Pro | Payslip Entries')]
 class PayslipEntryManager extends Component
@@ -277,9 +278,10 @@ class PayslipEntryManager extends Component
     // ── Auto-generate code ──────────────────────────────────
     private function generateCode(): string
     {
-        $last = PayslipEntry::orderBy('id', 'desc')->first();
-        $n    = $last ? ((int) preg_replace('/\D/', '', $last->code)) + 1 : 1;
-        return 'PSE-' . str_pad($n, 5, '0', STR_PAD_LEFT);
+        // Use a UUID (or a unique string) to guarantee uniqueness across all payslips.
+        // This avoids collisions when multiple payslips are generated for the same payroll entry.
+        // Example format: PS-<UUID>
+        return 'PS-' . (string) \Illuminate\Support\Str::uuid();
     }
 
     // ── CRUD Openers ────────────────────────────────────────
@@ -466,7 +468,7 @@ class PayslipEntryManager extends Component
                 $this->dispatch('console-log', message: 'Creating payslip data array...');
                 
                 $data = [
-                    'code' => $this->generateEditingId ? ($existingPayslip->code ?? 'PS-' . str_pad($payrollEntry->id, 5, '0', STR_PAD_LEFT)) : 'PS-' . str_pad($payrollEntry->id, 5, '0', STR_PAD_LEFT),
+                    'code' => $this->generateCode(),
                     'payroll_entry_id' => $payrollEntry->id,
                     'gross_pay' => $this->grossPay ?: 0,
                     'taxable_income' => $this->taxableIncome ?: 0,

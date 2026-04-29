@@ -676,6 +676,14 @@
                 <div class="db-hero-chips">
                     <span class="db-hero-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>{{ $employeeCount }} Staff</span>
                     <span class="db-hero-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>{{ round(($attendanceToday/max(1,$employeeCount))*100) }}% Present</span>
+                       <div class="db-h-actions">
+            <div class="db-search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="Search employees, documents...">
+            </div>
+            @livewire('notification-bell')
+            <button class="db-btn-primary">Generate Report</button>
+        </div>
                 </div>
             </div>
         </div>

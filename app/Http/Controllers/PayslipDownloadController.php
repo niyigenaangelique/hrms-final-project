@@ -20,17 +20,24 @@ class PayslipDownloadController extends Controller
                 return redirect()->back()->with('error', 'Employee record not found.');
             }
 
-            $payslip = PayslipEntry::with(['payrollEntry', 'payrollMonth'])
-                ->whereHas('payrollEntry', function($q) use ($employee) {
-                    $q->where('employee_id', $employee->id);
-                })
-                ->findOrFail($entryId);
+            $payslip = PayslipEntry::findOrFail($entryId);
+
+            // Security check
+            if ($payslip->payroll_computation_entry_id) {
+                $computation = \App\Models\PayrollComputationEntry::with(['payrollPeriod', 'payrollMonth'])->findOrFail($payslip->payroll_computation_entry_id);
+                if ($computation->employee_id !== $employee->id) abort(403);
+            } else if ($payslip->payroll_entry_id) {
+                $oldEntry = \App\Models\PayrollEntry::findOrFail($payslip->payroll_entry_id);
+                if ($oldEntry->employee_id !== $employee->id) abort(403);
+            } else {
+                abort(404, 'Payroll record not linked to this payslip.');
+            }
 
             $data = [
                 'payslip' => $payslip,
                 'employee' => $employee,
-                'payrollEntry' => $payslip->payrollEntry,
-                'month' => $payslip->payrollMonth,
+                'computation' => $payslip->payroll_computation_entry_id ? \App\Models\PayrollComputationEntry::find($payslip->payroll_computation_entry_id) : null,
+                'payrollEntry' => $payslip->payroll_entry_id ? \App\Models\PayrollEntry::find($payslip->payroll_entry_id) : null,
                 'orgName' => 'ZIBITECH',
                 'generatedAt' => now()->format('F d, Y H:i'),
             ];
@@ -38,14 +45,13 @@ class PayslipDownloadController extends Controller
             $pdf = Pdf::loadView('pdf.payslip', $data);
             $pdf->setPaper('A4', 'portrait');
             
-            $filename = 'payslip_' . ($payslip->payrollMonth->name ?? 'period') . '_' . $employee->code . '.pdf';
-            $filename = str_replace(' ', '_', $filename);
+            $filename = 'payslip_' . now()->format('M_Y') . '_' . $employee->code . '.pdf';
             
             return $pdf->stream($filename);
 
         } catch (\Exception $e) {
             \Log::error('Payslip download failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to generate payslip PDF.');
+            return redirect()->back()->with('error', 'Failed to generate: ' . $e->getMessage());
         }
     }
 }
